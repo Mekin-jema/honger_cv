@@ -774,3 +774,351 @@
     print-color-adjust: exact;
   }
 }
+
+/* The design controls live in the toolbar so visitors can compare changes beside the preview. */
+.cv-toolbar {
+  max-width: 1200px;
+  min-height: 62px;
+  border: 1px solid #e2ded6;
+  border-radius: 14px;
+  background: #fffefa;
+  padding: 9px 12px;
+  box-shadow: 0 8px 30px -24px rgb(0 0 0 / 0.32);
+}
+.cv-toolbar-settings,
+.cv-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cv-toolbar-settings {
+  justify-content: center;
+}
+.cv-layout-picker {
+  display: grid;
+  grid-template-columns: auto minmax(116px, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.cv-layout-picker > span,
+.cv-color-picker legend {
+  color: #625d55;
+  font-size: 11px;
+  font-weight: 750;
+}
+.cv-layout-picker select {
+  min-height: 36px;
+  border: 1px solid #d8d3cb;
+  border-radius: 9px;
+  background: #fff;
+  padding: 0 30px 0 10px;
+  color: #282622;
+  font-size: 12px;
+  font-weight: 650;
+}
+.cv-layout-picker select:focus-visible,
+.cv-color-swatch:focus-visible {
+  outline: 2px solid var(--cv-accent);
+  outline-offset: 2px;
+}
+.cv-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.cv-color-picker legend {
+  float: left;
+  padding: 0;
+}
+.cv-color-options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cv-color-swatch {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 2px solid #fffefa;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  box-shadow: 0 0 0 1px #c9c3b9;
+  cursor: pointer;
+}
+.cv-color-swatch.is-selected {
+  box-shadow: 0 0 0 2px var(--swatch-color);
+}
+.cv-color-swatch.is-selected::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  content: "✓";
+  font-size: 12px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+.cv-toolbar-actions .cv-tool {
+  min-height: 36px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 12px;
+}
+.cv-studio-heading {
+  max-width: 1200px;
+  margin-top: 26px;
+}
+.cv-studio-layout {
+  display: block;
+}
+.cv-preview-heading {
+  max-width: 1200px;
+  margin: 0 auto 12px;
+}
+.cv-preview-panel .cv-sheet {
+  max-width: 210mm;
+}
+.cv-root[data-color="cobalt"] {
+  --cv-accent: #2855c5;
+  --cv-line: #c9d5ef;
+}
+.cv-root[data-color="terracotta"] {
+  --cv-accent: #b5400f;
+  --cv-line: #ddd7cb;
+}
+.cv-root[data-color="forest"] {
+  --cv-accent: #18745e;
+  --cv-line: #c5ded6;
+}
+.cv-root[data-color="plum"] {
+  --cv-accent: #7b3fa1;
+  --cv-line: #ddd0e9;
+}
+.cv-root[data-color="slate"] {
+  --cv-accent: #475569;
+  --cv-line: #cbd5e1;
+}
+.cv-root[data-template="modern"] .cv-header {
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--cv-accent);
+}
+.cv-root[data-template="modern"] .cv-photo {
+  border-radius: 8px;
+}
+.cv-root[data-template="classic"] .cv-name {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+.cv-root[data-template="classic"] .cv-h2 {
+  border-bottom-width: 2px;
+}
+
+/* Sidebar format groups profile details and credentials in a shaded rail. */
+.cv-root[data-template="sidebar"] .cv-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  grid-template-areas:
+    "header header"
+    "availability availability"
+    "profile highlights"
+    "skills experience"
+    "education experience"
+    "languages projects"
+    "references references";
+  gap: 0 7mm;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cv-accent) 8%, var(--cv-paper)) 0 34%,
+    var(--cv-paper) 34% 100%
+  );
+}
+.cv-root[data-template="sidebar"] .cv-header { grid-area: header; }
+.cv-root[data-template="sidebar"] .cv-availability { grid-area: availability; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(1) { grid-area: profile; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(2) { grid-area: highlights; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(3) { grid-area: skills; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(4) { grid-area: experience; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(5) { grid-area: projects; }
+.cv-root[data-template="sidebar"] .cv-sheet > .cv-section:nth-of-type(6) { grid-area: references; }
+.cv-root[data-template="sidebar"] .cv-two { display: contents; }
+.cv-root[data-template="sidebar"] .cv-two > .cv-section:first-child { grid-area: education; }
+.cv-root[data-template="sidebar"] .cv-two > .cv-section:last-child { grid-area: languages; }
+.cv-root[data-template="sidebar"] .cv-section { min-width: 0; }
+.cv-root[data-template="sidebar"] .cv-header {
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--cv-accent);
+}
+.cv-root[data-template="sidebar"] .cv-availability {
+  background: color-mix(in srgb, var(--cv-accent) 12%, var(--cv-paper));
+  color: var(--cv-ink);
+}
+
+/* Timeline makes dates and roles read as one continuous career path. */
+.cv-root[data-template="timeline"] .cv-header {
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cv-line);
+}
+.cv-root[data-template="timeline"] .cv-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30pt;
+  letter-spacing: -0.035em;
+}
+.cv-root[data-template="timeline"] .cv-h2 {
+  padding-bottom: 5px;
+  border-bottom: 0;
+  border-left: 3px solid var(--cv-accent);
+  padding-left: 8px;
+  letter-spacing: 0.07em;
+}
+.cv-root[data-template="timeline"] .cv-jobs {
+  gap: 0;
+  border-left: 1px solid var(--cv-line);
+  margin-left: 5px;
+}
+.cv-root[data-template="timeline"] .cv-job {
+  position: relative;
+  padding: 0 0 12px 14px;
+  break-inside: avoid;
+}
+.cv-root[data-template="timeline"] .cv-job::before {
+  position: absolute;
+  top: 4px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--cv-paper);
+  border-radius: 50%;
+  background: var(--cv-accent);
+  content: "";
+}
+.cv-root[data-template="timeline"] .cv-date {
+  color: var(--cv-accent);
+}
+.cv-root[data-template="timeline"] .cv-engagement {
+  border-left-color: var(--cv-accent);
+}
+
+/* Editorial uses a wide masthead and paired content columns like a journal page. */
+.cv-root[data-template="editorial"] .cv-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "header header"
+    "availability availability"
+    "profile profile"
+    "highlights skills"
+    "experience experience"
+    "projects education"
+    "languages references";
+  column-gap: 9mm;
+}
+.cv-root[data-template="editorial"] .cv-header { grid-area: header; }
+.cv-root[data-template="editorial"] .cv-availability { grid-area: availability; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(1) { grid-area: profile; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(2) { grid-area: highlights; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(3) { grid-area: skills; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(4) { grid-area: experience; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(5) { grid-area: projects; }
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(6) { grid-area: references; }
+.cv-root[data-template="editorial"] .cv-two { display: contents; }
+.cv-root[data-template="editorial"] .cv-two > .cv-section:first-child { grid-area: education; }
+.cv-root[data-template="editorial"] .cv-two > .cv-section:last-child { grid-area: languages; }
+.cv-root[data-template="editorial"] .cv-header {
+  align-items: flex-end;
+  border-bottom: 3px solid var(--cv-accent);
+  padding-bottom: 12px;
+}
+.cv-root[data-template="editorial"] .cv-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 32pt;
+  letter-spacing: -0.04em;
+}
+.cv-root[data-template="editorial"] .cv-h2 {
+  border-bottom: 0;
+  letter-spacing: 0.08em;
+}
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(4),
+.cv-root[data-template="editorial"] .cv-sheet > .cv-section:nth-of-type(5) {
+  border-top: 1px solid var(--cv-line);
+  padding-top: 2px;
+}
+.cv-root[data-template="compact"] {
+  font-size: 8.75pt;
+  line-height: 1.32;
+}
+.cv-root[data-template="compact"] .cv-section { margin-top: 7px; }
+.cv-root[data-template="compact"] .cv-jobs { gap: 6px; }
+.cv-root[data-template="compact"] .cv-h2 {
+  margin-bottom: 4px;
+  padding-bottom: 2px;
+}
+.dark .cv-root .cv-toolbar {
+  border-color: #494744;
+  background: #252423;
+}
+.dark .cv-root .cv-layout-picker > span,
+.dark .cv-root .cv-color-picker legend {
+  color: #c1bbb1;
+}
+.dark .cv-root .cv-layout-picker select {
+  border-color: #55514b;
+  background: #302f2c;
+  color: #f4f1eb;
+}
+.dark .cv-root .cv-color-swatch {
+  border-color: #252423;
+}
+
+@media (max-width: 880px) {
+  .cv-toolbar {
+    flex-wrap: wrap;
+  }
+  .cv-toolbar-settings {
+    flex: 1;
+  }
+}
+@media (max-width: 640px) {
+  .cv-toolbar-settings {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .cv-toolbar-actions {
+    margin-left: auto;
+  }
+  .cv-root[data-template="sidebar"] .cv-sheet,
+  .cv-root[data-template="editorial"] .cv-sheet {
+    display: block;
+    background: var(--cv-paper);
+  }
+  .cv-root[data-template="sidebar"] .cv-two,
+  .cv-root[data-template="editorial"] .cv-two {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+  }
+}
+@media print {
+  .cv-toolbar,
+  .cv-studio-heading,
+  .cv-preview-heading {
+    display: none !important;
+  }
+  .cv-root {
+    --cv-paper: #fff;
+  }
+  .cv-root[data-template="sidebar"] .cv-sheet,
+  .cv-root[data-template="editorial"] .cv-sheet {
+    max-width: none;
+  }
+  .cv-root[data-template="sidebar"] .cv-sheet {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
