@@ -1,0 +1,384 @@
+/* The CV is a paper document: always light, A4, the same on screen and in the PDF.
+   .cv-preview carries the same paper variables for the live preview in the admin's Studio. */
+.cv-root,
+.cv-preview {
+  --cv-ink: #16171a;
+  --cv-muted: #57524a;
+  --cv-faint: #635e55;
+  --cv-line: #ddd7cb;
+  --cv-accent: #b5400f;
+  /* On screen the paper is a soft off-white; print forces pure white below. */
+  --cv-paper: #fdfcf9;
+  --cv-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 12px 40px -12px rgb(0 0 0 / 0.18);
+  color: var(--cv-ink);
+  font-size: 9.5pt;
+  line-height: 1.4;
+}
+.cv-root {
+  min-height: 100dvh;
+  background: var(--bg-soft);
+  padding: 24px 16px 56px;
+}
+.dark .cv-root,
+.dark .cv-preview {
+  --cv-paper: #f4f2ec;
+  --cv-shadow: 0 12px 40px -12px rgb(0 0 0 / 0.5);
+}
+/* One page tone on /cv: the body behind a short sheet matches .cv-root, so there is no band. */
+@media screen {
+  html:has(.cv-root),
+  html:has(.cv-root) body {
+    background: var(--bg-soft);
+  }
+}
+
+/* ---------- toolbar (screen only) ---------- */
+.cv-toolbar {
+  max-width: 210mm;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cv-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #857e72;
+  background: #fbfaf7;
+  color: #1f1d1a;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cv-tool-short {
+  display: none;
+}
+/* Phones: short labels ("Chat", "PDF") so the pills stay on one line; 44px targets on touch. */
+@media (max-width: 480px) {
+  .cv-tool-long {
+    display: none;
+  }
+  .cv-tool-short {
+    display: inline;
+  }
+}
+@media (pointer: coarse) {
+  .cv-tool {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+}
+.cv-tool:hover {
+  background: #e9e5dc;
+}
+.cv-tool-primary {
+  background: #1f1d1a;
+  border-color: #1f1d1a;
+  color: #f6f4ef;
+}
+.cv-tool-primary:hover {
+  background: #34312c;
+}
+/* Dark site theme: the paper stays light, but the toolbar matches the charcoal page. */
+.dark .cv-root .cv-tool {
+  background: #28282b;
+  border-color: #7a7770;
+  color: #e8e6e1;
+}
+.dark .cv-root .cv-tool:hover {
+  background: #343438;
+}
+.dark .cv-root .cv-tool-primary {
+  background: #e8e6e1;
+  border-color: #e8e6e1;
+  color: #1a1a1c;
+}
+.dark .cv-root .cv-tool-primary:hover {
+  background: #d6d3cc;
+}
+
+/* ---------- sheet ---------- */
+.cv-sheet {
+  max-width: 210mm;
+  margin: 0 auto;
+  background: var(--cv-paper);
+  padding: 16mm 16mm 14mm;
+  border-radius: 6px;
+  box-shadow: var(--cv-shadow);
+}
+@media (max-width: 640px) {
+  .cv-sheet {
+    padding: 22px 18px;
+  }
+}
+.cv-sheet a {
+  color: inherit;
+  text-decoration: none;
+}
+.cv-sheet a:hover {
+  text-decoration: underline;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.cv-photo {
+  width: 23mm;
+  height: 23mm;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.cv-name {
+  font-size: 24pt;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.cv-title {
+  margin-top: 3px;
+  font-size: 11.5pt;
+  font-weight: 600;
+  color: var(--cv-accent);
+}
+.cv-contacts {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  font-size: 9pt;
+  color: var(--cv-muted);
+}
+.cv-contacts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+}
+/* Long email / LinkedIn URL wrap instead of pushing the page wider on 320px phones. */
+.cv-contacts li > a,
+.cv-contacts li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Touch screens: each contact link becomes a 32px+ tap target. Screen only, so print and the PDF keep their size. */
+@media screen and (pointer: coarse) {
+  .cv-contacts {
+    row-gap: 4px;
+  }
+  .cv-contacts li > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+  }
+}
+/* Phones (screen only, so print and the PDF keep the side-by-side header): photo on top, centred. */
+@media screen and (max-width: 640px) {
+  .cv-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .cv-photo {
+    width: 96px;
+    height: 96px;
+  }
+  .cv-contacts {
+    justify-content: center;
+  }
+}
+.cv-icon {
+  width: 10px;
+  height: 10px;
+  color: var(--cv-faint);
+}
+.cv-availability {
+  margin-top: 12px;
+  border-left: 2.5px solid var(--cv-accent);
+  background: #fff7f2;
+  padding: 5px 10px;
+  font-size: 9pt;
+  font-weight: 600;
+  color: #7c2d12;
+}
+
+/* ---------- sections ---------- */
+.cv-section {
+  margin-top: 11px;
+}
+.cv-h2 {
+  margin-bottom: 7px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--cv-line);
+  font-size: 9.5pt;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--cv-accent);
+  break-after: avoid;
+}
+.cv-text {
+  color: var(--cv-ink);
+}
+.cv-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 12px;
+}
+.cv-h3 {
+  font-size: 11pt;
+  font-weight: 700;
+}
+.cv-at {
+  font-weight: 600;
+  color: var(--cv-muted);
+}
+.cv-h4 {
+  font-size: 10pt;
+  font-weight: 700;
+}
+.cv-date {
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--cv-faint);
+  white-space: nowrap;
+}
+.cv-meta {
+  font-size: 9pt;
+  color: var(--cv-muted);
+}
+.cv-bullets {
+  margin-top: 3px;
+  padding-left: 14px;
+  list-style: disc;
+}
+.cv-bullets li {
+  margin-top: 1px;
+  padding-left: 2px;
+}
+.cv-bullets li::marker {
+  color: var(--cv-faint);
+}
+.cv-stack {
+  margin-top: 3px;
+  font-size: 8.75pt;
+  color: var(--cv-muted);
+}
+.cv-stack span {
+  font-weight: 600;
+  color: var(--cv-ink);
+}
+
+.cv-skills {
+  display: grid;
+  gap: 3px;
+}
+.cv-skill {
+  display: grid;
+  grid-template-columns: 30mm 1fr;
+  gap: 10px;
+}
+.cv-skill dt {
+  font-weight: 700;
+}
+.cv-skill dd {
+  color: var(--cv-muted);
+}
+@media (max-width: 640px) {
+  .cv-skill {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.cv-jobs {
+  display: grid;
+  gap: 10px;
+}
+.cv-engagement {
+  margin-top: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--cv-line);
+  break-inside: avoid;
+}
+.cv-faint {
+  color: var(--cv-faint);
+}
+.cv-two {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 0 20px;
+}
+@media (max-width: 640px) {
+  .cv-two {
+    grid-template-columns: 1fr;
+  }
+}
+.cv-langs {
+  display: grid;
+  gap: 4px;
+}
+.cv-langs li {
+  display: flex;
+  flex-direction: column;
+}
+.cv-langs li span:last-child {
+  color: var(--cv-muted);
+  font-size: 9pt;
+}
+.cv-avoid,
+.cv-bullets li {
+  break-inside: avoid;
+}
+
+/* ---------- print / PDF ---------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 11mm 13mm;
+  }
+  html:has(.cv-root),
+  html:has(.cv-root) body {
+    /* !important: next-themes sets an inline color-scheme on <html>. */
+    color-scheme: light !important;
+    background: #fff !important;
+  }
+  .cv-root,
+  .dark .cv-root {
+    --cv-paper: #fff;
+  }
+  .cv-root {
+    background: #fff !important;
+    padding: 0;
+  }
+  .cv-sheet {
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .cv-sheet a:hover {
+    text-decoration: none;
+  }
+  .cv-root {
+    font-size: 9pt;
+    line-height: 1.38;
+  }
+  .cv-section {
+    margin-top: 9px;
+  }
+  .cv-availability {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

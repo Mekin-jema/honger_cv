@@ -1,130 +1,515 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Never scan build output folders (.next, .next-cv, private builds): they hold escaped class names. */
+@source not "../.next*";
 
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Warm off-white, not pure white: easier on the eyes. All text tokens pass WCAG AA (4.5:1) on bg, bg-soft, surface and card. */
+  --bg: #f6f4ef;
+  --bg-soft: #efece5;
+  --surface: #e9e5dc;
+  --surface-strong: #dcd6ca;
+  --card: #fdfcf9;
+  --fg: #1f1d1a;
+  --muted: #57524a;
+  --faint: #6b665d;
+  --line: #d6d0c4;
+  --line-strong: #857e72;
+  --accent: #b5400f;
+  --accent-soft: #f8e6da;
+  --on-accent: #ffffff;
+  --ring: var(--accent);
+  /* Edge for chips and ghost buttons: a step stronger than the hairline. */
+  --edge: color-mix(in srgb, var(--line-strong) 70%, var(--line));
+  --card-shadow: 0 1px 2px rgb(31 29 26 / 0.04), 0 4px 16px -8px rgb(31 29 26 / 0.08);
+  --avatar-l: 25%;
+  /* Dimmed hero parts: 3:1+ for large text on wide screens; raised to 4.5:1+ on phones (below). */
+  --intro-dim: 0.52;
+  color-scheme: light;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Soft charcoal, not near-black. */
+  --bg: #1a1a1c;
+  --bg-soft: #202022;
+  --surface: #28282b;
+  --surface-strong: #343438;
+  --card: #26262a;
+  --fg: #e8e6e1;
+  --muted: #aeaaa3;
+  --faint: #94908a;
+  --line: #36363b;
+  --line-strong: #7a7770;
+  --accent: #ff8a4c;
+  --accent-soft: #3a241a;
+  --on-accent: #1a1a1c;
+  --ring: var(--accent);
+  --card-shadow: none;
+  --avatar-l: 75%;
+  --intro-dim: 0.45;
+  color-scheme: dark;
 }
 
+/* Phones: the hero drops below the 24px large-text size, so dimmed parts need 4.5:1. */
+@media (max-width: 40rem) {
+  :root {
+    --intro-dim: 0.65;
+  }
+  :root.dark,
+  .dark {
+    --intro-dim: 0.6;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  /* Bangla text falls through to Noto Sans Bengali (only downloaded when a page has Bangla). */
+  --font-sans: var(--font-geist-sans), var(--font-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument), var(--font-bengali), Georgia, serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-text);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --popover: var(--card);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: var(--on-accent);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--fg);
+  --muted: var(--bg-soft);
+  --muted-text: #57524a;
+  --muted-foreground: var(--muted-text);
+  --accent-foreground: var(--on-accent);
+  --destructive: #b42318;
+  --border: var(--line);
+  --input: var(--line);
+  --sidebar: var(--bg-soft);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ring);
+}
+
+.dark {
+  --muted-text: #aeaaa3;
+  --destructive: #f87171;
+  --sidebar: var(--bg-soft);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ring);
+}
+
+/* Everything clickable gets a pointer (Tailwind v4 resets buttons to the default cursor). */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="option"],
+  [role="menuitem"],
+  [role="radio"],
+  a[href],
+  summary,
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
   }
-  body {
-    @apply bg-background text-foreground;
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
-  html {
-    @apply font-sans;
+}
+
+@layer components {
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.8rem;
+    color: var(--muted);
+    transition: background-color 150ms, color 150ms;
   }
+  .icon-btn:hover {
+    background: var(--surface);
+    color: var(--fg);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    border: 1px solid var(--edge);
+    background: var(--card);
+    color: var(--fg);
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 550;
+    transition: background-color 150ms, border-color 150ms, transform 150ms;
+  }
+  .chip:hover {
+    background: var(--surface);
+    border-color: var(--surface-strong);
+  }
+  .chip:active {
+    transform: scale(0.97);
+  }
+  .chip-sm {
+    gap: 0.375rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .chip-sm:hover {
+    color: var(--fg);
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 0.125rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    padding: 0.7rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: opacity 150ms, background-color 150ms, transform 150ms;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .btn-primary:hover {
+    opacity: 0.88;
+  }
+  .btn-ghost {
+    border: 1px solid var(--line-strong);
+    color: var(--fg);
+  }
+  .btn-ghost:hover {
+    background: var(--surface);
+  }
+  .card {
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Keyboard focus ring for buttons and links (solid accent, 3:1+ on every surface). Text inputs show focus through their own frame instead. */
+:focus-visible:not(input, textarea) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+.display {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+}
+
+/* ---------- Typed intro (dalefrench-style) ---------- */
+.intro {
+  /* --intro-size is measured in JS so the longest sentence fits in 4 lines. The pre-hydration guess tracks the
+     measured result (about 1/16 of the column width: viewport minus padding, minus the sidebar from lg). */
+  --intro-guess: clamp(1rem, 6.25vw - 0.15rem, 3.7rem);
+  font-size: var(--intro-size, var(--intro-guess));
+  line-height: 1.06;
+  min-height: calc(4 * 1.06em);
+}
+/* Phones: up to 8 lines at about twice the size (typed-intro.tsx measures the same budget). */
+@media (max-width: 40rem) {
+  .intro {
+    --intro-guess: clamp(1rem, 12.5vw - 0.3rem, 3.7rem);
+    min-height: calc(8 * 1.06em);
+  }
+}
+@media (min-width: 48rem) {
+  .intro {
+    --intro-guess: clamp(1rem, 6.25vw - 0.3rem, 3.7rem);
+  }
+}
+@media (min-width: 64rem) {
+  .intro {
+    --intro-guess: clamp(1rem, 6.25vw - 1.4rem, 3.7rem);
+  }
+}
+.intro-typing {
+  display: none;
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .intro-static {
+    display: none;
+  }
+  .intro-typing {
+    display: inline;
+  }
+}
+.seg {
+  opacity: var(--intro-dim);
+  transition: opacity 375ms ease-out;
+}
+.seg[data-active="true"] {
+  opacity: 1;
+}
+.seg[data-active="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 0.08em;
+  height: 0.82em;
+  margin-left: 0.06em;
+  margin-right: -0.14em;
+  vertical-align: -0.06em;
+  background: var(--accent);
+  animation: caret 0.75s steps(1) infinite;
+}
+.seg[data-typing="true"]::after {
+  animation: none;
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Touch: every target at least 44px (WCAG 2.5.5) ---------- */
+/* Unlayered on purpose, so it beats the size-8 / size-9 utilities that shrink icon buttons on desktop. */
+@media (pointer: coarse) {
+  .icon-btn,
+  .icon-btn.size-8,
+  .icon-btn.size-9 {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+  }
+  .chip-sm {
+    min-height: 44px;
+  }
+  /* Pill buttons (e.g. the header CV button) and sidebar rows / rail buttons on touch tablets. */
+  .btn,
+  .side-row {
+    min-height: 44px;
+  }
+}
+/* Phones: the quick-question chips under the question box are small, so more of them fit on one screen.
+   32px tall still clears the WCAG 2.2 target-size minimum (24px), and the chips are spaced apart. */
+@media (max-width: 40rem) {
+  .chip-sm {
+    gap: 0.25rem;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .chip-sm svg {
+    width: 0.8125rem;
+    height: 0.8125rem;
+  }
+}
+@media (pointer: coarse) and (max-width: 40rem) {
+  .chip-sm {
+    min-height: 2rem;
+  }
+}
+
+/* ---------- Dot-separated lists ---------- */
+/* Each item draws its own "·" before it; the list is shifted left by one gap and clipped there,
+   so the dot of whichever item starts a line is hidden and no separator dangles at a line edge. */
+.dot-list {
+  --dot-gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+  margin-left: calc(-1 * var(--dot-gap));
+  clip-path: inset(-0.5rem -0.5rem -0.5rem var(--dot-gap));
+}
+.dot-list > * {
+  position: relative;
+  padding-left: var(--dot-gap);
+  white-space: nowrap;
+}
+.dot-list > *::before {
+  content: "\00B7";
+  content: "\00B7" / "";
+  position: absolute;
+  left: 0;
+  width: var(--dot-gap);
+  text-align: center;
+  color: var(--faint);
+}
+
+/* ---------- Scrolling filter strip (admin) ---------- */
+/* Keeps the chosen filter clear of the edge fade; the fade only shows on an edge that really scrolls. */
+.tab-strip {
+  scroll-padding-inline: 24px;
+}
+.tab-strip[data-fade="start"] {
+  mask-image: linear-gradient(to right, transparent, #000 16px);
+}
+.tab-strip[data-fade="end"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
+}
+.tab-strip[data-fade="start end"] {
+  mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+}
+
+/* ---------- Thinking shimmer ---------- */
+.shimmer {
+  background: linear-gradient(90deg, var(--faint) 0%, var(--fg) 45%, var(--faint) 90%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom dock: clears the iPhone home bar on phones, 32px on desktop. */
+@utility pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  @media (min-width: 48rem) {
+    padding-bottom: 2rem;
+  }
+}
+/* While the on-screen keyboard is open, the home bar is hidden behind it: no extra gap under the box. */
+:root[data-keyboard="open"] .pb-safe {
+  padding-bottom: 0.5rem;
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bangla needs taller lines than Latin text: vowel signs sit above and below the letters. */
+:lang(bn) {
+  line-height: 1.75;
+}
+:lang(bn) .display,
+:lang(bn) .intro {
+  line-height: 1.3;
+  letter-spacing: 0;
 }

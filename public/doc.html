@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="cyan">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Guide & Interactive Flowcharts | Maruf Portfolio</title>
+  <!-- Mermaid.js for diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+  <!-- Marked.js for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #070b14;
+      --bg-secondary: #0d1424;
+      --bg-card: #152037;
+      --bg-hover: #1e2c4a;
+      --border-color: #273859;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --accent-purple: #c084fc;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --code-bg: #030712;
+      --sidebar-width: 320px;
+
+      /* Diagram Theme Variables - Default: High-Contrast Cyan */
+      --canvas-bg: #090f1d;
+      --canvas-grid: rgba(56, 189, 248, 0.15);
+      --node-fill: #0d172c;
+      --node-stroke: #38bdf8;
+      --node-stroke-width: 2.5px;
+      --node-glow: rgba(56, 189, 248, 0.25);
+      --node-text: #ffffff;
+      --diamond-fill: #1e1338;
+      --diamond-stroke: #c084fc;
+      --diamond-glow: rgba(192, 132, 252, 0.35);
+      --cylinder-fill: #04251e;
+      --cylinder-stroke: #34d399;
+      --edge-stroke: #38bdf8;
+      --edge-stroke-width: 2.5px;
+      --edge-glow: rgba(56, 189, 248, 0.45);
+      --edge-label-bg: #070d1a;
+      --edge-label-stroke: #38bdf8;
+      --edge-label-text: #ffffff;
+      --cluster-fill: rgba(13, 23, 44, 0.85);
+      --cluster-stroke: #64748b;
+      --cluster-title: #38bdf8;
+    }
+
+    /* Amber / Gold Theme */
+    [data-theme="amber"] {
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --canvas-bg: #100e0b;
+      --canvas-grid: rgba(245, 158, 11, 0.15);
+      --node-fill: #1c150c;
+      --node-stroke: #f59e0b;
+      --node-glow: rgba(245, 158, 11, 0.25);
+      --node-text: #ffffff;
+      --diamond-fill: #2a1b08;
+      --diamond-stroke: #fbbf24;
+      --diamond-glow: rgba(251, 191, 36, 0.35);
+      --edge-stroke: #f59e0b;
+      --edge-glow: rgba(245, 158, 11, 0.45);
+      --edge-label-bg: #140f09;
+      --edge-label-stroke: #f59e0b;
+      --edge-label-text: #ffffff;
+      --cluster-fill: rgba(28, 21, 12, 0.85);
+      --cluster-stroke: #78716c;
+      --cluster-title: #f59e0b;
+    }
+
+    /* High-Contrast Light Theme */
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-card: #e2e8f0;
+      --bg-hover: #cbd5e1;
+      --border-color: #94a3b8;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.25);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --code-bg: #e2e8f0;
+
+      --canvas-bg: #ffffff;
+      --canvas-grid: rgba(2, 132, 199, 0.12);
+      --node-fill: #f0f9ff;
+      --node-stroke: #0284c7;
+      --node-stroke-width: 2.5px;
+      --node-glow: rgba(2, 132, 199, 0.2);
+      --node-text: #021f3d;
+      --diamond-fill: #faf5ff;
+      --diamond-stroke: #7e22ce;
+      --diamond-glow: rgba(126, 34, 206, 0.25);
+      --cylinder-fill: #ecfdf5;
+      --cylinder-stroke: #059669;
+      --edge-stroke: #0284c7;
+      --edge-stroke-width: 2.5px;
+      --edge-glow: rgba(2, 132, 199, 0.25);
+      --edge-label-bg: #ffffff;
+      --edge-label-stroke: #0284c7;
+      --edge-label-text: #021f3d;
+      --cluster-fill: rgba(241, 245, 249, 0.85);
+      --cluster-stroke: #64748b;
+      --cluster-title: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    /* Sidebar Navigation */
+    #sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .sidebar-header {
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+      font-weight: 700;
+    }
+
+    .theme-selector-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .theme-selector-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .theme-button-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .theme-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .theme-btn.active {
+      background: var(--accent);
+      color: #04111d;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .search-box {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .nav-group-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.65rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--text-main);
+      background-color: var(--bg-hover);
+    }
+
+    .nav-link.active {
+      color: var(--accent);
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .diagram-badge {
+      font-size: 0.7rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 1px 6px;
+      border-radius: 9999px;
+      margin-left: auto;
+      font-weight: 700;
+    }
+
+    /* Main Content Area */
+    #main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      max-width: 1080px;
+      padding: 2.5rem 3.5rem 6rem;
+      overflow-x: hidden;
+    }
+
+    /* Top bar */
+    .top-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(192, 132, 252, 0.12));
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .top-banner-text h3 {
+      font-size: 1.15rem;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+      font-weight: 700;
+    }
+
+    .top-banner-text p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .badge-interactive {
+      background: var(--accent);
+      color: #04111d;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.4rem 0.85rem;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Markdown Typography & Elements */
+    #markdown-body h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 1.5rem 0 1rem;
+      letter-spacing: -0.02em;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+
+    #markdown-body h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 2.5rem 0 1rem;
+      padding-top: 1rem;
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    #markdown-body h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 1.75rem 0 0.75rem;
+    }
+
+    #markdown-body h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    #markdown-body p {
+      margin-bottom: 1rem;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      opacity: 0.95;
+    }
+
+    #markdown-body ul, #markdown-body ol {
+      margin: 0.5rem 0 1.25rem 1.5rem;
+      color: var(--text-main);
+    }
+
+    #markdown-body li {
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    #markdown-body blockquote {
+      border-left: 4px solid var(--accent);
+      background: rgba(56, 189, 248, 0.08);
+      padding: 0.85rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.25rem 0;
+      color: var(--text-main);
+    }
+
+    #markdown-body code:not(pre code) {
+      background-color: var(--bg-card);
+      color: var(--accent);
+      border: 1px solid var(--border-color);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.875em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 600;
+    }
+
+    #markdown-body pre:not(.diagram-raw) {
+      background-color: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      font-size: 0.875rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    #markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+
+    #markdown-body th, #markdown-body td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    #markdown-body th {
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    #markdown-body tr:hover td {
+      background-color: var(--bg-hover);
+    }
+
+    #markdown-body hr {
+      border: 0;
+      height: 1px;
+      background: var(--border-color);
+      margin: 2.5rem 0;
+    }
+
+    #markdown-body a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    #markdown-body a:hover {
+      text-decoration: underline;
+    }
+
+    /* ==========================================================================
+       HIGH-CONTRAST INTERACTIVE DIAGRAM VIEWPORT & CANVAS
+       ========================================================================== */
+    .diagram-viewport {
+      position: relative;
+      background: var(--canvas-bg);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      margin: 2rem 0 2.5rem;
+      padding: 0;
+      overflow: hidden;
+      height: 560px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 15px var(--node-glow);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .diagram-viewport:hover {
+      border-color: var(--accent);
+      box-shadow: 0 12px 45px rgba(0, 0, 0, 0.6), 0 0 25px var(--accent-glow);
+    }
+
+    /* Diagram Toolbar */
+    .diagram-toolbar {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(13, 20, 36, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      padding: 5px 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .diagram-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .diagram-btn:hover {
+      background: var(--accent);
+      color: #04111d;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .diagram-hint {
+      position: absolute;
+      bottom: 14px;
+      left: 16px;
+      z-index: 5;
+      font-size: 0.75rem;
+      color: #ffffff;
+      background: rgba(13, 20, 36, 0.9);
+      backdrop-filter: blur(6px);
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .zoom-level-badge {
+      font-size: 0.75rem;
+      color: #04111d;
+      background: var(--accent);
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* Diagram Canvas / SVG Area with Blueprint Grid */
+    .diagram-canvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      background-color: var(--canvas-bg);
+      background-image: radial-gradient(var(--canvas-grid) 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+
+    .diagram-canvas:active {
+      cursor: grabbing;
+    }
+
+    .diagram-canvas svg {
+      max-width: none;
+      width: 100%;
+      height: 100%;
+      display: block;
+      transform-origin: center center;
+      transition: transform 0.05s ease-out;
+    }
+
+    /* ==========================================================================
+       CRITICAL: ULTRA-HIGH-CONTRAST MERMAID SVG OVERRIDES
+       ========================================================================== */
+
+    /* 1. All Standard Rectangles, Rounded Boxes, and Circles */
+    .diagram-canvas svg .node rect,
+    .diagram-canvas svg .node circle,
+    .diagram-canvas svg .node ellipse,
+    .diagram-canvas svg .node path:not(.edgePath path) {
+      fill: var(--node-fill) !important;
+      stroke: var(--node-stroke) !important;
+      stroke-width: var(--node-stroke-width) !important;
+      rx: 8px !important;
+      ry: 8px !important;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px var(--node-glow)) !important;
+    }
+
+    /* 2. Decision Diamond Nodes (Polygons) */
+    .diagram-canvas svg .node polygon {
+      fill: var(--diamond-fill) !important;
+      stroke: var(--diamond-stroke) !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 12px var(--diamond-glow)) !important;
+    }
+
+    /* 3. Database / Storage Cylinders */
+    .diagram-canvas svg .node.cylinder path,
+    .diagram-canvas svg .node.cylinder rect {
+      fill: var(--cylinder-fill) !important;
+      stroke: var(--cylinder-stroke) !important;
+      stroke-width: 2.5px !important;
+    }
+
+    /* 4. Pure High-Contrast Node Text (Labels) */
+    .diagram-canvas svg .node .label,
+    .diagram-canvas svg .node text,
+    .diagram-canvas svg .node span,
+    .diagram-canvas svg .node div {
+      color: var(--node-text) !important;
+      fill: var(--node-text) !important;
+      font-weight: 700 !important;
+      font-size: 14.5px !important;
+      line-height: 1.45 !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+    }
+
+    /* 5. Bold High-Contrast Connecting Lines / Edges */
+    .diagram-canvas svg .edgePath path,
+    .diagram-canvas svg path.path {
+      stroke: var(--edge-stroke) !important;
+      stroke-width: var(--edge-stroke-width) !important;
+      stroke-opacity: 0.95 !important;
+      filter: drop-shadow(0 0 4px var(--edge-glow)) !important;
+    }
+
+    /* 6. Arrowheads */
+    .diagram-canvas svg .marker,
+    .diagram-canvas svg marker path {
+      fill: var(--edge-stroke) !important;
+      stroke: var(--edge-stroke) !important;
+      stroke-width: 1px !important;
+    }
+
+    /* 7. Edge Label Pills (Yes, No, After 5s) */
+    .diagram-canvas svg .edgeLabel {
+      background-color: var(--edge-label-bg) !important;
+      border-radius: 6px !important;
+    }
+
+    .diagram-canvas svg .edgeLabel rect {
+      fill: var(--edge-label-bg) !important;
+      stroke: var(--edge-label-stroke) !important;
+      stroke-width: 1.5px !important;
+      rx: 6px !important;
+      ry: 6px !important;
+    }
+
+    .diagram-canvas svg .edgeLabel span,
+    .diagram-canvas svg .edgeLabel text,
+    .diagram-canvas svg .edgeLabel p {
+      color: var(--edge-label-text) !important;
+      fill: var(--edge-label-text) !important;
+      font-weight: 800 !important;
+      font-size: 13px !important;
+      padding: 3px 8px !important;
+      background: var(--edge-label-bg) !important;
+      border-radius: 4px !important;
+    }
+
+    /* 8. Subgraph Cluster Enclosures */
+    .diagram-canvas svg .cluster rect {
+      fill: var(--cluster-fill) !important;
+      stroke: var(--cluster-stroke) !important;
+      stroke-width: 2px !important;
+      stroke-dasharray: 6 6 !important;
+      rx: 12px !important;
+      ry: 12px !important;
+    }
+
+    .diagram-canvas svg .cluster .label span,
+    .diagram-canvas svg .cluster text {
+      color: var(--cluster-title) !important;
+      fill: var(--cluster-title) !important;
+      font-weight: 800 !important;
+      font-size: 15.5px !important;
+      letter-spacing: 0.04em !important;
+      text-transform: uppercase !important;
+    }
+
+    /* Fullscreen Modal Mode */
+    .diagram-viewport.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 99999;
+      border-radius: 0;
+      border: none;
+      background: var(--canvas-bg);
+      box-shadow: none;
+      margin: 0;
+    }
+
+    .diagram-viewport.fullscreen .diagram-toolbar {
+      top: 20px;
+      right: 20px;
+      padding: 8px 12px;
+    }
+
+    .diagram-viewport.fullscreen .diagram-btn {
+      font-size: 0.9rem;
+      padding: 7px 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      #sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+      }
+      #main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+      }
+      .diagram-viewport {
+        height: 440px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+        Architecture Guide
+      </div>
+      <div class="sidebar-subtitle">High-Contrast Interactive Charts</div>
+    </div>
+
+    <!-- Theme Palette Selector -->
+    <div class="theme-selector-box">
+      <div class="theme-selector-label">High-Contrast Palette</div>
+      <div class="theme-button-group">
+        <button class="theme-btn active" data-palette="cyan">🌌 Cyan</button>
+        <button class="theme-btn" data-palette="amber">⚡ Amber</button>
+        <button class="theme-btn" data-palette="light">☀️ Light</button>
+      </div>
+    </div>
+
+    <input type="text" id="filter-input" class="search-box" placeholder="Filter sections & diagrams..." />
+
+    <div>
+      <div class="nav-group-title">Interactive Diagrams</div>
+      <ul class="nav-list" id="diagrams-nav-list">
+        <li><a href="#diagram-visitor-path" class="nav-link">Visitor Request Lifecycle <span class="diagram-badge">§2.1</span></a></li>
+        <li><a href="#diagram-admin-path" class="nav-link">Admin Studio & Publishing <span class="diagram-badge">§2.1</span></a></li>
+        <li><a href="#diagram-ai-pipeline" class="nav-link">AI Ask Pipeline (RAG) <span class="diagram-badge">§2.2</span></a></li>
+        <li><a href="#diagram-persona-resolve" class="nav-link">Persona & Tier Resolution <span class="diagram-badge">§5.2</span></a></li>
+        <li><a href="#diagram-chat-state" class="nav-link">Chat Engine & Answer Lifecycle <span class="diagram-badge">§6.1</span></a></li>
+        <li><a href="#diagram-publish-steps" class="nav-link">7-Step Publishing Workflow <span class="diagram-badge">§8.3</span></a></li>
+        <li><a href="#diagram-auth-flows" class="nav-link">Admin Auth & Access Gating <span class="diagram-badge">§9</span></a></li>
+        <li><a href="#diagram-db-migrations" class="nav-link">Database Migration Pipeline <span class="diagram-badge">§10.1</span></a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="nav-group-title">Guide Sections</div>
+      <ul class="nav-list" id="sections-nav-list">
+        <li><a href="#1-executive-overview--core-philosophy" class="nav-link">1. Overview & Philosophy</a></li>
+        <li><a href="#2-high-level-architecture-diagrams" class="nav-link">2. Architecture Diagrams</a></li>
+        <li><a href="#3-technology-stack" class="nav-link">3. Technology Stack</a></li>
+        <li><a href="#4-core-mental-model--concepts" class="nav-link">4. Mental Model & Concepts</a></li>
+        <li><a href="#5-request-lifecycle--routing-architecture" class="nav-link">5. Request & Routing</a></li>
+        <li><a href="#6-the-chat-engine--client-side-runtime" class="nav-link">6. Chat Engine Runtime</a></li>
+        <li><a href="#7-the-ai-brain-pipeline" class="nav-link">7. AI Brain Pipeline</a></li>
+        <li><a href="#8-multi-persona-system--persona-studio" class="nav-link">8. Multi-Persona Studio</a></li>
+        <li><a href="#9-authentication-access-codes--security-model" class="nav-link">9. Auth & Access Security</a></li>
+        <li><a href="#10-database-architecture--migrations" class="nav-link">10. Database Architecture</a></li>
+        <li><a href="#11-directory--module-reference-map" class="nav-link">11. Directory Map</a></li>
+        <li><a href="#12-developer-workflows--operations" class="nav-link">12. Developer Operations</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main id="main-content">
+    <div class="top-banner">
+      <div class="top-banner-text">
+        <h3>High-Contrast Interactive Architecture Documentation</h3>
+        <p>Vibrant colors, bold borders, and pure white text. Scroll to zoom, drag to pan, or click ⛶ for full-screen mode.</p>
+      </div>
+      <span class="badge-interactive">High Contrast Mode</span>
+    </div>
+
+    <!-- Rendered Markdown Body -->
+    <article id="markdown-body"></article>
+  </main>
+
+  <script>
+    // Theme Switcher Logic
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        themeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const palette = btn.getAttribute('data-palette');
+        document.documentElement.setAttribute('data-theme', palette);
+      });
+    });
+
+    // Initialize Mermaid with high contrast settings
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        darkMode: true,
+        background: '#090f1d',
+        primaryColor: '#0d172c',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#38bdf8',
+        secondaryColor: '#1e1338',
+        secondaryTextColor: '#ffffff',
+        secondaryBorderColor: '#c084fc',
+        tertiaryColor: '#04251e',
+        tertiaryTextColor: '#ffffff',
+        tertiaryBorderColor: '#34d399',
+        noteBkgColor: '#152037',
+        noteTextColor: '#ffffff',
+        noteBorderColor: '#38bdf8',
+        clusterBkg: 'rgba(13, 23, 44, 0.85)',
+        clusterBorder: '#64748b',
+        titleColor: '#38bdf8',
+        edgeLabelBackground: '#070d1a',
+        actorTextColor: '#ffffff',
+        signalColor: '#38bdf8',
+        signalTextColor: '#ffffff',
+        labelBoxBkgColor: '#070d1a',
+        labelTextColor: '#ffffff',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: '15px'
+      },
+      flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    // Fetch and render doc.md
+    async function loadDocumentation() {
+      const markdownContainer = document.getElementById('markdown-body');
+      let markdownText = '';
+
+      try {
+        const response = await fetch('./doc.md');
+        if (!response.ok) throw new Error('Network error');
+        markdownText = await response.text();
+      } catch (err) {
+        try {
+          const resp2 = await fetch('/doc.md');
+          if (resp2.ok) {
+            markdownText = await resp2.text();
+          } else {
+            throw new Error('Not found at root');
+          }
+        } catch (e) {
+          console.warn('Could not fetch doc.md via HTTP:', e);
+          markdownContainer.innerHTML = '<p style="color:#ef4444;padding:2rem;">Error loading doc.md. Please ensure doc.md is accessible.</p>';
+          return;
+        }
+      }
+
+      // Pre-process markdown to extract mermaid diagrams and replace with interactive wrappers
+      const diagramMatches = [];
+      let diagramIndex = 0;
+
+      const diagramAnchorNames = [
+        'diagram-visitor-path',
+        'diagram-admin-path',
+        'diagram-ai-pipeline',
+        'diagram-persona-resolve',
+        'diagram-chat-state',
+        'diagram-publish-steps',
+        'diagram-auth-flows',
+        'diagram-db-migrations'
+      ];
+
+      const processedMarkdown = markdownText.replace(/```mermaid([\s\S]*?)```/g, (match, mermaidCode) => {
+        const anchorId = diagramAnchorNames[diagramIndex] || `diagram-${diagramIndex}`;
+        const placeholder = `<div id="${anchorId}" class="diagram-placeholder" data-index="${diagramIndex}"></div>`;
+        diagramMatches.push({
+          index: diagramIndex,
+          code: mermaidCode.trim(),
+          anchorId: anchorId
+        });
+        diagramIndex++;
+        return placeholder;
+      });
+
+      // Parse markdown to HTML
+      markdownContainer.innerHTML = marked.parse(processedMarkdown);
+
+      // Render each mermaid diagram into its interactive viewport
+      for (const item of diagramMatches) {
+        const placeholder = document.querySelector(`.diagram-placeholder[data-index="${item.index}"]`);
+        if (!placeholder) continue;
+
+        const viewport = document.createElement('div');
+        viewport.className = 'diagram-viewport';
+        viewport.id = `viewport-${item.index}`;
+
+        viewport.innerHTML = `
+          <div class="diagram-toolbar">
+            <button class="diagram-btn btn-zoom-in" title="Zoom In">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              <span>+</span>
+            </button>
+            <button class="diagram-btn btn-zoom-out" title="Zoom Out">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              <span>-</span>
+            </button>
+            <button class="diagram-btn btn-reset" title="Reset Zoom">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="diagram-btn btn-fullscreen" title="Toggle Fullscreen">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+              <span>Fullscreen</span>
+            </button>
+            <button class="diagram-btn btn-svg" title="Download SVG">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>SVG</span>
+            </button>
+            <button class="diagram-btn btn-copy" title="Copy Mermaid Code">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="diagram-hint">
+            <span>🖱️ Scroll to Zoom • Drag to Pan</span>
+            <span class="zoom-level-badge">100%</span>
+          </div>
+          <div class="diagram-canvas"></div>
+        `;
+
+        placeholder.replaceWith(viewport);
+
+        try {
+          const id = `mermaid-svg-${item.index}`;
+          const { svg } = await mermaid.render(id, item.code);
+          const canvas = viewport.querySelector('.diagram-canvas');
+          canvas.innerHTML = svg;
+
+          const svgElem = canvas.querySelector('svg');
+          if (svgElem) {
+            setupPanZoom(viewport, canvas, svgElem, item.code);
+          }
+        } catch (err) {
+          console.error(`Error rendering diagram ${item.index}:`, err);
+          viewport.querySelector('.diagram-canvas').innerHTML = `<p style="color:#ef4444;padding:1rem;">Diagram syntax error: ${err.message}</p>`;
+        }
+      }
+
+      setupFilter();
+    }
+
+    // Interactive Pan & Zoom Controller
+    function setupPanZoom(viewport, canvas, svg, rawCode) {
+      let scale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let isPanning = false;
+      let startX = 0;
+      let startY = 0;
+
+      const zoomBadge = viewport.querySelector('.zoom-level-badge');
+      const btnZoomIn = viewport.querySelector('.btn-zoom-in');
+      const btnZoomOut = viewport.querySelector('.btn-zoom-out');
+      const btnReset = viewport.querySelector('.btn-reset');
+      const btnFullscreen = viewport.querySelector('.btn-fullscreen');
+      const btnSvg = viewport.querySelector('.btn-svg');
+      const btnCopy = viewport.querySelector('.btn-copy');
+
+      svg.style.transformOrigin = 'center center';
+      svg.style.transition = 'transform 0.05s ease-out';
+
+      function updateTransform() {
+        svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        if (zoomBadge) {
+          zoomBadge.textContent = `${Math.round(scale * 100)}%`;
+        }
+      }
+
+      // Wheel Zoom
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - rect.width / 2;
+        const mouseY = e.clientY - rect.top - rect.height / 2;
+
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+        const nextScale = Math.min(Math.max(scale * zoomFactor, 0.2), 8.0);
+
+        translateX -= (mouseX - translateX) * (nextScale / scale - 1) * 0.3;
+        translateY -= (mouseY - translateY) * (nextScale / scale - 1) * 0.3;
+
+        scale = nextScale;
+        updateTransform();
+      }, { passive: false });
+
+      // Mouse Drag to Pan
+      canvas.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.diagram-toolbar')) return;
+        isPanning = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        svg.style.transition = 'none';
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isPanning) {
+          isPanning = false;
+          svg.style.transition = 'transform 0.05s ease-out';
+        }
+      });
+
+      // Touch Pan and Pinch-to-Zoom
+      let initialDistance = 0;
+      let initialScale = 1;
+
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          isPanning = true;
+          startX = e.touches[0].clientX - translateX;
+          startY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 2) {
+          isPanning = false;
+          initialDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          initialScale = scale;
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isPanning) {
+          translateX = e.touches[0].clientX - startX;
+          translateY = e.touches[0].clientY - startY;
+          updateTransform();
+        } else if (e.touches.length === 2) {
+          const currentDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          if (initialDistance > 0) {
+            scale = Math.min(Math.max((currentDistance / initialDistance) * initialScale, 0.2), 8.0);
+            updateTransform();
+          }
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchend', () => {
+        isPanning = false;
+        initialDistance = 0;
+      });
+
+      // Buttons
+      btnZoomIn.addEventListener('click', () => {
+        scale = Math.min(scale * 1.3, 8.0);
+        updateTransform();
+      });
+
+      btnZoomOut.addEventListener('click', () => {
+        scale = Math.max(scale / 1.3, 0.2);
+        updateTransform();
+      });
+
+      btnReset.addEventListener('click', () => {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+      });
+
+      btnFullscreen.addEventListener('click', () => {
+        viewport.classList.toggle('fullscreen');
+        if (viewport.classList.contains('fullscreen')) {
+          btnFullscreen.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Exit Fullscreen</span>
+          `;
+          document.body.style.overflow = 'hidden';
+        } else {
+          btnFullscreen.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>Fullscreen</span>
+          `;
+          document.body.style.overflow = '';
+        }
+      });
+
+      btnSvg.addEventListener('click', () => {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = svgUrl;
+        downloadLink.download = `architecture-diagram.svg`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      });
+
+      btnCopy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(rawCode);
+          btnCopy.querySelector('span').textContent = 'Copied!';
+          setTimeout(() => {
+            btnCopy.querySelector('span').textContent = 'Copy';
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
+      });
+    }
+
+    function setupFilter() {
+      const filterInput = document.getElementById('filter-input');
+      filterInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+          const text = link.textContent.toLowerCase();
+          const li = link.closest('li');
+          if (text.includes(query)) {
+            li.style.display = '';
+          } else {
+            li.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadDocumentation);
+  </script>
+</body>
+</html>
