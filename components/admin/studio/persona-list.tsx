@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, ChevronRight, Inbox, LoaderCircle, Plus, Settings, UserRound } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-provider";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn, withBase } from "@/lib/utils";
 import { adminFetch } from "./api";
 import { SelectInput, TextInput } from "./controls";
@@ -49,6 +50,7 @@ export function PersonaList({ personas, noDatabase }: { personas: Summary[]; noD
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-4xl items-center gap-3 px-4 md:px-6">
+          <SidebarTrigger className="shrink-0" />
           <a href={withBase("/admin/")} className="icon-btn shrink-0" aria-label="Back to the inbox">
             <ArrowLeft className="size-5" />
           </a>

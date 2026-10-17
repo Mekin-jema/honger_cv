@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { ArrowLeft, KeyRound, LaptopMinimal, LoaderCircle, LogOut, ShieldAlert, ShieldCheck, Smartphone, UserRoundPen } from "lucide-react";
 import { FieldError, SendError, errProps, field, label } from "@/components/blocks/forms";
 import { ThemeToggle } from "@/components/theme-provider";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getAuthClient } from "@/lib/auth-client";
 import { cn, withBase } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export function AdminSettings({ email, currentSessionId, staticCode, mailProvide
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-3xl items-center gap-3 px-4 md:px-6">
+          <SidebarTrigger className="shrink-0" />
           <a href={withBase("/admin/")} className="icon-btn shrink-0" aria-label="Back to the admin">
             <ArrowLeft className="size-5" />
           </a>
