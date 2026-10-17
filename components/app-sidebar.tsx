@@ -43,7 +43,7 @@ export function AppSidebar({
 }: ComponentProps<typeof Sidebar> & { isAdmin: boolean }) {
   const persona = usePersona()
   const pathname = usePathname().replace(/\/+$/, "") || "/"
-  const documentPath = persona.document.pageUrl
+  const documentPath = persona.legacy ? "/cv/" : persona.document.pageUrl
 
   const linkItem = (title: string, href: string, icon: ReactNode) => {
     const target = href.split("#", 1)[0].replace(/\/+$/, "") || "/"

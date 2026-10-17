@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download } from "lucide-react";
-import { CvSheet } from "@/components/document/cv-sheet";
 import { otherPersonaMetadata, otherPersonaPage } from "@/components/site/other-persona";
 import { PersonaShell } from "@/components/site/persona-shell";
 import { cv as codeCv } from "@/content/cv";
@@ -10,9 +7,8 @@ import { profile } from "@/content/profile";
 import { readCv } from "@/lib/persona/cv";
 import { describe } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
-import { withBase } from "@/lib/utils";
 import { currentPersona } from "@/server/persona/resolve";
-import { PrintButton } from "./print-button";
+import { CvStudio } from "./cv-studio";
 
 const cvTitle = `CV - ${profile.name}`;
 
@@ -48,26 +44,5 @@ export default async function CvPage() {
   // The published CV (edited in the Studio), else the code content.
   const cv = readCv(p.compiled.doc.document.data, codeCv);
 
-  return (
-    <div className="cv-root">
-      <nav aria-label="CV actions" className="cv-toolbar no-print">
-        {/* Phones get short labels (full names stay in aria-label), so the pills never wrap. */}
-        <Link href="/" className="cv-tool" aria-label="Back to chat">
-          <ArrowLeft className="size-4" aria-hidden="true" /> <span className="cv-tool-long">Back to chat</span>
-          <span className="cv-tool-short">Chat</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <PrintButton />
-          <a href={withBase(profile.cvPdf)} download className="cv-tool cv-tool-primary" aria-label="Download PDF">
-            <Download className="size-4" aria-hidden="true" /> <span className="cv-tool-long">Download PDF</span>
-            <span className="cv-tool-short">PDF</span>
-          </a>
-        </div>
-      </nav>
-
-      <main>
-        <CvSheet cv={cv} />
-      </main>
-    </div>
-  );
+  return <CvStudio cv={cv} />;
 }
