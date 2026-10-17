@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Github } from "@/components/brand-icons";
 import { Breadcrumbs, JsonLd } from "@/components/site/site-shell";
@@ -46,6 +47,13 @@ export default async function ProjectPage(props: Props) {
 
       <article>
         <header className="mb-10">
+          <Image
+            src={`/og/${p.id}.png`}
+            alt={`${p.name} project cover`}
+            width={1200}
+            height={630}
+            className="mb-8 aspect-[1.91/1] w-full rounded-2xl border border-line object-cover"
+          />
           <p className="eyebrow">
             {p.kind} · {p.year}
           </p>

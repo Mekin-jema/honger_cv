@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { IntentLink } from "@/components/chat/intent-link";
 import { useState } from "react";
 import {
@@ -95,7 +96,7 @@ function useCopy() {
 const Tags = ({ items, className }: { items: readonly string[]; className?: string }) => (
   <ul className={cn("flex flex-wrap gap-1.5", className)}>
     {items.map((s) => (
-      <li key={s} className="tag">
+      <li key={s} className="inline-flex items-center rounded-full border border-line-strong bg-bg-soft px-2.5 py-1 text-xs font-semibold text-fg">
         {s}
       </li>
     ))}
@@ -203,6 +204,13 @@ function ProjectGrid({ onAsk }: { onAsk: Ask }) {
           data-gs="row"
           className="card group flex w-full items-start gap-4 p-5 text-left transition-colors hover:border-surface-strong hover:bg-bg-soft md:p-6"
         >
+          <Image
+            src={`/og/${p.id}.png`}
+            alt={`${p.name} project cover`}
+            width={1200}
+            height={630}
+            className="h-16 w-24 shrink-0 rounded-lg border border-line object-cover sm:h-20 sm:w-32"
+          />
           <div className="min-w-0 flex-1">
             <div className="eyebrow flex flex-wrap items-center gap-x-2">
               <span className={cn(p.kind === "Open source" && "text-accent")}>{p.kind}</span>
@@ -230,6 +238,13 @@ function ProjectDetail({ id }: { id: string }) {
   if (!p) return null;
   return (
     <article className="card overflow-hidden">
+      <Image
+        src={`/og/${p.id}.png`}
+        alt={`${p.name} project cover`}
+        width={1200}
+        height={630}
+        className="aspect-[1.91/1] w-full border-b border-line object-cover"
+      />
       <header className="border-b border-line bg-bg-soft p-5 md:p-6">
         <div className="eyebrow">
           {p.kind} · {p.year}

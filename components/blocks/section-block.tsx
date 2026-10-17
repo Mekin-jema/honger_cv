@@ -46,7 +46,7 @@ export function SectionBody({ s }: { s: ClientSection }) {
 const Tags = ({ items, className }: { items: string[]; className?: string }) => (
   <ul className={cn("flex flex-wrap gap-1.5", className)}>
     {items.map((t) => (
-      <li key={t} className="tag">
+      <li key={t} className="inline-flex items-center rounded-full border border-line-strong bg-bg-soft px-2.5 py-1 text-xs font-semibold text-fg">
         {t}
       </li>
     ))}

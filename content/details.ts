@@ -10,7 +10,7 @@ export const skills: { group: string; items: string[] }[] = [
   },
   {
     group: "AI & LLM",
-    items: ["LangChain", "LangGraph", "RAG", "AI Agents", "OpenAI APIs", "MCP", "OpenSearch", "Vector search", "Research automation"],
+    items: ["LangChain", "LangGraph", "RAG", "AI Agents", "OpenAI APIs", "OpenRouter", "MCP", "OpenSearch", "Vector search", "Research automation"],
   },
   {
     group: "Data",

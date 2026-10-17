@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { Breadcrumbs, JsonLd, PageHead } from "@/components/site/site-shell";
 import { profile } from "@/content/profile";
@@ -40,18 +41,27 @@ export default async function ProjectsPage() {
       <ul className="space-y-4">
         {projects.map((p) => (
           <li key={p.id}>
-            <article className="card group relative p-5 transition-colors hover:bg-bg-soft md:p-6">
-              <p className="eyebrow">
-                {p.kind} · {p.year}
-              </p>
-              <h2 className="display mt-2 text-2xl">
-                <Link href={`/projects/${p.id}/`} className="after:absolute after:inset-0 after:rounded-[inherit]">
-                  {p.name}
-                </Link>
-              </h2>
-              <p className="mt-2 leading-relaxed text-muted">{p.tagline}</p>
-              <p className="mt-3 text-sm text-muted">{p.numbers.slice(0, 3).join(" · ")}</p>
-              <ArrowUpRight className="absolute top-5 right-5 size-5 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+            <article className="card group relative overflow-hidden transition-colors hover:bg-bg-soft">
+              <Image
+                src={`/og/${p.id}.png`}
+                alt={`${p.name} project cover`}
+                width={1200}
+                height={630}
+                className="aspect-[1.91/1] w-full border-b border-line object-cover"
+              />
+              <div className="relative p-5 md:p-6">
+                <p className="eyebrow">
+                  {p.kind} · {p.year}
+                </p>
+                <h2 className="display mt-2 text-2xl">
+                  <Link href={`/projects/${p.id}/`} className="after:absolute after:inset-0 after:rounded-[inherit]">
+                    {p.name}
+                  </Link>
+                </h2>
+                <p className="mt-2 leading-relaxed text-muted">{p.tagline}</p>
+                <p className="mt-3 text-sm text-muted">{p.numbers.slice(0, 3).join(" · ")}</p>
+                <ArrowUpRight className="absolute top-5 right-5 size-5 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+              </div>
             </article>
           </li>
         ))}
