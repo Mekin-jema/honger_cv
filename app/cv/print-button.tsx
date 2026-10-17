@@ -8,7 +8,7 @@ export function PrintButton({ label = "Print" }: { label?: string }) {
       type="button"
       onClick={() => window.print()}
       className="cv-tool"
-      title="In the print dialog, choose Save as PDF."
+      title="In the print dialog, choose Save as PDF to download the selected layout and color."
     >
       <Printer className="size-4" aria-hidden="true" /> {label}
     </button>

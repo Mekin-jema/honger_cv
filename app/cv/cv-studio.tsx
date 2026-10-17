@@ -31,23 +31,33 @@ const palettes = [
 
 export function CvStudio({ cv }: { cv: CvData }) {
   const [template, setTemplate] = useState<(typeof templates)[number]["id"]>("modern");
-  const [palette, setPalette] = useState<(typeof palettes)[number]["id"]>("terracotta");
+  const [accentColor, setAccentColor] = useState<string>(palettes[1].color);
   const selectedTemplate = templates.find((item) => item.id === template) ?? templates[0];
-  const selectedPalette = palettes.find((item) => item.id === palette) ?? palettes[0];
+  const selectedPalette = palettes.find((item) => item.color === accentColor);
 
   return (
-    <div className="cv-root" data-template={template} data-color={palette}>
+    <div
+      className="cv-root"
+      data-template={template}
+      data-color={selectedPalette?.id ?? "custom"}
+      style={
+        {
+          "--cv-accent": accentColor,
+          "--cv-line": `color-mix(in srgb, ${accentColor} 25%, #fff)`,
+        } as CSSProperties
+      }
+    >
       <nav aria-label="CV actions" className="cv-toolbar no-print">
         <div className="cv-toolbar-navigation">
           <SidebarTrigger className="cv-tool cv-sidebar-toggle" />
         </div>
         <div className="cv-toolbar-actions">
-          <PrintButton label="Save as PDF" />
+          <PrintButton label="Save selected PDF" />
           <a
             href={withBase(profile.cvPdf)}
             download
             className="cv-tool cv-tool-primary"
-            aria-label="Download the original CV PDF"
+            aria-label="Download the original CV PDF without the selected design or color"
           >
             <Download className="size-4" aria-hidden="true" />
             <span>Original PDF</span>
@@ -70,14 +80,24 @@ export function CvStudio({ cv }: { cv: CvData }) {
                 <button
                   key={item.id}
                   type="button"
-                  className={`cv-color-swatch${palette === item.id ? " is-selected" : ""}`}
+                  className={`cv-color-swatch${accentColor === item.color ? " is-selected" : ""}`}
                   style={{ "--swatch-color": item.color } as CSSProperties}
                   aria-label={`${item.name} color`}
-                  aria-pressed={palette === item.id}
+                  aria-pressed={accentColor === item.color}
                   title={item.name}
-                  onClick={() => setPalette(item.id)}
+                  onClick={() => setAccentColor(item.color)}
                 />
               ))}
+              <label className="cv-custom-color">
+                <input
+                  type="color"
+                  value={accentColor}
+                  aria-label="Choose any custom accent color"
+                  title="Choose any custom accent color"
+                  onChange={(event) => setAccentColor(event.target.value)}
+                />
+                <span>Custom</span>
+              </label>
             </div>
           </fieldset>
         </div>
@@ -129,7 +149,9 @@ export function CvStudio({ cv }: { cv: CvData }) {
           <div className="cv-preview-heading no-print">
             <div>
               <h2>Live preview</h2>
-              <p>{selectedTemplate.name} design · {selectedPalette.name} accent · Updates as you choose</p>
+              <p>
+                {selectedTemplate.name} design · {selectedPalette?.name ?? accentColor.toUpperCase()} accent · Updates as you choose
+              </p>
             </div>
             <span className="cv-preview-status"><span aria-hidden="true" /> Ready to save</span>
           </div>
