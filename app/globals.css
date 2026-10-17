@@ -463,6 +463,21 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+.suggestion-chip {
+  border-color: var(--line-strong);
+  background-color: var(--card);
+  color: var(--fg);
+}
+.suggestion-chip svg {
+  color: var(--accent);
+  opacity: 1;
+}
+.suggestion-chip:hover {
+  border-color: var(--accent);
+  background-color: var(--surface);
+  color: var(--fg);
+}
+
 /* ---------- Thinking shimmer ---------- */
 .shimmer {
   background: linear-gradient(90deg, var(--faint) 0%, var(--fg) 45%, var(--faint) 90%);

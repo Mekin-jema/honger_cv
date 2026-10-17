@@ -25,8 +25,8 @@ type Props = {
 export function SuggestionChips({ ids, intents, onPick, wrap, center, compact, onMore, className }: Props) {
   const persona = usePersona();
   const list = intents ?? (ids ?? []).map((id) => persona.get(id)).filter((i): i is Question => !!i && i.id !== "fallback");
-  const chip = compact ? "chip chip-sm" : "chip";
-  const icon = compact ? "size-3.5 text-faint" : "size-4 text-faint";
+  const chip = compact ? "chip chip-sm suggestion-chip" : "chip suggestion-chip";
+  const icon = compact ? "size-3.5" : "size-4";
   const items = (
     <>
       {list.map((i) => (

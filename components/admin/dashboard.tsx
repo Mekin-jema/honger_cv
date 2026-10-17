@@ -379,6 +379,23 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 py-5 md:px-6 md:py-6">
+        <section className="relative isolate overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-card via-card to-accent-soft/55 p-5 md:flex md:items-center md:justify-between md:gap-6 md:p-6">
+          <span aria-hidden="true" className="absolute -right-8 -top-16 -z-10 size-48 rounded-full bg-accent/10 blur-3xl" />
+          <div>
+            <p className="eyebrow">Admin workspace</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Your inbox, in focus</h2>
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted">
+              Review conversations, feedback, and visitor activity from one place.
+            </p>
+          </div>
+          <div className="mt-4 flex w-fit items-center gap-2 rounded-xl border border-line bg-bg/75 px-3.5 py-2.5 text-sm font-medium text-muted md:mt-0">
+            <span className={cn("relative grid size-2 place-items-center rounded-full", items.length ? "bg-emerald-500" : "bg-faint")}>
+              {items.length > 0 && <span className="absolute size-2 animate-ping rounded-full bg-emerald-500/50" />}
+            </span>
+            {items.length ? `${items.length} inbox ${items.length === 1 ? "item" : "items"}` : "Inbox is ready"}
+          </div>
+        </section>
+
         {/* Stats */}
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard icon={MessageSquareText} tone="text-sky-700 dark:text-sky-400 bg-sky-500/12" label="Messages" value={db.contacts.length} hint={db.contacts.length ? `Latest ${ago(db.contacts.at(-1)!.createdAt, now)}` : "None yet"} />
@@ -420,66 +437,61 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
         </ul>
 
         {/* Toolbar */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="space-y-3">
           {/* A filter group (toggle buttons), not tabs: one Tab stop each, Enter/Space selects. */}
           {/* The frame holds the border, so the edge fade only touches the tabs, never the outline. */}
-          <div className="min-w-0 overflow-hidden rounded-xl border border-line bg-card">
-          <div ref={tabStripRef} role="group" aria-label="Filter" className="tab-strip no-scrollbar flex gap-1 overflow-x-auto p-1">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                aria-pressed={tab === t.id}
-                onClick={(e) => {
-                  // Bring the chosen filter fully into view (clear of the edge fade) on narrow screens.
-                  e.currentTarget.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
-                  setTab(t.id);
-                  setSelected(null);
-                  openerRef.current = null;
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm pointer-coarse:min-h-11 font-semibold whitespace-nowrap text-muted transition-colors hover:text-fg",
-                  tab === t.id && "bg-surface text-fg shadow-sm",
-                )}
-              >
-                {t.label}
-                <span className={cn("rounded-md px-1.5 text-xs tabular-nums", tab === t.id ? "bg-card text-fg" : "bg-surface text-muted")}>{t.count}</span>
-              </button>
-            ))}
-          </div>
-          </div>
-          {personas.length > 1 && (
-            <div className="flex items-center gap-2 text-sm font-semibold md:ml-auto">
-              <label htmlFor="inbox-persona" className="text-muted">
-                Persona
-              </label>
-              <select
-                id="inbox-persona"
-                value={persona ?? ""}
-                onChange={(e) => window.location.assign(withBase(e.target.value ? `/admin/?persona=${encodeURIComponent(e.target.value)}` : "/admin/"))}
-                className="rounded-xl border border-line-strong bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-accent pointer-coarse:min-h-11"
-              >
-                <option value="">All</option>
-                {personas.map((p) => (
-                  <option key={p.slug} value={p.slug}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+          <div className="min-w-0 overflow-hidden rounded-2xl border border-line bg-card p-1 shadow-sm">
+            <div ref={tabStripRef} role="group" aria-label="Filter" className="tab-strip no-scrollbar flex gap-1 overflow-x-auto p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  aria-pressed={tab === t.id}
+                  onClick={(e) => {
+                    e.currentTarget.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
+                    setTab(t.id);
+                    setSelected(null);
+                    openerRef.current = null;
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap text-muted transition-colors hover:bg-bg-soft hover:text-fg pointer-coarse:min-h-11",
+                    tab === t.id && "bg-surface text-fg shadow-sm",
+                  )}
+                >
+                  {t.label}
+                  <span className={cn("rounded-md px-1.5 py-0.5 text-xs tabular-nums", tab === t.id ? "bg-card text-fg" : "bg-bg-soft text-muted")}>{t.count}</span>
+                </button>
+              ))}
             </div>
-          )}
-          <label className={cn("relative md:w-80", personas.length > 1 ? "" : "md:ml-auto")}>
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-faint" />
-            <input
-              ref={searchRef}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search people, emails, messages…"
-              aria-label="Search"
-              className="w-full rounded-xl border border-line-strong bg-card py-2.5 pr-10 pl-10 text-sm outline-none pointer-coarse:min-h-11 transition-[border-color,box-shadow] placeholder:text-faint focus:border-accent focus:ring-1 focus:ring-accent"
-            />
-            <kbd className="absolute top-1/2 right-3 -translate-y-1/2 rounded border border-line px-1.5 font-mono text-[11px] text-faint">/</kbd>
-          </label>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            {personas.length > 1 && (
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <label htmlFor="inbox-persona" className="text-muted">Persona</label>
+                <select
+                  id="inbox-persona"
+                  value={persona ?? ""}
+                  onChange={(e) => window.location.assign(withBase(e.target.value ? `/admin/?persona=${encodeURIComponent(e.target.value)}` : "/admin/"))}
+                  className="rounded-xl border border-line-strong bg-card px-3 py-2.5 text-sm font-medium outline-none focus:border-accent pointer-coarse:min-h-11"
+                >
+                  <option value="">All</option>
+                  {personas.map((p) => <option key={p.slug} value={p.slug}>{p.name}</option>)}
+                </select>
+              </div>
+            )}
+            <label className={cn("relative w-full sm:ml-auto sm:max-w-md", personas.length > 1 ? "" : "sm:ml-auto")}>
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-faint" />
+              <input
+                ref={searchRef}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search people, emails, messages…"
+                aria-label="Search"
+                className="w-full rounded-xl border border-line-strong bg-card py-2.5 pr-10 pl-10 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-faint focus:border-accent focus:ring-1 focus:ring-accent pointer-coarse:min-h-11"
+              />
+              <kbd className="absolute top-1/2 right-3 -translate-y-1/2 rounded border border-line px-1.5 font-mono text-[11px] text-faint">/</kbd>
+            </label>
+          </div>
         </div>
 
         {tab === "analytics" ? (
@@ -488,9 +500,18 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
           </div>
         ) : (
         /* Two panes */
-        <div className="grid min-h-[28rem] flex-1 grid-cols-[minmax(0,1fr)] overflow-hidden rounded-2xl border border-line bg-card lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
+        <div className="grid min-h-[30rem] flex-1 grid-cols-[minmax(0,1fr)] overflow-hidden rounded-3xl border border-line bg-card shadow-sm lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
           {/* List */}
           <div className={cn("min-h-0 min-w-0 border-line lg:border-r", hasDetail && "hidden lg:block")}>
+            <div className="flex items-center justify-between gap-3 border-b border-line bg-bg-soft/55 px-4 py-3.5 md:px-5">
+              <div>
+                <h2 className="text-sm font-semibold">{tab === "visitors" ? "Visitor activity" : tab === "ai" ? "AI answers" : "Activity feed"}</h2>
+                <p className="mt-0.5 text-xs text-muted">{tab === "visitors" ? "Recent visitor sessions" : "Latest messages, feedback, and votes"}</p>
+              </div>
+              <span className="rounded-full border border-line bg-card px-2.5 py-1 text-xs font-semibold tabular-nums text-muted">
+                {tab === "visitors" ? listVisitors.length : tab === "ai" ? db.aiAnswers.length : listItems.length}
+              </span>
+            </div>
             {tab === "votes" ? (
               <VotesTable db={db} labels={labels} query={needle} />
             ) : tab === "ai" ? (
@@ -587,15 +608,17 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
 
 function StatCard({ icon: Icon, tone, label, value, hint }: { icon: React.ComponentType<{ className?: string }>; tone: string; label: string; value: React.ReactNode; hint: React.ReactNode }) {
   return (
-    <li className="card flex flex-col gap-3 p-4 md:p-5">
+    <li className="card group relative flex min-h-36 flex-col gap-3 overflow-hidden p-4 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-md md:min-h-40 md:p-5">
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-accent/80 via-accent/30 to-transparent" />
+      <span aria-hidden="true" className="absolute -right-8 -top-8 size-24 rounded-full bg-accent/5 blur-2xl transition-colors group-hover:bg-accent/10" />
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted">{label}</span>
-        <span className={cn("grid size-8 place-items-center rounded-lg", tone)}>
-          <Icon className="size-4" />
+        <span className={cn("grid size-9 place-items-center rounded-xl ring-1 ring-black/5 dark:ring-white/5", tone)}>
+          <Icon className="size-[18px]" />
         </span>
       </div>
-      <div className="display text-3xl tabular-nums md:text-[2rem]">{value}</div>
-      <div className="text-xs text-muted">{hint}</div>
+      <div className="display text-3xl tabular-nums md:text-[2.15rem]">{value}</div>
+      <div className="mt-auto text-xs leading-relaxed text-muted">{hint}</div>
     </li>
   );
 }
@@ -721,7 +744,7 @@ function Detail({ item, visitor, now, backRef, onBack, onPick }: { item?: Item; 
             {visitor.asked.length > 0 && (
               <ul className="mt-3 flex flex-wrap gap-1.5">
                 {[...new Set(visitor.asked)].map((q) => (
-                  <li key={q} className="tag">
+                  <li key={q} className="inline-flex items-center rounded-full border border-line-strong bg-bg-soft px-2.5 py-1 text-xs font-medium leading-relaxed text-fg">
                     {q}
                   </li>
                 ))}

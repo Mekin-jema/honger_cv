@@ -5,12 +5,11 @@ import { usePathname } from "next/navigation"
 import type { ComponentProps, ReactNode } from "react"
 import {
   BriefcaseBusiness,
+  BrainCircuit,
   Gauge,
   FileText,
   FolderKanban,
-  House,
   Mail,
-  MessageSquareText,
   Shield,
   UserRound,
   Wrench,
@@ -29,8 +28,8 @@ import {
 import { usePersona } from "@/lib/persona/context"
 
 const portfolioLinks = [
-  { title: "Dashboard", path: "/dashboard/", icon: Gauge },
-  { title: "Home", path: "/", icon: House },
+  { title: "Summary", path: "/dashboard/", icon: Gauge },
+  { title: "Ask AI", path: "/", icon: BrainCircuit },
   { title: "About", questionId: "about", icon: UserRound },
   { title: "Experience", questionId: "experience", icon: BriefcaseBusiness },
   { title: "Projects", questionId: "projects", icon: FolderKanban },
@@ -104,25 +103,8 @@ export function AppSidebar({
             )}
           </SidebarMenu>
         </SidebarGroup>
-        {persona.sidebar.map((group) => {
-          const topics = group.ids.flatMap((id) => {
-            const question = persona.get(id)
-            return question ? [{ id, label: question.label }] : []
-          })
-          if (!topics.length) return null
-          return (
-            <SidebarGroup key={group.title}>
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-              <SidebarMenu>
-                {topics.map(({ id, label }) =>
-                  linkItem(label, persona.askPath(id), <MessageSquareText />),
-                )}
-              </SidebarMenu>
-            </SidebarGroup>
-          )
-        })}
         {isAdmin && (
-          <SidebarGroup className="mt-auto">
+          <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarMenu>{linkItem("Admin", "/admin/", <Shield />)}</SidebarMenu>
           </SidebarGroup>
