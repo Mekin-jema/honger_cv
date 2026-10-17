@@ -3,11 +3,15 @@ import { ArrowUpRight, BriefcaseBusiness, FolderKanban, MapPin } from "lucide-re
 import { experience } from "@/content/experience"
 import { profile } from "@/content/profile"
 import { projects } from "@/content/projects"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export default function DashboardPage() {
   const featuredProjects = projects.slice(0, 3)
   return (
     <main className="mx-auto w-full max-w-6xl space-y-8 px-5 py-8 md:px-8">
+      <div className="flex justify-start">
+        <SidebarTrigger className="-ml-2" />
+      </div>
       <section className="rounded-2xl border bg-card p-6 shadow-sm md:p-8">
         <p className="eyebrow">Career overview</p>
         <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">

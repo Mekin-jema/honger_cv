@@ -19,20 +19,21 @@ export function AppShell({
   const routePath = pathname.replace(/\/+$/, "") || "/"
   const isChatPage = routePath === "/" || routePath.startsWith("/ask/")
   const isAdminInbox = routePath === "/admin"
+  const isDashboardPage = routePath === "/dashboard"
+  const isCvPage = routePath === "/cv"
   const isPersonaAdmin = routePath === "/admin/personas" || routePath.startsWith("/admin/personas/")
   const isAdminSettings = routePath === "/admin/settings"
-  const isCvPage = routePath === "/cv"
   const isPortfolioPage =
     ["/about", "/contact", "/experience", "/projects", "/skills"].includes(routePath) ||
     routePath.startsWith("/projects/")
 
-  if (isCvPage || isPortfolioPage) return <>{children}</>
+  if (isPortfolioPage) return <>{children}</>
 
   return (
     <SidebarProvider>
       <AppSidebar isAdmin={isAdmin} />
       <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-        {!isChatPage && !isAdminInbox && !isPersonaAdmin && !isAdminSettings && (
+        {!isChatPage && !isAdminInbox && !isDashboardPage && !isCvPage && !isPersonaAdmin && !isAdminSettings && (
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b bg-background/95 px-3 backdrop-blur">
             <SidebarTrigger />
           </header>
