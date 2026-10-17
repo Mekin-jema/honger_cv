@@ -787,12 +787,14 @@
 
 /* The design controls live in the toolbar so visitors can compare changes beside the preview. */
 .cv-toolbar {
-  max-width: 1200px;
+  width: calc(100% + 32px);
+  max-width: none;
   min-height: 62px;
+  margin: -24px -16px 24px;
   border: 1px solid #e2ded6;
-  border-radius: 14px;
+  border-radius: 0;
   background: #fffefa;
-  padding: 9px 12px;
+  padding: 9px 24px;
   box-shadow: 0 8px 30px -24px rgb(0 0 0 / 0.32);
 }
 .cv-toolbar-actions {
@@ -1076,6 +1078,8 @@
 @media (max-width: 880px) {
   .cv-toolbar {
     flex-wrap: wrap;
+    padding-right: 16px;
+    padding-left: 16px;
   }
 }
 @media (max-width: 640px) {
@@ -1252,6 +1256,24 @@
 .cv-template-art[data-template-art="compact"] .cv-art-lines {
   box-shadow: 0 4px 0 #e2ded7, 0 8px 0 #e2ded7;
 }
+.cv-template-art[data-template-art="navy-rail"] {
+  padding-left: 23px;
+  background: #1c3443;
+}
+.cv-template-art[data-template-art="navy-rail"] .cv-art-rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  width: 16px;
+  background: #1c3443;
+}
+.cv-template-art[data-template-art="navy-rail"] .cv-art-header,
+.cv-template-art[data-template-art="navy-rail"] .cv-art-section {
+  background: #f3f4f6;
+}
+.cv-template-art[data-template-art="navy-rail"] .cv-art-title {
+  background: #b8c4cc;
+}
 .cv-template-name {
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -1318,5 +1340,322 @@
     display: block;
     max-width: none;
     margin: 0;
+  }
+}
+
+/* A portrait-led profile rail, inspired by the supplied resume reference. */
+.cv-root[data-template="navy-rail"] .cv-sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  grid-template-areas:
+    "header experience"
+    "availability experience"
+    "profile experience"
+    "highlights education"
+    "languages skills"
+    "projects projects"
+    "references references";
+  gap: 0 7mm;
+  background: linear-gradient(90deg, #1c3443 0 42%, var(--cv-paper) 42% 100%);
+  padding: 14mm;
+}
+.cv-root[data-template="navy-rail"] .cv-header {
+  grid-area: header;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 8px 10px 12px;
+}
+.cv-root[data-template="navy-rail"] .cv-header > img {
+  order: 2;
+  align-self: center;
+  width: 25mm;
+  height: 25mm;
+  border: 2px solid rgb(255 255 255 / 0.75);
+}
+.cv-root[data-template="navy-rail"] .cv-header > div {
+  order: 1;
+  flex: none;
+  width: 100%;
+}
+.cv-root[data-template="navy-rail"] .cv-name {
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19pt;
+  letter-spacing: 0;
+}
+.cv-root[data-template="navy-rail"] .cv-title {
+  color: #e1e7eb;
+  font-size: 10pt;
+  font-weight: 500;
+}
+.cv-root[data-template="navy-rail"] .cv-contacts {
+  flex-direction: column;
+  gap: 5px;
+  color: #e5ebef;
+  font-size: 7.5pt;
+}
+.cv-root[data-template="navy-rail"] .cv-icon {
+  flex: 0 0 10px;
+  color: #c6d2d9;
+}
+.cv-root[data-template="navy-rail"] .cv-availability {
+  grid-area: availability;
+  margin: 2px 10px 0;
+  border-left-color: var(--cv-accent);
+  background: transparent;
+  padding: 7px 8px;
+  color: #fff;
+  font-size: 8pt;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1) {
+  grid-area: profile;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2) {
+  grid-area: highlights;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(3) {
+  grid-area: skills;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(4) {
+  grid-area: experience;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(5) {
+  grid-area: projects;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(6) {
+  grid-area: references;
+}
+.cv-root[data-template="navy-rail"] .cv-two {
+  display: contents;
+}
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:first-child {
+  grid-area: education;
+}
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child {
+  grid-area: languages;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1),
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2),
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child {
+  padding-right: 10px;
+  padding-left: 10px;
+  color: #f4f6f7;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1) .cv-h2,
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2) .cv-h2,
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child .cv-h2 {
+  border-bottom-color: rgb(255 255 255 / 0.28);
+  color: #fff;
+  text-align: center;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1) .cv-text,
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2) .cv-bullets,
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child .cv-langs li {
+  color: #e4e9ec;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2) .cv-bullets li::marker {
+  color: #c6d2d9;
+}
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child .cv-langs li span:last-child {
+  color: #c6d2d9;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(3),
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:first-child {
+  padding-left: 8px;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(4) {
+  padding-left: 10px;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(4) .cv-h2,
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(3) .cv-h2,
+.cv-root[data-template="navy-rail"] .cv-two > .cv-section:first-child .cv-h2 {
+  border: 0;
+  background: #e8e9e8;
+  padding: 4px 8px;
+  color: #293a46;
+}
+.cv-root[data-template="navy-rail"] .cv-date {
+  color: var(--cv-accent);
+}
+.cv-root[data-template="navy-rail"] .cv-projects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(5),
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(6) {
+  border-top: 1px solid var(--cv-line);
+  padding-top: 3px;
+}
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(5) .cv-h2,
+.cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(6) .cv-h2 {
+  border: 0;
+  color: var(--cv-accent);
+}
+@media (max-width: 640px) {
+  .cv-root[data-template="navy-rail"] .cv-sheet {
+    display: block;
+    background: var(--cv-paper);
+    padding: 22px 18px;
+  }
+  .cv-root[data-template="navy-rail"] .cv-header,
+  .cv-root[data-template="navy-rail"] .cv-availability,
+  .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1),
+  .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2),
+  .cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child {
+    background: #1c3443;
+    color: #f4f6f7;
+    padding: 12px;
+  }
+  .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1) .cv-h2,
+  .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2) .cv-h2,
+  .cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child .cv-h2 {
+    color: #fff;
+  }
+}
+@media print {
+  .cv-root[data-template="navy-rail"] .cv-sheet {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Keep the profile rail and main content in independent columns so long experience does not stretch the rail. */
+.cv-root[data-template="navy-rail"] .cv-sheet-navy-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  align-items: stretch;
+  gap: 0;
+  max-width: 210mm;
+  padding: 0;
+  background: var(--cv-paper);
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail {
+  min-width: 0;
+  background: #1c3443;
+  padding: 12mm 8mm;
+  color: #f4f6f7;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column {
+  min-width: 0;
+  padding: 12mm 10mm;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-header {
+  padding: 0 2mm 4mm;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-header > img {
+  order: 2;
+  align-self: center;
+  width: 25mm;
+  height: 25mm;
+  border: 2px solid rgb(255 255 255 / 0.75);
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-header > div {
+  order: 1;
+  flex: none;
+  width: 100%;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-name {
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19pt;
+  letter-spacing: 0;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-title {
+  color: #e1e7eb;
+  font-size: 10pt;
+  font-weight: 500;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-contacts {
+  flex-direction: column;
+  gap: 5px;
+  color: #e5ebef;
+  font-size: 7.5pt;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-icon {
+  flex: 0 0 10px;
+  color: #c6d2d9;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-availability {
+  margin: 2px 0 0;
+  border-left: 2px solid var(--cv-accent);
+  background: color-mix(in srgb, var(--cv-accent) 21%, #1c3443);
+  padding: 7px 8px;
+  color: #fff;
+  font-size: 8pt;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-section {
+  margin-top: 11px;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-h2 {
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--cv-accent) 70%, #fff);
+  background: color-mix(in srgb, var(--cv-accent) 21%, #1c3443);
+  padding: 4px 6px;
+  color: #fff;
+  text-align: center;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-text,
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-bullets,
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-langs li {
+  color: #f1f4f6;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-bullets li::marker {
+  color: #d4dee4;
+}
+.cv-root[data-template="navy-rail"] .cv-profile-rail .cv-langs li span:last-child {
+  color: #d4dee4;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column > .cv-section {
+  margin-top: 10px;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column > .cv-section:first-child {
+  margin-top: 0;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column .cv-h2 {
+  border: 0;
+  border-left: 3px solid var(--cv-accent);
+  background: color-mix(in srgb, var(--cv-accent) 12%, #fff);
+  padding: 4px 7px;
+  color: color-mix(in srgb, var(--cv-accent) 80%, #151719);
+}
+.cv-root[data-template="navy-rail"] .cv-main-column .cv-date {
+  color: var(--cv-accent);
+}
+.cv-root[data-template="navy-rail"] .cv-main-column .cv-projects {
+  display: block;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column > .cv-section:last-child {
+  border-top: 1px solid color-mix(in srgb, var(--cv-accent) 35%, #ddd7cb);
+  padding-top: 7px;
+}
+.cv-root[data-template="navy-rail"] .cv-main-column > .cv-section:last-child .cv-text {
+  color: #3d4145;
+}
+@media (max-width: 640px) {
+  .cv-root[data-template="navy-rail"] .cv-sheet-navy-rail {
+    display: block;
+    padding: 0;
+    background: var(--cv-paper);
+  }
+  .cv-root[data-template="navy-rail"] .cv-profile-rail {
+    padding: 22px 18px;
+  }
+  .cv-root[data-template="navy-rail"] .cv-main-column {
+    padding: 18px;
+  }
+}
+@media print {
+  .cv-root[data-template="navy-rail"] .cv-sheet-navy-rail {
+    max-width: none;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cv-root[data-template="navy-rail"] .cv-profile-rail,
+  .cv-root[data-template="navy-rail"] .cv-profile-rail * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

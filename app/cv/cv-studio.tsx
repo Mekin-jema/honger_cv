@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import Link from "next/link";
-import { ArrowLeft, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { CvSheet } from "@/components/document/cv-sheet";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { CvData } from "@/lib/persona/cv";
@@ -17,6 +16,7 @@ const templates = [
   { id: "timeline", name: "Timeline", description: "A visual path through your career history." },
   { id: "editorial", name: "Editorial", description: "A magazine-inspired grid with a bold masthead." },
   { id: "compact", name: "Compact", description: "Tighter spacing for a shorter, denser CV." },
+  { id: "navy-rail", name: "Navy Profile Rail", description: "A dark profile column paired with a crisp white experience page." },
 ] as const;
 
 const palettes = [
@@ -38,10 +38,6 @@ export function CvStudio({ cv }: { cv: CvData }) {
       <nav aria-label="CV actions" className="cv-toolbar no-print">
         <div className="cv-toolbar-navigation">
           <SidebarTrigger className="cv-tool cv-sidebar-toggle" />
-          <Link href="/" className="cv-tool" aria-label="Back to chat">
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            <span>Back to chat</span>
-          </Link>
         </div>
         <div className="cv-toolbar-actions">
           <PrintButton label="Save as PDF" />
@@ -135,7 +131,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
           </div>
 
           <main aria-label={`${selectedTemplate.name} CV preview`}>
-            <CvSheet cv={cv} />
+            <CvSheet cv={cv} layout={template === "navy-rail" ? "navy-rail" : "default"} />
           </main>
         </section>
       </div>
