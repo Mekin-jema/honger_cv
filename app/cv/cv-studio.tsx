@@ -17,6 +17,8 @@ const templates = [
   { id: "editorial", name: "Editorial", description: "A magazine-inspired grid with a bold masthead." },
   { id: "compact", name: "Compact", description: "Tighter spacing for a shorter, denser CV." },
   { id: "navy-rail", name: "Navy Profile Rail", description: "A dark profile column paired with a crisp white experience page." },
+  { id: "slate-sidebar", name: "Slate Sidebar", description: "A soft gray profile panel with centered section labels." },
+  { id: "wide-professional", name: "Wide Professional", description: "A full-width header and date-led experience rows." },
 ] as const;
 
 const palettes = [
@@ -101,11 +103,13 @@ export function CvStudio({ cv }: { cv: CvData }) {
               >
                 <span className="cv-template-art" data-template-art={item.id} aria-hidden="true">
                   <span className="cv-art-rail" />
+                  <span className="cv-art-photo" />
                   <span className="cv-art-header" />
                   <span className="cv-art-title" />
                   <span className="cv-art-line" />
                   <span className="cv-art-section" />
                   <span className="cv-art-lines" />
+                  <span className="cv-art-date" />
                   <span className="cv-art-section cv-art-section-short" />
                   <span className="cv-art-lines cv-art-lines-short" />
                 </span>
@@ -131,7 +135,14 @@ export function CvStudio({ cv }: { cv: CvData }) {
           </div>
 
           <main aria-label={`${selectedTemplate.name} CV preview`}>
-            <CvSheet cv={cv} layout={template === "navy-rail" ? "navy-rail" : "default"} />
+            <CvSheet
+              cv={cv}
+              layout={
+                template === "navy-rail" || template === "slate-sidebar" || template === "wide-professional"
+                  ? template
+                  : "default"
+              }
+            />
           </main>
         </section>
       </div>

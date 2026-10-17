@@ -20,7 +20,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: "default" | "navy-rail" }) {
+type CvSheetLayout = "default" | "navy-rail" | "slate-sidebar" | "wide-professional";
+
+export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
   const contacts = [
     { icon: MapPin, label: profile.location },
     { icon: Mail, label: profile.email, href: `mailto:${profile.email}` },
@@ -164,23 +166,53 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: "defa
     </Section>
   );
 
-  if (layout === "navy-rail") {
+  const profileRail = (
+    <>
+      {header}
+      {availability}
+      {profileSection}
+      {highlightsSection}
+      {languagesSection}
+    </>
+  );
+  const mainColumn = (
+    <>
+      {experienceSection}
+      {educationSection}
+      {skillsSection}
+      {projectsSection}
+      {referencesSection}
+    </>
+  );
+
+  if (layout === "navy-rail" || layout === "slate-sidebar") {
     return (
-      <article className="cv-sheet cv-sheet-navy-rail">
+      <article className={`cv-sheet cv-sheet-${layout}`}>
         <aside className="cv-profile-rail">
-          {header}
-          {availability}
-          {profileSection}
-          {highlightsSection}
-          {languagesSection}
+          {profileRail}
         </aside>
         <div className="cv-main-column">
-          {experienceSection}
-          {educationSection}
-          {skillsSection}
-          {projectsSection}
-          {referencesSection}
+          {mainColumn}
         </div>
+      </article>
+    );
+  }
+
+  if (layout === "wide-professional") {
+    return (
+      <article className="cv-sheet cv-sheet-wide-professional">
+        {header}
+        {availability}
+        {profileSection}
+        {highlightsSection}
+        {experienceSection}
+        {educationSection}
+        <div className="cv-wide-pair">
+          {skillsSection}
+          {languagesSection}
+        </div>
+        {projectsSection}
+        {referencesSection}
       </article>
     );
   }
