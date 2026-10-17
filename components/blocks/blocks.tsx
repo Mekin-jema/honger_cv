@@ -194,7 +194,7 @@ function Experience() {
 
 function ProjectGrid({ onAsk }: { onAsk: Ask }) {
   return (
-    <div className="space-y-3">
+    <div className="grid gap-4 sm:grid-cols-2">
       {projects.map((p) => (
         <IntentLink
           key={p.id}
@@ -202,31 +202,35 @@ function ProjectGrid({ onAsk }: { onAsk: Ask }) {
           onPick={onAsk}
           aria-label={`${p.name}: read the full story`}
           data-gs="row"
-          className="card group flex w-full items-start gap-4 p-5 text-left transition-colors hover:border-surface-strong hover:bg-bg-soft md:p-6"
+          className="card group w-full overflow-hidden text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md"
         >
           <Image
             src={`/og/${p.id}.png`}
             alt={`${p.name} project cover`}
             width={1200}
             height={630}
-            className="h-16 w-24 shrink-0 rounded-lg border border-line object-cover sm:h-20 sm:w-32"
+            className="aspect-[1.91/1] w-full border-b border-line object-cover"
           />
-          <div className="min-w-0 flex-1">
-            <div className="eyebrow flex flex-wrap items-center gap-x-2">
-              <span className={cn(p.kind === "Open source" && "text-accent")}>{p.kind}</span>
-              <span aria-hidden="true">·</span>
-              <span>{p.year}</span>
+          <div className="min-w-0 p-4 md:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="eyebrow flex flex-wrap items-center gap-x-2">
+                  <span className={cn(p.kind === "Open source" && "text-accent")}>{p.kind}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{p.year}</span>
+                </div>
+                <h3 className="display mt-2 text-[1.4rem] md:text-[1.6rem]">{p.name}</h3>
+              </div>
+              <span className="grid size-9 shrink-0 place-items-center rounded-full border border-line-strong bg-bg-soft text-muted transition-colors group-hover:border-accent group-hover:text-accent">
+                <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+              </span>
             </div>
-            <h3 className="display mt-2 text-[1.5rem] md:text-[1.7rem]">{p.name}</h3>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-muted md:text-base">{p.tagline}</p>
+            <p className="mt-2 leading-relaxed text-muted">{p.tagline}</p>
             <div className="mt-3">
               <Figures items={p.numbers.slice(0, 3)} />
             </div>
             <Tags items={p.stack.slice(0, 6)} className="mt-3" />
           </div>
-          <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-faint transition-colors group-hover:border-surface-strong group-hover:text-fg">
-            <ArrowUpRight className="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
         </IntentLink>
       ))}
     </div>

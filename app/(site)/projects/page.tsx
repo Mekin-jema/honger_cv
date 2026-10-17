@@ -38,10 +38,10 @@ export default async function ProjectsPage() {
       <Breadcrumbs trail={trail} />
       <PageHead eyebrow="Work" title="Projects" intro={INTRO} />
 
-      <ul className="space-y-4">
+      <ul className="grid gap-5 sm:grid-cols-2">
         {projects.map((p) => (
           <li key={p.id}>
-            <article className="card group relative overflow-hidden transition-colors hover:bg-bg-soft">
+            <article className="card group relative h-full overflow-hidden transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md">
               <Image
                 src={`/og/${p.id}.png`}
                 alt={`${p.name} project cover`}
@@ -49,18 +49,29 @@ export default async function ProjectsPage() {
                 height={630}
                 className="aspect-[1.91/1] w-full border-b border-line object-cover"
               />
-              <div className="relative p-5 md:p-6">
-                <p className="eyebrow">
-                  {p.kind} · {p.year}
-                </p>
-                <h2 className="display mt-2 text-2xl">
-                  <Link href={`/projects/${p.id}/`} className="after:absolute after:inset-0 after:rounded-[inherit]">
-                    {p.name}
-                  </Link>
-                </h2>
+              <div className="relative flex flex-col p-4 md:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="eyebrow">{p.kind} · {p.year}</p>
+                    <h2 className="display mt-2 text-2xl">
+                      <Link href={`/projects/${p.id}/`} className="after:absolute after:inset-0 after:rounded-[inherit]">
+                        {p.name}
+                      </Link>
+                    </h2>
+                  </div>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full border border-line-strong bg-bg-soft text-muted transition-colors group-hover:border-accent group-hover:text-accent">
+                    <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </span>
+                </div>
                 <p className="mt-2 leading-relaxed text-muted">{p.tagline}</p>
-                <p className="mt-3 text-sm text-muted">{p.numbers.slice(0, 3).join(" · ")}</p>
-                <ArrowUpRight className="absolute top-5 right-5 size-5 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                <p className="mt-3 text-sm leading-relaxed text-muted">{p.numbers.slice(0, 3).join(" · ")}</p>
+                <ul aria-label={`${p.name} technology stack`} className="mt-4 flex flex-wrap gap-1.5">
+                  {p.stack.slice(0, 7).map((technology) => (
+                    <li key={technology} className="inline-flex items-center rounded-full border border-line-strong bg-bg-soft px-2.5 py-1 text-xs font-semibold text-fg">
+                      {technology}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </article>
           </li>
