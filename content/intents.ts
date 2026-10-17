@@ -249,7 +249,7 @@ const base: Intent[] = [
     answers: [
       "You can reach me through the contact details provided in my portfolio."
     ],
-    blocks: [],
+    blocks: [{ kind: "contact" }, { kind: "contact-form" }],
     followUps: ["hire", "about", "experience"],
   },
 ];

@@ -47,7 +47,7 @@ export function AppSidebar({
   const documentPath = persona.document.pageUrl
 
   const linkItem = (title: string, href: string, icon: ReactNode) => {
-    const target = href.replace(/\/+$/, "") || "/"
+    const target = href.split("#", 1)[0].replace(/\/+$/, "") || "/"
     const active = target === "/" ? pathname === "/" : pathname === target || pathname.startsWith(`${target}/`)
     return (
       <SidebarMenuItem key={`${title}-${href}`}>

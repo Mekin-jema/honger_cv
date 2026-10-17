@@ -48,8 +48,13 @@ type Props = {
 export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: Props) {
   const persona = usePersona();
   const intent = resolveIntent(msg, persona);
-  // The indexable page that covers this answer (curated answers only).
-  const page = msg.ai ? undefined : persona.get(intent.id)?.page;
+  // If AI selected a curated topic, keep its corresponding indexable page link.
+  const pageIntentId = msg.ai?.status === "ready" ? msg.ai.topicId : intent.id;
+  const blocks =
+    pageIntentId === "contact" && !intent.blocks.some((block) => block.kind === "contact-form")
+      ? [...intent.blocks, { kind: "contact-form" as const }]
+      : intent.blocks;
+  const page = pageIntentId ? persona.get(pageIntentId)?.page : undefined;
   const text = intent.answers[msg.variant % intent.answers.length];
   const words = text.split(/(\s+)/);
   const reduced = useReducedMotion();
@@ -74,8 +79,8 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
 
   // Warm up the animation library while "thinking", so the cards can animate as soon as they appear.
   useEffect(() => {
-    if (msg.animate && intent.blocks.length) loadGsap().catch(() => {});
-  }, [msg.animate, intent.blocks.length]);
+    if (msg.animate && blocks.length) loadGsap().catch(() => {});
+  }, [msg.animate, blocks.length]);
 
   // Restore this visitor's earlier vote on this exact wording.
   useEffect(() => {
@@ -157,9 +162,9 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
 
         {done && (
           <>
-            {intent.blocks.length > 0 && (
+            {blocks.length > 0 && (
               <AnimatedBlocks animate={msg.animate} className="mt-5 -ml-11 space-y-4 md:ml-0">
-                {intent.blocks.map((b, i) => (
+                {blocks.map((b, i) => (
                   <div key={i}>
                     <BlockView block={b} onAsk={onAsk} />
                   </div>
@@ -167,12 +172,12 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
               </AnimatedBlocks>
             )}
 
-            <motion.div {...appear(intent.blocks.length)} className="mt-3 -ml-[3.375rem] flex items-center gap-0.5 text-faint md:-ml-2.5">
-              <button type="button" className="icon-btn size-9" onClick={copy} aria-label="Copy answer">
+            <motion.div {...appear(intent.blocks.length)} className="mt-3 -ml-[3.375rem] inline-flex items-center gap-1 rounded-xl border border-line bg-bg-soft/70 p-1 shadow-sm md:-ml-2.5">
+              <button type="button" className="icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface" onClick={copy} aria-label="Copy answer" title="Copy answer">
                 {copied ? <Check className="size-4 text-accent" /> : <Copy className="size-4" />}
               </button>
               {page && (
-                <a href={persona.href(persona.document.pageUrl)} className="icon-btn size-9" aria-label="Open the public CV website" title="Open CV website">
+                <a href={persona.href(page)} className="icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface" aria-label="Open the related portfolio page" title="Open portfolio page">
                   <FileText className="size-4" />
                 </a>
               )}
@@ -180,26 +185,34 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
                 <>
                 <button
                   type="button"
-                  className={cn("icon-btn size-9", vote === "up" && "text-accent hover:text-accent")}
+                  className={cn(
+                    "icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface",
+                    vote === "up" && "border-accent bg-accent-soft text-accent hover:bg-accent-soft",
+                  )}
                   onClick={() => castVote("up")}
                   aria-label="Good answer"
+                  title="Good answer"
                   aria-pressed={vote === "up"}
                 >
-                  <ThumbsUp className={cn("size-4", vote === "up" && "fill-current")} />
+                  <ThumbsUp className={cn("size-4", vote === "up" && "fill-current")} aria-hidden="true" />
                 </button>
                 <button
                   type="button"
-                  className={cn("icon-btn size-9", vote === "down" && "text-accent hover:text-accent")}
+                  className={cn(
+                    "icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface",
+                    vote === "down" && "border-accent bg-accent-soft text-accent hover:bg-accent-soft",
+                  )}
                   onClick={() => castVote("down")}
                   aria-label="Bad answer"
+                  title="Bad answer"
                   aria-pressed={vote === "down"}
                 >
-                  <ThumbsDown className={cn("size-4", vote === "down" && "fill-current")} />
+                  <ThumbsDown className={cn("size-4", vote === "down" && "fill-current")} aria-hidden="true" />
                 </button>
                 </>
               )}
               {intent.id !== "fallback" && !msg.ai && (
-                <button type="button" className="icon-btn size-9" onClick={() => onRegenerate(msg.id)} aria-label="Regenerate answer">
+                <button type="button" className="icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface" onClick={() => onRegenerate(msg.id)} aria-label="Regenerate answer" title="Regenerate answer">
                   <RefreshCw className="size-4" />
                 </button>
               )}
@@ -218,7 +231,7 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
             )}
 
             {isLast && intent.followUps.length > 0 && (
-              <motion.div {...appear(intent.blocks.length + 1)} className="mt-3 -ml-11 md:ml-0">
+              <motion.div {...appear(blocks.length + 1)} className="mt-3 -ml-11 md:ml-0">
                 <SuggestionChips ids={intent.followUps} onPick={onAsk} wrap />
               </motion.div>
             )}
