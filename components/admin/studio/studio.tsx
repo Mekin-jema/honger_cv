@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-provider";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn, withBase } from "@/lib/utils";
 import { adminFetch } from "./api";
 import { ChecksTab } from "./checks";
@@ -120,6 +121,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 md:gap-3 md:px-6">
+          <SidebarTrigger className="shrink-0" />
           <a href={withBase("/admin/personas/")} className="icon-btn shrink-0" aria-label="All personas">
             <ArrowLeft className="size-5" />
           </a>
@@ -136,7 +138,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
                 <Eye className="size-3.5" /> Previewing
               </span>
             )}
-            <ThemeToggle />
+            <ThemeToggle className="admin-icon-btn" />
             <button
               type="button"
               onClick={() => void startPublish()}

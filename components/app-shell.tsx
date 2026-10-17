@@ -16,16 +16,22 @@ export function AppShell({
   isAdmin: boolean
 }) {
   const pathname = usePathname()
-  const isChatPage = pathname === "/" || pathname.startsWith("/ask/")
-  const isCvPage = /(?:^|\/)cv\/?$/.test(pathname)
+  const routePath = pathname.replace(/\/+$/, "") || "/"
+  const isChatPage = routePath === "/" || routePath.startsWith("/ask/")
+  const isAdminInbox = routePath === "/admin"
+  const isPersonaStudio = routePath.startsWith("/admin/personas/")
+  const isCvPage = routePath === "/cv"
+  const isPortfolioPage =
+    ["/about", "/contact", "/experience", "/projects", "/skills"].includes(routePath) ||
+    routePath.startsWith("/projects/")
 
-  if (isCvPage) return <>{children}</>
+  if (isCvPage || isPortfolioPage) return <>{children}</>
 
   return (
     <SidebarProvider>
       <AppSidebar isAdmin={isAdmin} />
       <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-        {!isChatPage && (
+        {!isChatPage && !isAdminInbox && !isPersonaStudio && (
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b bg-background/95 px-3 backdrop-blur">
             <SidebarTrigger />
           </header>
