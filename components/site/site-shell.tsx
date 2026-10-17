@@ -25,7 +25,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <ThemeToggle />
+          <ThemeToggle className="shrink-0 border border-line-strong bg-card text-fg shadow-sm" />
         </div>
       </header>
 

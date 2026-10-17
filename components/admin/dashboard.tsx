@@ -27,6 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-provider";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Analytics } from "./analytics";
 import type { AdminData } from "@/server/admin-view";
 import type { VisitorInfo } from "@/server/store";
@@ -339,6 +340,7 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-6">
+          <SidebarTrigger className="shrink-0" />
           <Link href="/" className="icon-btn shrink-0" aria-label="Back to site">
             <ArrowLeft className="size-5" />
           </Link>
@@ -359,13 +361,13 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
             <span className="eyebrow ml-1 hidden rounded-md border border-line px-1.5 py-0.5 sm:inline">Private</span>
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <a href={withBase("/admin/personas/")} className="icon-btn" aria-label="Personas" title="Personas: what the site knows and says">
+            <a href={withBase("/admin/personas/")} className="icon-btn admin-icon-btn" aria-label="Personas" title="Personas: what the site knows and says">
               <UserRoundPen className="size-[18px]" />
             </a>
-            <a href={withBase("/admin/settings/")} className="icon-btn" aria-label="Settings" title="Settings: password, devices">
+            <a href={withBase("/admin/settings/")} className="icon-btn admin-icon-btn" aria-label="Settings" title="Settings: password, devices">
               <Settings className="size-[18px]" />
             </a>
-            <ThemeToggle />
+            <ThemeToggle className="admin-icon-btn" />
             <a href={withBase("/api/admin/export/")} className="btn btn-ghost py-2.5 text-sm max-sm:px-3 pointer-coarse:min-h-11 pointer-coarse:min-w-11" aria-label="Export JSON">
               <Download className="size-4" /> <span className="hidden sm:inline">Export</span>
             </a>

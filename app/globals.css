@@ -445,6 +445,24 @@ textarea:focus-visible {
   mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
 }
 
+/* Admin navigation actions must remain visible over the translucent header in either theme.
+   Kept outside @layer so these surfaces win over generic icon-button utilities. */
+.admin-icon-btn {
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface-strong);
+  color: var(--fg);
+  box-shadow: var(--card-shadow);
+}
+.admin-icon-btn:hover {
+  border-color: var(--accent);
+  background-color: var(--surface-strong);
+  color: var(--fg);
+}
+.admin-icon-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* ---------- Thinking shimmer ---------- */
 .shimmer {
   background: linear-gradient(90deg, var(--faint) 0%, var(--fg) 45%, var(--faint) 90%);

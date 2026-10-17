@@ -32,7 +32,7 @@ export function PersonaShell({ p, children }: { p: ResolvedPersona; children: Re
             ))}
           </nav>
           <LanguageSwitch />
-          <ThemeToggle />
+          <ThemeToggle className="shrink-0 border border-line-strong bg-card text-fg shadow-sm" />
         </div>
       </header>
 

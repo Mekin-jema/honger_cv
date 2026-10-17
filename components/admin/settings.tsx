@@ -58,10 +58,10 @@ export function AdminSettings({ email, currentSessionId, staticCode, mailProvide
           <h1 className="text-[15px] font-semibold tracking-tight">Settings</h1>
           <span className="eyebrow ml-1 rounded-md border border-line px-1.5 py-0.5">Private</span>
           <div className="ml-auto flex items-center gap-1.5">
-            <a href={withBase("/admin/personas/")} className="icon-btn" aria-label="Personas" title="Personas">
+            <a href={withBase("/admin/personas/")} className="icon-btn admin-icon-btn" aria-label="Personas" title="Personas">
               <UserRoundPen className="size-[18px]" />
             </a>
-            <ThemeToggle />
+            <ThemeToggle className="admin-icon-btn" />
           </div>
         </div>
       </header>

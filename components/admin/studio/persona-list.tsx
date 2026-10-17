@@ -55,13 +55,13 @@ export function PersonaList({ personas, noDatabase }: { personas: Summary[]; noD
           <h1 className="text-[15px] font-semibold tracking-tight">Personas</h1>
           <span className="eyebrow ml-1 rounded-md border border-line px-1.5 py-0.5">Private</span>
           <div className="ml-auto flex items-center gap-1.5">
-            <a href={withBase("/admin/")} className="icon-btn" aria-label="Inbox" title="Inbox">
+            <a href={withBase("/admin/")} className="icon-btn admin-icon-btn" aria-label="Inbox" title="Inbox">
               <Inbox className="size-[18px]" />
             </a>
-            <a href={withBase("/admin/settings/")} className="icon-btn" aria-label="Settings" title="Settings">
+            <a href={withBase("/admin/settings/")} className="icon-btn admin-icon-btn" aria-label="Settings" title="Settings">
               <Settings className="size-[18px]" />
             </a>
-            <ThemeToggle />
+            <ThemeToggle className="admin-icon-btn" />
           </div>
         </div>
       </header>
