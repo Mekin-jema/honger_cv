@@ -117,7 +117,9 @@ Admin links are hidden from non-admin visitors, but authorization is also enforc
 
 ### Customer accounts and profiles
 
-Customers can register at `/register/`, sign in at `/login/`, and manage their profiles from `/account/`. Each profile has a private AI-training draft, a draft-grounded assistant test, a CV design studio, and an explicit publish action. Published profiles are available at `/u/<profile-slug>/`; their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo.
+Customers can register at `/register/`, sign in at `/login/`, and manage their CVs from `/account/`. Each customer can create Job CVs by entering a professional role; the role names the CV (for example, “Product Engineer CV” or “Product Engineer CV 2”), and the signed-in user's name seeds the CV identity. The customer Studio uses all nine Persona Studio tabs, including JSON, with owner-scoped APIs for drafts, AI helpers, checks, access management, and publishing. Their sidebar includes the public Portfolio navigation plus links to their own dashboard, AI, training, and CV form/design. The CV form saves to that customer's draft and is used by their own CV page and AI knowledge; it does not use the demo portfolio's data. Admins keep the same Portfolio sidebar and receive the administration links; the admin navigation label is **User**.
+
+The private assistant uses the selected customer's saved draft. If its Job CV has no personal training information yet, opening Ask AI redirects to the Knowledge training tab. Customers can publish explicitly; published profiles are available at `/u/<profile-slug>/`, where their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
 
 Persona ownership is checked on customer APIs, publishing jobs, and profile pages. Platform event totals are visible only to administrators in the `/admin/` dashboard. Apply the pending migrations before enabling customer registration in an existing deployment.
 

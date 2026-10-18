@@ -13,7 +13,7 @@ const MODES = {
   request: "Code or request: visitors can also ask for access; you approve requests and send a code.",
 } as const;
 
-export function DocumentTab({ slug, draft, doc, bangla }: TabProps) {
+export function DocumentTab({ slug, draft, doc, bangla, mode }: TabProps) {
   const set = draft.update;
   const d0 = doc.document ?? {};
   const access = doc.access ?? {};
@@ -24,15 +24,19 @@ export function DocumentTab({ slug, draft, doc, bangla }: TabProps) {
     <div className="space-y-5">
       <Panel title="Document" description="The CV or biodata: its web page and the PDF visitors download.">
         <div className="grid gap-4 md:grid-cols-3">
-          <SelectInput
-            label="Kind"
-            value={d0.kind ?? "cv"}
-            options={[
-              { value: "cv", label: "CV" },
-              { value: "biodata", label: "Biodata" },
-            ]}
-            onChange={(v) => set((d) => void ((d.document ??= {}).kind = v))}
-          />
+          {mode === "admin" ? (
+            <SelectInput
+              label="Kind"
+              value={d0.kind ?? "cv"}
+              options={[
+                { value: "cv", label: "CV" },
+                { value: "biodata", label: "Biodata" },
+              ]}
+              onChange={(v) => set((d) => void ((d.document ??= {}).kind = v))}
+            />
+          ) : (
+            <p className="rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold">Job profile · CV</p>
+          )}
           <TextInput label="Web page address" hint={`The page: /${d0.slug ?? "cv"}/`} value={d0.slug} onChange={(v) => set((d) => void ((d.document ??= {}).slug = v.toLowerCase()))} mono />
           <TextInput label="PDF file name" hint="Letters, digits, dots, dashes; ends with .pdf" value={d0.fileName} onChange={(v) => set((d) => void ((d.document ??= {}).fileName = v))} mono />
         </div>
@@ -84,8 +88,8 @@ export function DocumentTab({ slug, draft, doc, bangla }: TabProps) {
         )}
       </Panel>
 
-      {access.mode === "request" && <AccessRequests slug={slug} siteUrl={doc.site?.url} />}
-      {(access.mode ?? "open") !== "open" && <AccessCodes slug={slug} siteUrl={doc.site?.url} />}
+      {access.mode === "request" && <AccessRequests slug={slug} siteUrl={doc.site?.url} mode={mode} />}
+      {(access.mode ?? "open") !== "open" && <AccessCodes slug={slug} siteUrl={doc.site?.url} mode={mode} />}
     </div>
   );
 }

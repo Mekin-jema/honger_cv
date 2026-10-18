@@ -46,7 +46,7 @@ export const getCustomerSession = cache(async () => sessionFrom(await headers(),
 /** Pages: the signed-in admin, or a redirect to the login page (coming back to `next` afterwards). */
 export async function requireAdmin(next?: string): Promise<AdminSession> {
   const session = await getAdminSession();
-  if (!session) redirect(`/admin/login/${next ? `?next=${encodeURIComponent(next)}` : ""}`);
+  if (!session) redirect(`/login/${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   return session;
 }
 

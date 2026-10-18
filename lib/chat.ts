@@ -258,7 +258,12 @@ function buildHistory(
   return turns.slice(-MAX_TURNS);
 }
 
-export function useChat(persona: PersonaApi, initialIntent?: string) {
+export function useChat(
+  persona: PersonaApi,
+  initialIntent?: string,
+  options: { aiApiPath?: string; syncUrlPaths?: boolean } = {},
+) {
+  const { aiApiPath = "/api/ask/", syncUrlPaths = true } = options;
   const [state, dispatch] = useReducer(
     reducer,
     { persona, initialIntent },
@@ -284,7 +289,7 @@ export function useChat(persona: PersonaApi, initialIntent?: string) {
       variant: 0,
       ai: { status: "loading", requestId },
     });
-    postApi("/api/ask/", { question, history, lang: p.lang }).then((res) => {
+    postApi(aiApiPath, { question, history, lang: p.lang }).then((res) => {
       const common = {
         answerId: typeof res.answerId === "string" ? res.answerId : requestId,
         cards: Array.isArray(res.cards) ? (res.cards as Block[]) : [],
@@ -307,9 +312,9 @@ export function useChat(persona: PersonaApi, initialIntent?: string) {
             ? { route: res.route, text: res.text, ...common }
             : { route: "decline" };
       dispatch({ type: "ai-result", requestId, result });
-      if (result.route === "topic") syncUrl(p.askPath(result.intentId));
+      if (syncUrlPaths && result.route === "topic") syncUrl(p.askPath(result.intentId));
     });
-  }, []);
+  }, [aiApiPath, syncUrlPaths]);
 
   // An access code typed in the box unlocks the private details; it never goes to the AI.
   const unlock = useCallback(
@@ -366,9 +371,9 @@ export function useChat(persona: PersonaApi, initialIntent?: string) {
         text: text?.trim() || intent.prompt,
         variant,
       });
-      if (intent.id !== "fallback") syncUrl(p.askPath(intent.id));
+      if (syncUrlPaths && intent.id !== "fallback") syncUrl(p.askPath(intent.id));
     },
-    [askAi, unlock],
+    [askAi, syncUrlPaths, unlock],
   );
 
   const setPhase = useCallback(
@@ -382,8 +387,8 @@ export function useChat(persona: PersonaApi, initialIntent?: string) {
   );
   const reset = useCallback(() => {
     dispatch({ type: "reset" });
-    syncUrl(personaRef.current.href("/"));
-  }, []);
+    if (syncUrlPaths) syncUrl(personaRef.current.href("/"));
+  }, [syncUrlPaths]);
 
   const generating = state.messages.some(
     (m) => m.role === "assistant" && m.phase !== "done",

@@ -5,7 +5,7 @@ import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn, withBase } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 import { ChecksTab } from "./checks";
 import { DocumentTab } from "./document-access";
 import { HeroRulesTab } from "./hero-rules";
@@ -31,6 +31,7 @@ export type TabProps = {
   go: (tab: TabId, focus?: string) => void;
   /** Set by go(tab, focus): what the tab should open (a section key, a question id). */
   focus?: string;
+  mode: StudioMode;
 };
 
 type Props = {
@@ -40,6 +41,7 @@ type Props = {
   overview: Overview;
   tab: TabId;
   previewing: { slug: string; tier: string } | null;
+  mode?: StudioMode;
 };
 
 function SaveStatus({ draft }: { draft: DraftApi }) {
@@ -64,20 +66,20 @@ function SaveStatus({ draft }: { draft: DraftApi }) {
   );
 }
 
-export function Studio({ slug, name, initial, overview: initialOverview, tab: initialTab, previewing }: Props) {
-  const draft = useDraft(slug, initial);
+export function Studio({ slug, name, initial, overview: initialOverview, tab: initialTab, previewing, mode = "admin" }: Props) {
+  const draft = useDraft(slug, initial, mode);
   const [tab, setTab] = useState<TabId>(initialTab);
   const [focus, setFocus] = useState<string>();
   const [overview, setOverview] = useState(initialOverview);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const publish = useJob();
+  const publish = useJob(mode, slug);
   const doc = draft.doc;
   const bangla = (doc.site?.languages ?? ["en"]).includes("bn");
 
   const reloadOverview = useCallback(async () => {
-    const res = await adminFetch<Overview>(`/api/admin/personas/${slug}/overview/`);
+    const res = await studioFetch<Overview>(mode, slug, `/api/admin/personas/${slug}/overview/`);
     if (res.ok) setOverview(res.data);
-  }, [slug]);
+  }, [mode, slug]);
 
   const go = useCallback((next: TabId, target?: string) => {
     setTab(next);
@@ -101,7 +103,8 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
 
   const startPublish = async (force = false) => {
     if (!(await draft.flush())) return publish.fail("Save the draft first (see the message at the top).");
-    await publish.start(`/api/admin/personas/${slug}/publish/`, { force }, (data) => (data.unchanged ? "The site already shows this draft: nothing to publish." : undefined));
+    const path = mode === "customer" ? `/api/account/personas/${slug}/publish/` : `/api/admin/personas/${slug}/publish/`;
+    await publish.start(path, { force }, (data) => (data.unchanged ? "The site already shows this draft: nothing to publish." : undefined));
   };
 
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
@@ -113,7 +116,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
     tabRefs.current[TABS[j].id]?.focus();
   };
 
-  const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus };
+  const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode };
   const issues = draft.status.issues.length;
   const busy = publish.running;
 
@@ -122,7 +125,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
       <header className="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 md:gap-3 md:px-6">
           <SidebarTrigger className="shrink-0" />
-          <a href={withBase("/admin/personas/")} className="icon-btn shrink-0" aria-label="All personas">
+          <a href={withBase(mode === "customer" ? "/account/" : "/admin/personas/")} className="icon-btn shrink-0" aria-label={mode === "customer" ? "Your workspace" : "All personas"}>
             <ArrowLeft className="size-5" />
           </a>
           <div className="min-w-0 leading-tight">

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, KeyRound, LoaderCircle, LogOut, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 import { NumberInput, Panel, TextInput, smallBtn } from "./controls";
 
 type Code = { id: string; label: string; maxUses: number | null; uses: number; expiresAt: string | null; revokedAt: string | null; lastUsedAt: string | null; createdAt: string };
@@ -18,7 +18,7 @@ function status(c: Code): { text: string; live: boolean } {
 }
 
 /** Codes for the "With access code" parts: made here, shown once, revocable. */
-export function AccessCodes({ slug, siteUrl }: { slug: string; siteUrl?: string }) {
+export function AccessCodes({ slug, siteUrl, mode }: { slug: string; siteUrl?: string; mode: StudioMode }) {
   const [codes, setCodes] = useState<Code[] | null>(null);
   const [label, setLabel] = useState("");
   const [maxUses, setMaxUses] = useState<number | undefined>();
@@ -29,10 +29,10 @@ export function AccessCodes({ slug, siteUrl }: { slug: string; siteUrl?: string 
   const [message, setMessage] = useState<string>();
 
   const load = useCallback(async () => {
-    const res = await adminFetch<{ codes: Code[] }>(`/api/admin/personas/${slug}/codes/`);
+    const res = await studioFetch<{ codes: Code[] }>(mode, slug, `/api/admin/personas/${slug}/codes/`);
     if (res.ok) setCodes(res.data.codes);
     else setMessage(res.error);
-  }, [slug]);
+  }, [mode, slug]);
   useEffect(() => {
     // Loads once; state is set when the request resolves.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -42,7 +42,7 @@ export function AccessCodes({ slug, siteUrl }: { slug: string; siteUrl?: string 
   const create = async () => {
     setBusy("create");
     setMessage(undefined);
-    const res = await adminFetch<{ code: string; entry: Code }>(`/api/admin/personas/${slug}/codes/`, { body: { label: label.trim(), maxUses, days } });
+    const res = await studioFetch<{ code: string; entry: Code }>(mode, slug, `/api/admin/personas/${slug}/codes/`, { body: { label: label.trim(), maxUses, days } });
     setBusy(null);
     if (!res.ok) return setMessage(res.error);
     setFresh({ code: res.data.code, label: res.data.entry.label });
@@ -53,7 +53,7 @@ export function AccessCodes({ slug, siteUrl }: { slug: string; siteUrl?: string 
   const revoke = async (c: Code) => {
     if (!window.confirm(`Revoke the code for "${c.label}"? Visitors who unlocked with it lose access within a minute.`)) return;
     setBusy(c.id);
-    const res = await adminFetch(`/api/admin/personas/${slug}/codes/${c.id}/`, { method: "DELETE" });
+    const res = await studioFetch(mode, slug, `/api/admin/personas/${slug}/codes/${c.id}/`, { method: "DELETE" });
     setBusy(null);
     if (!res.ok) setMessage(res.error);
     void load();
@@ -61,7 +61,7 @@ export function AccessCodes({ slug, siteUrl }: { slug: string; siteUrl?: string 
   const resetAll = async () => {
     if (!window.confirm("Make every visitor who unlocked enter a code again? The codes themselves keep working.")) return;
     setBusy("reset");
-    const res = await adminFetch(`/api/admin/personas/${slug}/access-reset/`, { body: {} });
+    const res = await studioFetch(mode, slug, `/api/admin/personas/${slug}/access-reset/`, { body: {} });
     setBusy(null);
     setMessage(res.ok ? "Done: everyone who unlocked has to enter a code again." : res.error);
   };

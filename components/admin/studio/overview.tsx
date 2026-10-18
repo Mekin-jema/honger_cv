@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Eye, EyeOff, History, LoaderCircle, Rocket, Undo2 } from "lucide-react";
 import { tabForPath } from "@/lib/persona/edit";
 import { cn, withBase } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch } from "./api";
 import { Panel, smallBtn } from "./controls";
 import { JobProgress, type ClientJob, type JobView } from "./job";
 import type { TabProps } from "./studio";
@@ -23,7 +23,7 @@ type Props = TabProps & {
   previewing: { slug: string; tier: string } | null;
 };
 
-export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, publish, startPublish, source, previewing }: Props) {
+export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, publish, startPublish, source, previewing, mode }: Props) {
   const { issues, changed, state } = draft.status;
   const live = overview.versions.find((v) => v.id === overview.liveId);
   const [preview, setPreview] = useState(previewing?.slug === slug ? previewing.tier : null);
@@ -43,7 +43,7 @@ export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, pu
     setBusy(`preview-${tier}`);
     setMessage(undefined);
     await draft.flush();
-    const res = await adminFetch(`/api/admin/personas/${slug}/preview/`, { body: { tier } });
+    const res = await studioFetch(mode, slug, `/api/admin/personas/${slug}/preview/`, { body: { tier } });
     setBusy(null);
     if (!res.ok) return setMessage(res.error);
     setPreview(tier);
@@ -51,7 +51,7 @@ export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, pu
   };
   const stopPreview = async () => {
     setBusy("stop");
-    const res = await adminFetch(`/api/admin/preview/`, { method: "DELETE" });
+    const res = await studioFetch(mode, slug, `/api/admin/preview/`, { method: "DELETE" });
     setBusy(null);
     if (res.ok) setPreview(null);
     else setMessage(res.error);
@@ -59,7 +59,7 @@ export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, pu
   const rollback = async (v: VersionInfo) => {
     if (!window.confirm(`Make version ${v.number} live again? The site switches right away; your draft is not changed.`)) return;
     setBusy(v.id);
-    const res = await adminFetch(`/api/admin/personas/${slug}/versions/`, { body: { versionId: v.id } });
+    const res = await studioFetch(mode, slug, `/api/admin/personas/${slug}/versions/`, { body: { versionId: v.id } });
     setBusy(null);
     setMessage(res.ok ? `Version ${v.number} is live again.` : res.error);
     await Promise.all([reloadOverview(), draft.refreshReport()]);
@@ -144,7 +144,7 @@ export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, pu
         <JobProgress view={publish} title="Publishing" />
       </Panel>
 
-      <Panel
+      {mode === "admin" && <Panel
         title="Preview the draft"
         description="See the unpublished draft on the real site, in this browser only (other visitors keep seeing the live version). Nothing you do in the preview is recorded. It ends after two hours."
         actions={
@@ -168,7 +168,7 @@ export function OverviewTab({ slug, draft, doc, go, overview, reloadOverview, pu
         <p className="text-sm" role="status">
           {preview ? `This browser shows the draft ${preview === "unlocked" ? "as a visitor with an access code" : "as a visitor"}. Open the site in a new tab to look.` : "Not previewing: this browser sees the live site."}
         </p>
-      </Panel>
+      </Panel>}
 
       {message && (
         <p role="status" className="text-sm font-medium">

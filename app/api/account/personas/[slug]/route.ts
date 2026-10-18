@@ -33,6 +33,7 @@ export async function PUT(req: Request, context: Context) {
       422,
     );
   }
+  if (parsed.data.document?.kind === "biodata") return bad("Customer profiles must remain Job CVs.", 422);
   const rev = typeof body.rev === "number" && Number.isInteger(body.rev) && body.rev >= 0 ? body.rev : -1;
   if (rev < 0) return bad("Missing the draft revision. Reload before saving.");
 

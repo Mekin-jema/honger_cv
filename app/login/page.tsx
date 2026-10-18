@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AccountAuthForm } from "@/components/account/auth-form";
-import { getAdminSession, getCustomerSession } from "@/server/admin-session";
+import { getAdminSession, getCustomerSession, safeNext } from "@/server/admin-session";
 import { dbConfigured } from "@/server/db";
 import { safeAccountNext } from "@/lib/account-next";
 
@@ -15,8 +16,11 @@ export default async function CustomerLoginPage({
 }) {
   const params = await searchParams;
   const next = safeAccountNext(params.next);
-  if (await getAdminSession()) redirect("/admin/");
+  const adminNext = safeNext(typeof params.next === "string" ? params.next : undefined);
+  if (await getAdminSession()) redirect(adminNext);
   if (await getCustomerSession()) redirect(next);
+  const cookieJar = await cookies();
+  const pendingAdminVerification = cookieJar.has("fb.two_factor") || cookieJar.has("__Secure-fb.two_factor");
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-5 py-12 text-fg">
       <section className="w-full max-w-md rounded-3xl border border-line bg-card p-7 shadow-xl shadow-fg/5 sm:p-9">
@@ -26,11 +30,8 @@ export default async function CustomerLoginPage({
         {!dbConfigured() ? (
           <p role="alert" className="mt-6 rounded-xl bg-accent-soft p-4 text-sm text-accent">Sign-in is temporarily unavailable because account storage is not configured.</p>
         ) : (
-          <div className="mt-7"><AccountAuthForm mode="login" next={next} /></div>
+          <div className="mt-7"><AccountAuthForm mode="login" next={next} adminNext={adminNext} pendingAdminVerification={pendingAdminVerification} /></div>
         )}
-        <p className="mt-7 border-t border-line pt-5 text-center text-xs leading-5 text-muted">
-          Platform administrator? <Link href="/admin/login/" className="font-semibold text-fg underline-offset-4 hover:underline">Admin sign in</Link>
-        </p>
       </section>
     </main>
   );

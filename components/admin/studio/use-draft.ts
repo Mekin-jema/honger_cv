@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PersonaDocInput } from "@/lib/persona/schema";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 
 export type Doc = PersonaDocInput;
 export type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -16,7 +16,7 @@ const RETRY_AFTER_MS = 5000;
  * Each save names the revision it started from; if another tab saved in between, the server refuses
  * (409) and editing stops until the page is reloaded, so nobody overwrites anybody.
  */
-export function useDraft(slug: string, initial: { doc: Doc; rev: number; issues: string[]; changed: boolean | null }) {
+export function useDraft(slug: string, initial: { doc: Doc; rev: number; issues: string[]; changed: boolean | null }, mode: StudioMode = "admin") {
   const [doc, setDoc] = useState<Doc>(initial.doc);
   const [status, setStatus] = useState<DraftStatus>({ state: "saved", issues: initial.issues, changed: initial.changed, rev: initial.rev });
   const st = useRef({ doc: initial.doc, rev: initial.rev, dirty: false, conflict: false, inflight: null as Promise<void> | null, timer: undefined as ReturnType<typeof setTimeout> | undefined });
@@ -38,7 +38,7 @@ export function useDraft(slug: string, initial: { doc: Doc; rev: number; issues:
     setStatus((x) => ({ ...x, state: "saving", error: undefined }));
     let ok = false;
     const run = (async () => {
-      const res = await adminFetch<{ rev: number; issues: string[]; changed: boolean | null }>(`/api/admin/personas/${slug}/draft/`, { method: "PUT", body: { doc: s.doc, rev: s.rev } });
+      const res = await studioFetch<{ rev: number; issues: string[]; changed: boolean | null }>(mode, slug, `/api/admin/personas/${slug}/draft/`, { method: "PUT", body: { doc: s.doc, rev: s.rev } });
       if (!res.ok && res.status === 409) {
         s.conflict = true;
         setStatus((x) => ({ ...x, state: "conflict", error: res.error }));
@@ -61,7 +61,7 @@ export function useDraft(slug: string, initial: { doc: Doc; rev: number; issues:
     // Edited while saving: save again.
     if (ok && s.dirty) schedule(SAVE_AFTER_MS);
     return ok && !s.dirty;
-  }, [slug, schedule]);
+  }, [mode, slug, schedule]);
   useEffect(() => {
     saveRef.current = save;
   }, [save]);
@@ -97,10 +97,10 @@ export function useDraft(slug: string, initial: { doc: Doc; rev: number; issues:
 
   /** Re-reads "differs from live" and the problems (after a publish or a rollback). */
   const refreshReport = useCallback(async () => {
-    const res = await adminFetch<{ rev: number; issues: string[]; changed: boolean | null }>(`/api/admin/personas/${slug}/draft/`);
+    const res = await studioFetch<{ rev: number; issues: string[]; changed: boolean | null }>(mode, slug, `/api/admin/personas/${slug}/draft/`);
     const s = st.current;
     if (res.ok && res.data.rev === s.rev && !s.dirty) setStatus((x) => ({ ...x, issues: res.data.issues, changed: res.data.changed }));
-  }, [slug]);
+  }, [mode, slug]);
 
   useEffect(() => {
     const s = st.current;

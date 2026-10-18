@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Eye, LoaderCircle, Plus, Trash2 } from "lucide-react";
 import { idFrom, removeHeroPool } from "@/lib/persona/edit";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch } from "./api";
 import { IdListPicker, LTextInput, LTextList, NumberInput, Panel, SelectInput, Toggle, iconBtn, smallBtn } from "./controls";
 import type { TabProps } from "./studio";
 
 type PromptView = { prompt: string; tokens: number; retrieval: boolean; gated: string[]; leakTerms: number };
 
-export function HeroRulesTab({ slug, draft, doc, bangla }: TabProps) {
+export function HeroRulesTab({ slug, draft, doc, bangla, mode }: TabProps) {
   const set = draft.update;
   const hero = doc.hero;
   const rules = doc.rules ?? {};
@@ -23,7 +23,7 @@ export function HeroRulesTab({ slug, draft, doc, bangla }: TabProps) {
     setTier(t);
     setLoading(true);
     setError(undefined);
-    const res = await adminFetch<PromptView>(`/api/admin/personas/${slug}/prompt/`, { body: { doc, tier: t } });
+    const res = await studioFetch<PromptView>(mode, slug, `/api/admin/personas/${slug}/prompt/`, { body: { doc, tier: t } });
     setLoading(false);
     if (res.ok) setView(res.data);
     else {

@@ -53,7 +53,7 @@ export function proxy(req: NextRequest) {
     if (/^\/admin\/login(\/|$)/.test(pathname)) return NextResponse.next();
     if (!getSessionCookie(req, { cookiePrefix: "fb" })) {
       const url = req.nextUrl.clone();
-      url.pathname = "/admin/login/";
+      url.pathname = "/login/";
       url.search = `?next=${encodeURIComponent(`${pathname}${search}`)}`;
       return NextResponse.redirect(url);
     }

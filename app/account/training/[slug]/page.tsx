@@ -1,19 +1,30 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { TrainingEditor } from "@/components/account/training-editor";
+import { Studio } from "@/components/admin/studio/studio";
+import { TABS, type TabId } from "@/components/admin/studio/tabs";
+import type { Doc } from "@/components/admin/studio/use-draft";
 import { PersonaDocShape } from "@/lib/persona/schema";
+import { roleCvName } from "@/lib/persona/training";
+import { enText } from "@/lib/persona/edit";
 import { requireCustomer } from "@/server/admin-session";
-import { loadDraft, personaOwnedBy, publishedPointer } from "@/server/persona/repo";
+import { personaOwnedBy } from "@/server/persona/repo";
+import { editableDraft, studioOverview } from "@/server/persona/studio";
 
-export const metadata: Metadata = { title: "AI Training", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Job Persona Studio", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-export default async function TrainingPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function TrainingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { slug } = await params;
+  const query = await searchParams;
   const customer = await requireCustomer(`/account/training/${slug}/`);
   if (!/^[a-z][a-z0-9-]{1,31}$/.test(slug) || !(await personaOwnedBy(slug, customer.userId))) notFound();
-  const [draft, published] = await Promise.all([loadDraft(slug), publishedPointer(slug)]);
+  const [draft, overview] = await Promise.all([editableDraft(slug), studioOverview(slug)]);
   if (!draft) notFound();
   const parsed = PersonaDocShape.safeParse(draft.doc);
   if (!parsed.success) {
@@ -21,9 +32,21 @@ export default async function TrainingPage({ params }: { params: Promise<{ slug:
       <main className="mx-auto min-h-dvh max-w-3xl px-5 py-12">
         <h1 className="text-2xl font-semibold">This profile draft needs repair</h1>
         <p className="mt-3 text-muted">The saved data is not in a format this editor can safely change. Contact support before editing it.</p>
-        <Link href="/account/" className="mt-5 inline-block font-semibold text-accent hover:underline">Return to your workspace</Link>
       </main>
     );
   }
-  return <TrainingEditor slug={slug} initialDoc={parsed.data} initialRev={draft.rev} initiallyPublished={!!published?.versionId} />;
+  const wanted = typeof query.tab === "string" ? query.tab : "overview";
+  const tab = (TABS.some((item) => item.id === wanted) ? wanted : "overview") as TabId;
+  return (
+    <Studio
+      key={slug}
+      slug={slug}
+      name={roleCvName(enText(parsed.data.identity.role ?? parsed.data.identity.headline))}
+      initial={{ doc: parsed.data as Doc, rev: draft.rev, issues: draft.issues, changed: draft.changed, source: draft.source }}
+      overview={overview}
+      tab={tab}
+      previewing={null}
+      mode="customer"
+    />
+  );
 }

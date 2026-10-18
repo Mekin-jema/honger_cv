@@ -13,9 +13,10 @@ import { cn } from "@/lib/utils";
 type Props = {
   onNew: () => void;
   onAsk: (intentId: string) => void;
+  privateMode?: boolean;
 };
 
-export function TopBar({ onNew, onAsk }: Props) {
+export function TopBar({ onNew, onAsk, privateMode = false }: Props) {
   const persona = usePersona();
   const { document: doc, availability } = persona;
   const [copied, setCopied] = useState(false);
@@ -32,20 +33,22 @@ export function TopBar({ onNew, onAsk }: Props) {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-1 px-2 md:px-3">
-      <SidebarTrigger className="mr-1" />
-      {availability.show && <Availability onClick={availability.action ? () => onAsk(availability.action!) : undefined} className="ml-1" />}
-      <UnlockedPill />
+      {!privateMode && <SidebarTrigger className="mr-1" />}
+      {!privateMode && availability.show && <Availability onClick={availability.action ? () => onAsk(availability.action!) : undefined} className="ml-1" />}
+      {!privateMode && <UnlockedPill />}
 
       <div className="ml-auto flex items-center gap-1">
-        <button type="button" className="icon-btn" onClick={share} aria-label="Copy link to this answer">
-          {copied ? <Check className="size-[18px] text-accent" /> : <Link2 className="size-[18px]" />}
-        </button>
-        <ThemeToggle className="border border-line-strong bg-card text-fg shadow-sm" />
+        {!privateMode && (
+          <button type="button" className="icon-btn" onClick={share} aria-label="Copy link to this answer">
+            {copied ? <Check className="size-[18px] text-accent" /> : <Link2 className="size-[18px]" />}
+          </button>
+        )}
+        {!privateMode && <ThemeToggle className="border border-line-strong bg-card text-fg shadow-sm" />}
         <button type="button" className="icon-btn lg:hidden" onClick={onNew} aria-label={persona.labels.newChat}>
           <SquarePen className="size-[18px]" />
         </button>
-        <LanguageSwitch />
-        {doc.pdfUrl ? (
+        {!privateMode && <LanguageSwitch />}
+        {privateMode ? null : doc.pdfUrl ? (
           <>
             <a href={persona.fileHref(doc.pdfUrl)} download className="icon-btn sm:hidden" aria-label={doc.download}>
               <Download className="size-[18px]" />

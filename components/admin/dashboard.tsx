@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -29,14 +28,13 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Analytics } from "./analytics";
 import type { AdminData } from "@/server/admin-view";
 import type { VisitorInfo } from "@/server/store";
 import { cn, plain, withBase } from "@/lib/utils";
 import { getAuthClient } from "@/lib/auth-client";
 
-type Props = { data: AdminData; labels: Record<string, string>; personas?: { slug: string; name: string }[]; persona?: string; topContent?: ReactNode };
-type Tab = "all" | "messages" | "feedback" | "votes" | "ai" | "visitors" | "analytics";
+type Props = { data: AdminData; labels: Record<string, string>; personas?: { slug: string; name: string }[]; persona?: string };
+type Tab = "all" | "messages" | "feedback" | "votes" | "ai" | "visitors";
 
 type Item = {
   id: string;
@@ -247,7 +245,7 @@ function useEdgeFade(ref: React.RefObject<HTMLElement | null>) {
 }
 
 // ---------- page ----------
-export function AdminDashboard({ data: db, labels, personas = [], persona, topContent }: Props) {
+export function AdminDashboard({ data: db, labels, personas = [], persona }: Props) {
   const now = useNow();
   const lastSeen = useLastSeen();
   const [tab, setTab] = useState<Tab>("all");
@@ -329,7 +327,6 @@ export function AdminDashboard({ data: db, labels, personas = [], persona, topCo
     { id: "votes", label: "Votes", count: db.votes.length },
     { id: "ai", label: "AI answers", count: db.aiAnswers.length },
     { id: "visitors", label: "Visitors", count: visitors.length },
-    { id: "analytics", label: "Analytics", count: db.analytics.views },
   ];
 
   const selectedItem = tab !== "visitors" ? items.find((i) => i.id === selected) : undefined;
@@ -378,8 +375,6 @@ export function AdminDashboard({ data: db, labels, personas = [], persona, topCo
           </div>
         </div>
       </header>
-
-      {topContent}
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 py-5 md:px-6 md:py-6">
         <section className="relative isolate overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-card via-card to-accent-soft/55 p-5 md:flex md:items-center md:justify-between md:gap-6 md:p-6">
@@ -497,12 +492,7 @@ export function AdminDashboard({ data: db, labels, personas = [], persona, topCo
           </div>
         </div>
 
-        {tab === "analytics" ? (
-          <div className="overflow-hidden rounded-2xl border border-line bg-card">
-            <Analytics data={db.analytics} />
-          </div>
-        ) : (
-        /* Two panes */
+        {/* Two panes */}
         <div className="grid min-h-[30rem] flex-1 grid-cols-[minmax(0,1fr)] overflow-hidden rounded-3xl border border-line bg-card shadow-sm lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
           {/* List */}
           <div className={cn("min-h-0 min-w-0 border-line lg:border-r", hasDetail && "hidden lg:block")}>
@@ -603,7 +593,6 @@ export function AdminDashboard({ data: db, labels, personas = [], persona, topCo
             )}
           </div>
         </div>
-        )}
       </main>
     </div>
   );

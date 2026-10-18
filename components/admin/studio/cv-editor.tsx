@@ -43,15 +43,36 @@ const blankJob = (): CvJob => ({ company: "", role: "", period: "", location: ""
  * The job persona's CV: every part of /cv/ and its PDF, with a live preview of the printed sheet next to
  * the form. Changes autosave into the draft; Publish & train makes them live and prints a new PDF.
  */
-export function CvEditor({ draft, data }: { draft: DraftApi; data: unknown }) {
-  const cv = readCv(data, codeCv);
+export function CvEditor({
+  draft,
+  data,
+  fallbackCv = codeCv,
+  value,
+  onChange,
+}: {
+  draft?: DraftApi;
+  data?: unknown;
+  fallbackCv?: CvData;
+  value?: CvData;
+  onChange?: (next: CvData) => void;
+}) {
+  const cv = value ?? readCv(data, fallbackCv);
   const [preview, setPreview] = useState(true);
-  const set = (fn: (c: CvData) => void) =>
-    draft.update((d) => {
-      const next = readCv(d.document?.data, codeCv);
+  const set = (fn: (c: CvData) => void) => {
+    if (draft) {
+      draft.update((d) => {
+        const next = readCv(d.document?.data, fallbackCv);
+        fn(next);
+        (d.document ??= {}).data = next as unknown as Record<string, unknown>;
+      });
+      return;
+    }
+    if (onChange) {
+      const next = structuredClone(cv);
       fn(next);
-      (d.document ??= {}).data = next as unknown as Record<string, unknown>;
-    });
+      onChange(next);
+    }
+  };
 
   return (
     <div className={cn("grid items-start gap-5", preview && "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]")}>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, LoaderCircle, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, LoaderCircle, RotateCcw, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { PersonaDoc } from "@/lib/persona/schema";
+import { PersonaDocShape, type PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
 
 const lines = (value: string) => value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, 100);
@@ -99,11 +99,15 @@ function applyTrainingFields(
   return doc;
 }
 
-type Props = { slug: string; initialDoc: PersonaDoc; initialRev: number; initiallyPublished: boolean };
+type Props = { slug: string; initialDoc: PersonaDoc; initialRev: number; initiallyPublished: boolean; initialTab?: "editor" | "json" };
 
-export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublished }: Props) {
+export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublished, initialTab = "editor" }: Props) {
   const router = useRouter();
-  const [initial] = useState(initialDoc);
+  const [baseDoc, setBaseDoc] = useState(initialDoc);
+  const [jsonOverride, setJsonOverride] = useState<PersonaDoc>();
+  const [tab, setTab] = useState<"editor" | "json">(initialTab);
+  const [jsonText, setJsonText] = useState(JSON.stringify(initialDoc, null, 2));
+  const [jsonError, setJsonError] = useState<string>();
   const [rev, setRev] = useState(initialRev);
   const [name, setName] = useState(initialDoc.identity.name);
   const [headline, setHeadline] = useState(text(initialDoc.identity.role ?? initialDoc.identity.headline));
@@ -121,7 +125,49 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
   const [status, setStatus] = useState<string>();
   const [error, setError] = useState<string>();
 
-  const document = () => applyTrainingFields(initial, { name, headline, summary, skills, experience, education, projects });
+  const buildDocument = () => jsonOverride ?? applyTrainingFields(baseDoc, { name, headline, summary, skills, experience, education, projects });
+  const openTab = (next: "editor" | "json") => {
+    setTab(next);
+    if (next === "json") {
+      setJsonText(JSON.stringify(buildDocument(), null, 2));
+      setJsonError(undefined);
+    }
+    const url = new URL(window.location.href);
+    if (next === "json") url.searchParams.set("tab", next);
+    else url.searchParams.delete("tab");
+    window.history.replaceState(null, "", url);
+  };
+  const applyJson = () => {
+    let value: unknown;
+    try {
+      value = JSON.parse(jsonText);
+    } catch (cause) {
+      setJsonError(`Not valid JSON: ${cause instanceof Error ? cause.message : String(cause)}`);
+      return;
+    }
+    const parsed = PersonaDocShape.safeParse(value);
+    if (!parsed.success) {
+      setJsonError(parsed.error.issues.slice(0, 5).map((issue) => `${issue.path.join(".") || "profile"}: ${issue.message}`).join("; "));
+      return;
+    }
+    const next = parsed.data;
+    setBaseDoc(next);
+    setJsonOverride(next);
+    setName(next.identity.name);
+    setHeadline(text(next.identity.role ?? next.identity.headline));
+    setSummary(text(next.identity.summary));
+    setSkills(sectionLines(next, "skills"));
+    setExperience(sectionLines(next, "experience"));
+    setEducation(sectionLines(next, "education"));
+    setProjects(sectionLines(next, "projects"));
+    setJsonText(JSON.stringify(next, null, 2));
+    setJsonError(undefined);
+    setStatus("JSON applied. Save your draft to keep the changes.");
+  };
+  const editField = <T,>(setter: (value: T) => void, value: T) => {
+    setJsonOverride(undefined);
+    setter(value);
+  };
   const save = async () => {
     setBusy(true);
     setError(undefined);
@@ -130,7 +176,7 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
       const response = await fetch(withBase(`/api/account/personas/${slug}/`), {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ doc: document(), rev }),
+        body: JSON.stringify({ doc: buildDocument(), rev }),
       });
       const result = (await response.json()) as { rev?: number; error?: string };
       if (!response.ok || typeof result.rev !== "number") {
@@ -162,12 +208,12 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ question }),
       });
-      const result = (await response.json()) as { result?: { route: string; text?: string }; error?: string };
-      if (!response.ok || !result.result) {
+      const result = (await response.json()) as { text?: string; result?: { route: string }; error?: string };
+      if (!response.ok || typeof result.text !== "string") {
         setError(result.error || "The profile assistant couldn't answer this test question.");
         return;
       }
-      setAnswer(result.result.text || (result.result.route === "decline" ? "The assistant correctly declined because the profile doesn't contain an answer yet." : `Assistant route: ${result.result.route}`));
+      setAnswer(result.text);
     } catch {
       setError("Couldn't reach the server. Check your connection and try again.");
     } finally {
@@ -240,9 +286,9 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
       </Link>
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="inline-flex items-center gap-2 text-sm font-semibold text-accent"><Sparkles className="size-4" aria-hidden="true" /> AI Training</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Build your profile</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Add facts the assistant can use. Keep each experience, education, project, or skill on its own line.</p>
+          <p className="inline-flex items-center gap-2 text-sm font-semibold text-accent"><Sparkles className="size-4" aria-hidden="true" /> Persona Studio</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Build and train your profile</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Add facts the assistant can use, edit the full profile as JSON, and test answers before publishing.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/account/training/${slug}/design/`} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line-strong bg-card px-4 font-semibold hover:border-accent/50">
@@ -257,14 +303,65 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.75fr]">
+      <div className="mt-7 flex gap-1 overflow-x-auto rounded-xl border border-line bg-card p-1" role="tablist" aria-label="Profile editor">
+        {([
+          ["editor", "Profile & AI"],
+          ["json", "JSON"],
+        ] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => openTab(id)}
+            className={`min-h-10 rounded-lg px-4 text-sm font-semibold whitespace-nowrap ${tab === id ? "bg-surface text-fg" : "text-muted hover:text-fg"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "json" ? (
+        <section className="mt-5 space-y-4 rounded-2xl border border-line bg-card p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="font-semibold">Your profile as JSON</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">Edit the complete profile, including nested details. Applying validates the document; save the draft to persist it. JSON changes stay private until you publish.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => {
+                const blob = new Blob([JSON.stringify(buildDocument(), null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                  const link = window.document.createElement("a");
+                link.href = url;
+                link.download = `${slug}-profile.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+              }} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong px-3 text-sm font-semibold">
+                <Download className="size-4" /> Download
+              </button>
+              <button type="button" onClick={() => {
+                setJsonText(JSON.stringify(buildDocument(), null, 2));
+                setJsonError(undefined);
+              }} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong px-3 text-sm font-semibold">
+                <RotateCcw className="size-4" /> Reset
+              </button>
+              <button type="button" onClick={applyJson} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent">
+                Apply JSON
+              </button>
+            </div>
+          </div>
+          {jsonError && <p role="alert" className="rounded-xl bg-accent-soft p-3 text-sm font-medium text-accent">{jsonError}</p>}
+          <label htmlFor="profile-json" className="sr-only">Profile JSON</label>
+          <textarea id="profile-json" value={jsonText} onChange={(event) => {
+            setJsonText(event.target.value);
+            setJsonOverride(undefined);
+            setJsonError(undefined);
+          }} spellCheck={false} rows={30} className={`${textAreaClass} min-h-[32rem] resize-y font-mono text-xs leading-relaxed`} />
+        </section>
+      ) : (
+      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_0.75fr]">
         <div className="space-y-5">
           <section className="rounded-2xl border border-line bg-card p-5 sm:p-6">
             <h2 className="font-semibold">Profile basics</h2>
             <div className="mt-4 space-y-4">
-              <label className="block space-y-2 text-sm font-medium">Full name<input className={inputClass} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} /></label>
-              <label className="block space-y-2 text-sm font-medium">Professional headline<input className={inputClass} maxLength={160} value={headline} onChange={(event) => setHeadline(event.target.value)} /></label>
-              <label className="block space-y-2 text-sm font-medium">Short professional summary<textarea className={textAreaClass} maxLength={6000} value={summary} onChange={(event) => setSummary(event.target.value)} /></label>
+              <label className="block space-y-2 text-sm font-medium">Full name<input className={inputClass} maxLength={120} value={name} onChange={(event) => editField(setName, event.target.value)} /></label>
+              <label className="block space-y-2 text-sm font-medium">Professional headline<input className={inputClass} maxLength={160} value={headline} onChange={(event) => editField(setHeadline, event.target.value)} /></label>
+              <label className="block space-y-2 text-sm font-medium">Short professional summary<textarea className={textAreaClass} maxLength={6000} value={summary} onChange={(event) => editField(setSummary, event.target.value)} /></label>
             </div>
           </section>
           {([
@@ -276,7 +373,7 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
             <section key={title} className="rounded-2xl border border-line bg-card p-5 sm:p-6">
               <label className="block space-y-2 text-sm font-semibold">
                 {title}
-                <textarea className={textAreaClass} value={value} onChange={(event) => setter(event.target.value)} aria-describedby={`hint-${title}`} />
+                <textarea className={textAreaClass} value={value} onChange={(event) => editField(setter, event.target.value)} aria-describedby={`hint-${title}`} />
               </label>
               <p id={`hint-${title}`} className="mt-2 text-xs leading-5 text-muted">{hint}</p>
             </section>
@@ -311,6 +408,7 @@ export function TrainingEditor({ slug, initialDoc, initialRev, initiallyPublishe
           {error && <p role="alert" className="rounded-xl bg-accent-soft p-4 text-sm font-medium text-accent">{error}</p>}
         </aside>
       </div>
+      )}
     </div>
   );
 }

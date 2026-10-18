@@ -4,17 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Bot, FileText, LoaderCircle, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
-import type { PersonaRow } from "@/server/persona/repo";
 import { withBase } from "@/lib/utils";
+import { roleCvName } from "@/lib/persona/training";
 
-export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
+type AccountCv = {
+  slug: string;
+  name: string;
+  identityName: string;
+  role: string;
+  publishedVersionId: string | null;
+};
+
+export function AccountWorkspace({ personas }: { personas: AccountCv[] }) {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
   const [headline, setHeadline] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
-  const createProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+  const createCv = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
     setBusy(true);
@@ -23,11 +30,11 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
       const response = await fetch(withBase("/api/account/personas/"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ fullName, headline }),
+        body: JSON.stringify({ headline }),
       });
       const result = (await response.json()) as { slug?: string; error?: string };
       if (!response.ok || !result.slug) {
-        setError(result.error || "Couldn't create your profile. Try again.");
+        setError(result.error || "Couldn't create your CV. Try again.");
         return;
       }
       router.push(`/account/training/${result.slug}/`);
@@ -40,14 +47,15 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
 
   const publishedCount = personas.filter((persona) => persona.publishedVersionId).length;
   const draftCount = personas.length - publishedCount;
+  const roleCount = personas.filter((persona) => persona.role.trim().toLowerCase() === headline.trim().toLowerCase()).length;
 
   return (
     <div className="space-y-8">
-      <section aria-label="Your profile summary" className="grid gap-3 sm:grid-cols-3">
+      <section aria-label="Your CV summary" className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Your profiles", value: personas.length },
-          { label: "Published", value: publishedCount },
-          { label: "Private drafts", value: draftCount },
+          { label: "Your CVs", value: personas.length },
+          { label: "Published CVs", value: publishedCount },
+          { label: "CV drafts", value: draftCount },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-2xl border border-line bg-card p-5">
             <p className="text-sm font-medium text-muted">{label}</p>
@@ -57,10 +65,10 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
       </section>
 
       {personas.length > 0 && (
-        <section aria-labelledby="profiles-heading" className="space-y-3">
+        <section aria-labelledby="cvs-heading" className="space-y-3">
           <div>
-            <h2 id="profiles-heading" className="text-lg font-semibold">Your dashboard</h2>
-            <p className="mt-1 text-sm text-muted">Open your AI, update its training, or continue designing your CV.</p>
+            <h2 id="cvs-heading" className="text-lg font-semibold">Your CVs</h2>
+            <p className="mt-1 text-sm text-muted">Open a CV’s AI, update its information, or change its design.</p>
           </div>
           <ul className="grid gap-4 lg:grid-cols-2">
             {personas.map((persona) => (
@@ -71,8 +79,9 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{persona.name}</span>
+                    {persona.role && <span className="block truncate text-sm text-muted">{persona.role}</span>}
                     <span className="block text-sm text-muted">
-                      {persona.publishedVersionId ? "Published profile" : "Private draft"}
+                      {persona.publishedVersionId ? "Published CV" : "Private CV draft"}
                     </span>
                   </span>
                 </div>
@@ -81,19 +90,19 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
                     href={`/account/ai/${persona.slug}/`}
                     className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-3.5 text-sm font-semibold text-on-accent"
                   >
-                    <Bot className="size-4" aria-hidden="true" /> Open my AI
+                    <Bot className="size-4" aria-hidden="true" /> Ask my CV AI
                   </Link>
                   <Link
                     href={`/account/training/${persona.slug}/`}
                     className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
                   >
-                    <Sparkles className="size-4" aria-hidden="true" /> Train AI
+                    <Sparkles className="size-4" aria-hidden="true" /> Train CV AI
                   </Link>
                   <Link
                     href={`/account/training/${persona.slug}/design/`}
                     className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
                   >
-                    <FileText className="size-4" aria-hidden="true" /> CV design
+                    <FileText className="size-4" aria-hidden="true" /> Edit CV
                   </Link>
                   {persona.publishedVersionId && (
                     <Link
@@ -102,7 +111,7 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
                       rel="noreferrer"
                       className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
                     >
-                      Public profile <ArrowRight className="size-3.5" aria-hidden="true" />
+                      Public CV <ArrowRight className="size-3.5" aria-hidden="true" />
                     </Link>
                   )}
                 </div>
@@ -112,31 +121,19 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
         </section>
       )}
 
-      <form onSubmit={createProfile} className="rounded-2xl border border-line bg-card p-5 sm:p-7">
+      <form id="create-job-profile" onSubmit={createCv} className="rounded-2xl border border-line bg-card p-5 sm:p-7">
         <div className="flex items-start gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
             <Plus className="size-5" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-lg font-semibold">Create your AI profile</h2>
-            <p className="mt-1 text-sm leading-6 text-muted">Start with your name and professional focus. You can add and edit details before publishing.</p>
+              <h2 className="text-lg font-semibold">{personas.length ? "Create another CV" : "Create your CV"}</h2>
+              <p className="mt-1 text-sm leading-6 text-muted">Your professional role names the CV automatically. Your account name starts the CV identity; edit your experience and train its AI before publishing.</p>
           </div>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4">
           <label className="space-y-2 text-sm font-medium">
-            Full name
-            <input
-              required
-              minLength={2}
-              maxLength={120}
-              autoComplete="name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              className="w-full rounded-xl border border-line-strong bg-bg px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
-            />
-          </label>
-          <label className="space-y-2 text-sm font-medium">
-            Professional headline
+              Professional headline
             <input
               required
               minLength={2}
@@ -148,14 +145,17 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
             />
           </label>
         </div>
+        {headline.trim().length >= 2 && (
+          <p className="mt-3 text-sm text-muted">Your CV will be named <span className="font-semibold text-fg">{roleCvName(headline, roleCount + 1)}</span>.</p>
+        )}
         {error && <p role="alert" className="mt-4 text-sm font-medium text-accent">{error}</p>}
         <button
           type="submit"
-          disabled={busy || !fullName.trim() || !headline.trim()}
+          disabled={busy || headline.trim().length < 2}
           className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60"
         >
           {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />}
-          Start training
+          {busy ? "Creating CV..." : "Create CV"}
         </button>
       </form>
     </div>

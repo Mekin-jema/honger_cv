@@ -43,18 +43,22 @@ type Props = {
   onPhase: (id: string, phase: Phase) => void;
   onAsk: (intentId: string) => void;
   onRegenerate: (id: string) => void;
+  privateMode?: boolean;
 };
 
-export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: Props) {
+export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate, privateMode = false }: Props) {
   const persona = usePersona();
   const intent = resolveIntent(msg, persona);
   // If AI selected a curated topic, keep its corresponding indexable page link.
   const pageIntentId = msg.ai?.status === "ready" ? msg.ai.topicId : intent.id;
+  const availableBlocks = privateMode
+    ? intent.blocks.filter((block) => !["contact-form", "feedback-form", "request-access"].includes(block.kind))
+    : intent.blocks;
   const blocks =
-    pageIntentId === "contact" && !intent.blocks.some((block) => block.kind === "contact-form")
-      ? [...intent.blocks, { kind: "contact-form" as const }]
-      : intent.blocks;
-  const page = pageIntentId ? persona.get(pageIntentId)?.page : undefined;
+    !privateMode && pageIntentId === "contact" && !availableBlocks.some((block) => block.kind === "contact-form")
+      ? [...availableBlocks, { kind: "contact-form" as const }]
+      : availableBlocks;
+  const page = !privateMode && pageIntentId ? persona.get(pageIntentId)?.page : undefined;
   const text = intent.answers[msg.variant % intent.answers.length];
   const words = text.split(/(\s+)/);
   const reduced = useReducedMotion();
@@ -181,7 +185,7 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
                   <FileText className="size-4" />
                 </a>
               )}
-              {!notice && (
+              {!privateMode && !notice && (
                 <>
                 <button
                   type="button"
@@ -221,7 +225,7 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate }: 
             <p role="status" aria-live="polite" className={cn("-ml-11 text-sm text-muted md:ml-0", voteError ? "mt-1" : "sr-only")}>
               {voteError ? "Couldn't save your vote - try again." : ""}
             </p>
-            {voteNote && persona.get("feedback") && (
+            {!privateMode && voteNote && persona.get("feedback") && (
               <p className="mt-1 -ml-11 text-sm text-muted md:ml-0">
                 Sorry it missed.{" "}
                 <button type="button" className="font-semibold text-fg underline-offset-4 hover:underline" onClick={() => onAsk("feedback")}>

@@ -5,7 +5,7 @@ import { Check, ListPlus, LoaderCircle, MessageSquarePlus, ThumbsDown } from "lu
 import { enText, idFrom } from "@/lib/persona/edit";
 import type { LText } from "@/lib/persona/text";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch } from "./api";
 import { LTextInput, SelectInput, smallBtn } from "./controls";
 import type { TabProps } from "./studio";
 
@@ -77,7 +77,7 @@ function AddFact({ group, doc, bangla, onAdd, onCancel }: { group: Group; doc: T
   );
 }
 
-export function ReviewTab({ slug, draft, doc, bangla, go }: TabProps) {
+export function ReviewTab({ slug, draft, doc, bangla, go, mode }: TabProps) {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [error, setError] = useState<string>();
   const [adding, setAdding] = useState<string | null>(null);
@@ -85,10 +85,10 @@ export function ReviewTab({ slug, draft, doc, bangla, go }: TabProps) {
   const [filter, setFilter] = useState("");
 
   const load = useCallback(async () => {
-    const res = await adminFetch<{ entries: Entry[] }>(`/api/admin/personas/${slug}/review/`);
+    const res = await studioFetch<{ entries: Entry[] }>(mode, slug, `/api/admin/personas/${slug}/review/`);
     if (res.ok) setEntries(res.data.entries);
     else setError(res.error);
-  }, [slug]);
+  }, [mode, slug]);
   useEffect(() => {
     // Loads once; state is set when the request resolves.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -109,7 +109,7 @@ export function ReviewTab({ slug, draft, doc, bangla, go }: TabProps) {
 
   const resolve = async (g: Group, promotedTo?: string) => {
     setBusy(g.key);
-    const res = await adminFetch(`/api/admin/personas/${slug}/review/`, { body: { ids: g.entries.map((e) => e.id), promotedTo } });
+    const res = await studioFetch(mode, slug, `/api/admin/personas/${slug}/review/`, { body: { ids: g.entries.map((e) => e.id), promotedTo } });
     setBusy(null);
     if (!res.ok) return setError(res.error);
     const ids = new Set(g.entries.map((e) => e.id));

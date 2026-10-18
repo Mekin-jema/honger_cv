@@ -58,19 +58,30 @@ import type { Question } from "@/lib/persona/types";
 
 export function ChatApp({
   initialIntent,
+  initialQuestion,
   aiEnabled = false,
+  aiApiPath,
+  trackEvents = true,
+  syncUrlPaths = true,
+  privateMode = false,
 }: {
   initialIntent?: string;
+  initialQuestion?: string;
   aiEnabled?: boolean;
+  aiApiPath?: string;
+  trackEvents?: boolean;
+  syncUrlPaths?: boolean;
+  privateMode?: boolean;
 }) {
   const persona = usePersona();
   // The landing screen shows a short, curated set; "More" opens the full list.
   const landing = persona.landing
     .map((id) => persona.get(id))
     .filter((q): q is Question => !!q);
-  const chat = useChat(persona, initialIntent);
+  const chat = useChat(persona, initialIntent, { aiApiPath, syncUrlPaths });
   const { messages, generating, ask: chatAsk } = chat;
   const initialAsk = useRef<string | null>(null);
+  const initialTextAsk = useRef<string | null>(null);
   const empty = messages.length === 0;
 
   const [showDown, setShowDown] = useState(false);
@@ -98,9 +109,9 @@ export function ChatApp({
   const ask = useCallback(
     (intentId: string, text?: string) => {
       chatAsk(intentId, text);
-      track("ask", { intentId });
+      if (trackEvents) track("ask", { intentId });
     },
-    [chatAsk],
+    [chatAsk, trackEvents],
   );
 
   useEffect(() => {
@@ -111,11 +122,18 @@ export function ChatApp({
     ask(question.id);
   }, [ask, initialIntent, persona]);
 
+  useEffect(() => {
+    if (!initialQuestion || initialTextAsk.current === initialQuestion) return;
+    initialTextAsk.current = initialQuestion;
+    ask("ai", initialQuestion);
+  }, [ask, initialQuestion]);
+
   // One anonymous page view per load (device details only if the visitor accepted).
   useEffect(() => {
+    if (!trackEvents) return;
     startSession();
     track("pageview", { path: window.location.pathname });
-  }, []);
+  }, [trackEvents]);
 
   const reset = () => {
     chat.reset();
@@ -212,17 +230,20 @@ export function ChatApp({
           Skip to question box
         </a>
         {/* The Privacy answer carries the same Accept/Reject, so the banner steps aside while it is shown. */}
-        <ConsentBanner
-          onLearnMore={
-            persona.get("privacy") ? () => chatAsk("privacy") : undefined
-          }
-          hidden={activeIntent === "privacy"}
-        />
-        <div className="flex h-[var(--app-h,100dvh)] overflow-hidden">
+        {!privateMode && (
+          <ConsentBanner
+            onLearnMore={
+              persona.get("privacy") ? () => chatAsk("privacy") : undefined
+            }
+            hidden={activeIntent === "privacy"}
+          />
+        )}
+        <div className={`flex ${privateMode ? "h-[calc(var(--app-h,100dvh)-4rem)]" : "h-[var(--app-h,100dvh)]"} overflow-hidden`}>
           <div className="flex min-w-0 flex-1 flex-col">
             <TopBar
               onNew={reset}
               onAsk={ask}
+              privateMode={privateMode}
             />
 
             <LayoutGroup>
@@ -285,6 +306,7 @@ export function ChatApp({
                                 onPhase={chat.setPhase}
                                 onAsk={ask}
                                 onRegenerate={chat.regenerate}
+                                privateMode={privateMode}
                               />
                             </div>
                           )}

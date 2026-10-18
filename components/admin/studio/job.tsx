@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, ChevronDown, Circle, LoaderCircle, MinusCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 
 /** Background jobs (publish & train, checks) as the admin sees them: started, polled, shown step by step. */
 
@@ -25,7 +25,7 @@ export type JobView = ReturnType<typeof useJob>;
 
 const POLL_MS = 1000;
 
-export function useJob() {
+export function useJob(mode: StudioMode = "admin", slug = "") {
   const [job, setJob] = useState<ClientJob | null>(null);
   const [error, setError] = useState<string>();
   const [issues, setIssues] = useState<string[]>([]);
@@ -43,7 +43,7 @@ export function useJob() {
     if (watching.current !== id) return;
     // Hidden tab: check less often.
     if (document.hidden) return later(id, POLL_MS * 4);
-    const res = await adminFetch<{ job: ClientJob }>(`/api/admin/jobs/${id}/`);
+    const res = await studioFetch<{ job: ClientJob }>(mode, slug, `/api/admin/jobs/${id}/`);
     if (watching.current !== id) return;
     if (res.ok) {
       setJob(res.data.job);
@@ -54,7 +54,7 @@ export function useJob() {
       }
     }
     later(id, res.ok ? POLL_MS : POLL_MS * 3);
-  }, [later]);
+  }, [later, mode, slug]);
   useEffect(() => {
     pollRef.current = poll;
   }, [poll]);
@@ -78,7 +78,7 @@ export function useJob() {
       setError(undefined);
       setIssues([]);
       setNote(undefined);
-      const res = await adminFetch<{ jobId?: string } & Record<string, unknown>>(path, { body });
+      const res = await studioFetch<{ jobId?: string } & Record<string, unknown>>(mode, slug, path, { body });
       setStarting(false);
       if (!res.ok) {
         setError(res.error);
@@ -90,7 +90,7 @@ export function useJob() {
         watch(res.data.jobId);
       } else setNote(immediate?.(res.data) ?? "Done.");
     },
-    [watch],
+    [mode, slug, watch],
   );
 
   const fail = useCallback((message: string) => setError(message), []);

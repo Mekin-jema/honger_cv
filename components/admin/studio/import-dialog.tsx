@@ -5,7 +5,7 @@ import { ChevronDown, LoaderCircle, Sparkles, X } from "lucide-react";
 import { parsePersonaMarkdown, renderPersonaMarkdown } from "@/lib/persona/markdown";
 import { describeMerge, mergeMarkdown } from "@/lib/persona/merge";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 import { Toggle, inputCls, smallBtn } from "./controls";
 import type { Doc, DraftApi } from "./use-draft";
 
@@ -37,7 +37,7 @@ const GUIDE: [string, string][] = [
  * Paste the Markdown template (or free text for the AI to structure), see exactly what changes, then
  * apply it to the draft. Nothing is applied before "Apply"; applying is an ordinary autosaved edit.
  */
-export function ImportDialog({ slug, draft, doc, ai, onClose }: { slug: string; draft: DraftApi; doc: Doc; ai: boolean; onClose: () => void }) {
+export function ImportDialog({ slug, draft, doc, ai, studioMode, onClose }: { slug: string; draft: DraftApi; doc: Doc; ai: boolean; studioMode: StudioMode; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<"template" | "free">("template");
   const [text, setText] = useState("");
@@ -63,7 +63,7 @@ export function ImportDialog({ slug, draft, doc, ai, onClose }: { slug: string; 
   const runAi = async (action: "structure" | "suggest") => {
     setBusy(action);
     setAiError(undefined);
-    const res = await adminFetch<{ markdown: string }>("/api/admin/ai/", { body: { action, slug, doc, text: free } });
+    const res = await studioFetch<{ markdown: string }>(studioMode, slug, "/api/admin/ai/", { body: { action, slug, doc, text: free } });
     setBusy(null);
     if (!res.ok) return setAiError(res.error);
     setText(res.data.markdown);
@@ -115,7 +115,7 @@ export function ImportDialog({ slug, draft, doc, ai, onClose }: { slug: string; 
           {mode === "free" ? (
             <div className="space-y-3">
               <label htmlFor="free-text" className="block text-sm font-semibold">
-                Paste an old biodata, notes or a message, in English or Bangla
+                Paste your CV, resume, notes or a message, in English or Bangla
               </label>
               <textarea id="free-text" value={free} onChange={(e) => setFree(e.target.value)} rows={12} className={cn(inputCls, "resize-y")} placeholder="Name: ... Height: ... Father: retired teacher ..." />
               <p className="text-[13px] text-muted">The AI only sorts what you wrote into the template (phone numbers, addresses and family names become &ldquo;with access code&rdquo;). You check the result before anything changes. Private sections are never sent.</p>

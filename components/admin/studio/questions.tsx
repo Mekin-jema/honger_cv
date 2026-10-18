@@ -6,7 +6,7 @@ import { enText, idFrom, move, removeQuestion, renameQuestion } from "@/lib/pers
 import { ICON_NAMES, QIcon } from "@/lib/persona/icons";
 import type { LText } from "@/lib/persona/text";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch } from "./api";
 import { IdListPicker, LTextInput, LTextList, ListInput, Panel, SelectInput, TextInput, Toggle, VisBadge, iconBtn, inputCls, smallBtn } from "./controls";
 import { ImportDialog } from "./import-dialog";
 import type { TabProps } from "./studio";
@@ -63,7 +63,7 @@ function BlockPicker({ label, hint, value, doc, visibility, onChange, max }: { l
   );
 }
 
-function QuestionEditor({ slug, q, index, doc, bangla, ai, update, onRenamed, onDeleted }: { slug: string; q: Question; index: number; doc: Doc; bangla: boolean; ai: boolean; update: (fn: (d: Doc) => void) => void; onRenamed: (id: string) => void; onDeleted: () => void }) {
+function QuestionEditor({ slug, q, index, doc, bangla, ai, mode, update, onRenamed, onDeleted }: { slug: string; q: Question; index: number; doc: Doc; bangla: boolean; ai: boolean; mode: TabProps["mode"]; update: (fn: (d: Doc) => void) => void; onRenamed: (id: string) => void; onDeleted: () => void }) {
   const [idText, setIdText] = useState(q.id);
   const [seen, setSeen] = useState(q.id);
   const [idError, setIdError] = useState<string>();
@@ -89,7 +89,7 @@ function QuestionEditor({ slug, q, index, doc, bangla, ai, update, onRenamed, on
   const draftAnswer = async () => {
     setDrafting(true);
     setAiError(undefined);
-    const res = await adminFetch<{ answer: { en: string; bn?: string } }>("/api/admin/ai/", { body: { action: "draft-answer", slug, doc, label: enText(q.label), prompt: enText(q.prompt) } });
+    const res = await studioFetch<{ answer: { en: string; bn?: string } }>(mode, slug, "/api/admin/ai/", { body: { action: "draft-answer", slug, doc, label: enText(q.label), prompt: enText(q.prompt) } });
     setDrafting(false);
     if (!res.ok) return setAiError(res.error);
     const a = res.data.answer;
@@ -254,7 +254,7 @@ function Layout({ doc, bangla, update }: { doc: Doc; bangla: boolean; update: (f
   );
 }
 
-export function QuestionsTab({ slug, draft, doc, bangla, ai, focus }: TabProps) {
+export function QuestionsTab({ slug, draft, doc, bangla, ai, focus, mode }: TabProps) {
   const questions = doc.questions ?? [];
   const focusIndex = focus?.startsWith("questions.") ? Number(focus.split(".")[1]) : -1;
   const layoutFocus = !!focus && /^(landing|sidebar|defaultFollowUps|fallback)/.test(focus);
@@ -331,14 +331,14 @@ export function QuestionsTab({ slug, draft, doc, bangla, ai, focus }: TabProps) 
           </div>
           {index >= 0 ? (
             <div className="order-1 min-w-0 lg:order-2">
-            <QuestionEditor key={index} slug={slug} q={questions[index]} index={index} doc={doc} bangla={bangla} ai={ai} update={draft.update} onRenamed={setSelected} onDeleted={() => setSelected(questions.find((q) => q.id !== selected)?.id ?? null)} />
+            <QuestionEditor key={index} slug={slug} q={questions[index]} index={index} doc={doc} bangla={bangla} ai={ai} mode={mode} update={draft.update} onRenamed={setSelected} onDeleted={() => setSelected(questions.find((q) => q.id !== selected)?.id ?? null)} />
             </div>
           ) : (
             <p className="card order-1 p-5 text-muted lg:order-2">Pick a question, or add one.</p>
           )}
         </div>
       )}
-      {importing && <ImportDialog slug={slug} draft={draft} doc={doc} ai={ai} onClose={() => setImporting(false)} />}
+      {importing && <ImportDialog slug={slug} draft={draft} doc={doc} ai={ai} studioMode={mode} onClose={() => setImporting(false)} />}
     </div>
   );
 }

@@ -20,7 +20,7 @@ import "./cv.css";
 
 /**
  * The CV as a sheet of paper: used by /cv/ (and so the PDF) and by the live preview in the Studio, so
- * what the owner edits is exactly what gets printed. Contact details come from the profile.
+ * what the owner edits is exactly what gets printed. Persona CV data supplies the contact details.
  */
 
 function Section({ title, children, icon }: { title: string; children: React.ReactNode; icon?: React.ReactNode }) {
@@ -378,7 +378,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
           {skillsSection}
           {highlightsSection}
           {projectsSection}
-          {referencesSection}
+          {!cv.identity && referencesSection}
         </div>
       </article>
     );
@@ -415,7 +415,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
             {experienceSection}
             {educationSection}
             {projectsSection}
-            {referencesSection}
+            {!cv.identity && referencesSection}
           </div>
         </div>
       </article>
@@ -437,7 +437,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
           {experienceSection}
           {educationSection}
           {projectsSection}
-          {referencesSection}
+          {!cv.identity && referencesSection}
         </div>
       </article>
     );
@@ -454,7 +454,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
         {languagesSection}
         {projectsSection}
         {achievementsSection}
-        {referencesSection}
+        {!cv.identity && referencesSection}
       </article>
     );
   }
@@ -501,7 +501,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
           {languagesSection}
         </div>
         {projectsSection}
-        {referencesSection}
+        {!cv.identity && referencesSection}
       </article>
     );
   }
@@ -519,7 +519,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
         {educationSection}
         {languagesSection}
       </div>
-      {referencesSection}
+      {!cv.identity && referencesSection}
     </article>
   );
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, LoaderCircle, Mail, Phone, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminFetch } from "./api";
+import { studioFetch, type StudioMode } from "./api";
 import { Panel, smallBtn } from "./controls";
 
 type Request = { id: string; name: string; relation: string | null; phone: string | null; email: string | null; message: string; status: "new" | "approved" | "declined"; codeId: string | null; createdAt: string };
@@ -11,7 +11,7 @@ type Request = { id: string; name: string; relation: string | null; phone: strin
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /** People who asked for access: approve with a new code (shown once, to send them) or decline. */
-export function AccessRequests({ slug, siteUrl }: { slug: string; siteUrl?: string }) {
+export function AccessRequests({ slug, siteUrl, mode }: { slug: string; siteUrl?: string; mode: StudioMode }) {
   const [list, setList] = useState<Request[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [fresh, setFresh] = useState<{ id: string; code: string } | null>(null);
@@ -19,10 +19,10 @@ export function AccessRequests({ slug, siteUrl }: { slug: string; siteUrl?: stri
   const [error, setError] = useState<string>();
 
   const load = useCallback(async () => {
-    const res = await adminFetch<{ requests: Request[] }>(`/api/admin/personas/${slug}/requests/`);
+    const res = await studioFetch<{ requests: Request[] }>(mode, slug, `/api/admin/personas/${slug}/requests/`);
     if (res.ok) setList(res.data.requests);
     else setError(res.error);
-  }, [slug]);
+  }, [mode, slug]);
   useEffect(() => {
     // Loads once; state is set when the request resolves.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -32,7 +32,7 @@ export function AccessRequests({ slug, siteUrl }: { slug: string; siteUrl?: stri
   const decide = async (r: Request, action: "approve" | "decline") => {
     if (action === "decline" && !window.confirm(`Decline the request from ${r.name}?`)) return;
     setBusy(r.id);
-    const res = await adminFetch<{ code?: string }>(`/api/admin/personas/${slug}/requests/`, { body: { id: r.id, action } });
+    const res = await studioFetch<{ code?: string }>(mode, slug, `/api/admin/personas/${slug}/requests/`, { body: { id: r.id, action } });
     setBusy(null);
     if (!res.ok) return setError(res.error);
     if (res.data.code) {

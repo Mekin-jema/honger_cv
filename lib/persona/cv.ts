@@ -34,6 +34,21 @@ export type CvData = {
   identity?: CvIdentity;
 };
 
+const emptyCv: CvData = {
+  showPhoto: true,
+  title: "",
+  availability: "",
+  photo: "",
+  profile: "",
+  highlights: [],
+  skills: [],
+  experience: [],
+  projects: [],
+  education: { degree: "", school: "", year: "", note: "" },
+  courses: [],
+  languages: [],
+};
+
 type Rec = Record<string, unknown>;
 const rec = (x: unknown): Rec => (x && typeof x === "object" && !Array.isArray(x) ? (x as Rec) : {});
 const str = (x: unknown, d: string) => (typeof x === "string" ? x : d);
@@ -89,7 +104,7 @@ export function personaToCvData(doc: PersonaDoc, lang: Lang): CvData {
     links: doc.identity.links.map(({ label, href }) => ({ label, href })),
   };
 
-  return {
+  const derived: CvData = {
     showPhoto: doc.document.showPhoto,
     title: lt(doc.identity.role ?? doc.identity.headline, lang) || "Professional profile",
     availability: doc.availability.show ? "Open to new opportunities" : "",
@@ -132,4 +147,41 @@ export function personaToCvData(doc: PersonaDoc, lang: Lang): CvData {
     })).filter((item) => item.name || item.level),
     identity: cvIdentity,
   };
+  return { ...readCv(doc.document.data, derived), identity: cvIdentity };
+}
+
+/** CV-only knowledge saved from the form, excluding contact and design metadata. */
+export function cvKnowledge(doc: PersonaDoc, lang: Lang): Record<string, unknown> {
+  const cv = personaToCvData(doc, lang);
+  return {
+    profile: cv.profile,
+    highlights: cv.highlights.filter(Boolean),
+    skills: cv.skills.filter((item) => item.k || item.v),
+    experience: cv.experience
+      .map((job) => ({ ...job, bullets: job.bullets.filter(Boolean) }))
+      .filter((job) => job.role || job.company || job.bullets.length || job.engagements.length),
+    projects: cv.projects.filter((project) => project.name || project.text),
+    education: Object.fromEntries(Object.entries(cv.education).filter(([, value]) => !!value)),
+    courses: cv.courses.filter(Boolean),
+    languages: cv.languages.filter((item) => item.name || item.level),
+  };
+}
+
+export function hasCvKnowledge(doc: PersonaDoc): boolean {
+  const cv = readCv(doc.document.data, emptyCv);
+  return !!(
+    cv.profile.trim() ||
+    cv.highlights.some((item) => item.trim()) ||
+    cv.skills.some((item) => item.k.trim() || item.v.trim()) ||
+    cv.experience.some((job) =>
+      job.company.trim() ||
+      job.role.trim() ||
+      job.bullets.some((item) => item.trim()) ||
+      job.engagements.some((item) => item.title.trim() || item.bullets.some((bullet) => bullet.trim())),
+    ) ||
+    cv.projects.some((project) => project.name.trim() || project.meta.trim() || project.text.trim()) ||
+    Object.values(cv.education).some((value) => value.trim()) ||
+    cv.courses.some((item) => item.trim()) ||
+    cv.languages.some((item) => item.name.trim() || item.level.trim())
+  );
 }

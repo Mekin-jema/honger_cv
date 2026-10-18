@@ -6,7 +6,7 @@ import { enText, idFrom, move, removeSection, renameSection, setBangla, uniqueId
 import { renderPersonaMarkdown, SECTION_DISPLAYS_LIST } from "@/lib/persona/markdown";
 import type { LText } from "@/lib/persona/text";
 import { cn } from "@/lib/utils";
-import { adminFetch, downloadText } from "./api";
+import { downloadText, studioFetch } from "./api";
 import { LTextInput, LTextList, ListInput, NumberInput, Panel, RowActions, SelectInput, TextInput, Toggle, VisBadge, VisSelect, VIS_LABEL, iconBtn, inputCls, smallBtn, type Vis } from "./controls";
 import { ImportDialog } from "./import-dialog";
 import type { TabProps } from "./studio";
@@ -280,7 +280,7 @@ function SectionEditor({ section, index, doc, bangla, update, onDeleted, onRenam
   );
 }
 
-export function KnowledgeTab({ slug, draft, doc, bangla, ai, focus }: TabProps) {
+export function KnowledgeTab({ slug, draft, doc, bangla, ai, focus, mode }: TabProps) {
   const sections = doc.sections ?? [];
   const focusIndex = focus?.startsWith("sections.") ? Number(focus.split(".")[1]) : -1;
   const [selected, setSelected] = useState<string | null>(sections[focusIndex]?.key ?? sections[0]?.key ?? null);
@@ -293,7 +293,7 @@ export function KnowledgeTab({ slug, draft, doc, bangla, ai, focus }: TabProps) 
   const translate = async () => {
     setTranslating(true);
     setNote(undefined);
-    const res = await adminFetch<{ items: { path: (string | number)[]; en: string; bn: string }[]; total: number }>("/api/admin/ai/", { body: { action: "translate", slug, doc } });
+    const res = await studioFetch<{ items: { path: (string | number)[]; en: string; bn: string }[]; total: number }>(mode, slug, "/api/admin/ai/", { body: { action: "translate", slug, doc } });
     setTranslating(false);
     if (!res.ok) return setNote(res.error);
     let applied = 0;
@@ -351,7 +351,7 @@ export function KnowledgeTab({ slug, draft, doc, bangla, ai, focus }: TabProps) 
           <p className="card order-1 p-5 text-muted lg:order-2">Pick a section, or add one.</p>
         )}
       </div>
-      {importing && <ImportDialog slug={slug} draft={draft} doc={doc} ai={ai} onClose={() => setImporting(false)} />}
+      {importing && <ImportDialog slug={slug} draft={draft} doc={doc} ai={ai} studioMode={mode} onClose={() => setImporting(false)} />}
     </div>
   );
 }

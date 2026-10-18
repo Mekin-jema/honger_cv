@@ -1,11 +1,12 @@
 import { PersonaDocSchema, formatIssues } from "@/lib/persona/schema";
 import { lt } from "@/lib/persona/text";
 import { customerSession } from "@/server/admin-session";
+import { hasTrainingContent } from "@/lib/persona/training";
 import { answerQuestion, type AiTurn } from "@/server/brain/answer";
 import { aiEnabled } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
-import { compilePersona } from "@/server/persona/compile";
+import { clientView, compilePersona } from "@/server/persona/compile";
 import { recordPlatformEventSafely } from "@/server/platform-events";
 
 type Context = { params: Promise<{ slug: string }> };
@@ -40,23 +41,41 @@ export async function POST(req: Request, context: Context) {
   if (!draft) return bad("This profile has no training draft.", 404);
   const parsed = PersonaDocSchema.safeParse(draft.doc);
   if (!parsed.success) return bad(`Fix the draft before testing: ${formatIssues(parsed.error, 6).join("; ")}`, 422);
+  if (!hasTrainingContent(parsed.data)) return bad("Add your own details in the Knowledge tab before asking your AI.", 409);
 
   try {
     const compiled = compilePersona(slug, parsed.data, { versionId: null, number: 0 });
     const answer = await answerQuestion({ compiled, tier: "public", question, history });
     const result = answer.result;
-    let text: string;
-    if (result.route === "answer") text = result.text;
-    else if (result.route === "topic") {
-      const savedAnswer = parsed.data.questions.find((item) => item.id === result.intentId)?.answers[0];
-      text = result.text || (savedAnswer ? lt(savedAnswer, parsed.data.site.defaultLang) : "") || "I found a related topic in your profile.";
-    } else if (result.route === "gated") {
-      text = "That detail is not included in the public information in your profile yet.";
-    } else {
-      text = "I couldn't find that information in your profile. Add it in AI Training to teach me.";
-    }
+    const view = clientView(compiled, "public", parsed.data.site.defaultLang);
     await recordPlatformEventSafely(session.userId, "assistant_tested", slug, { route: answer.result.route });
-    return json({ ok: true, text, result: answer.result });
+    if (result.route === "topic") {
+      const topic = view.questions.find((item) => item.id === result.intentId);
+      const savedAnswer = parsed.data.questions.find((item) => item.id === result.intentId)?.answers[0];
+      return json({
+        ok: true,
+        route: "topic",
+        intentId: result.intentId,
+        answerId: `draft-${draft.rev}`,
+        text: result.text || (savedAnswer ? lt(savedAnswer, parsed.data.site.defaultLang) : null),
+        cards: topic?.blocks ?? [],
+        suggestedTopics: topic?.followUps ?? [],
+      });
+    }
+    if (result.route === "answer") {
+      return json({ ok: true, route: "answer", answerId: `draft-${draft.rev}`, text: result.text, cards: result.cards, suggestedTopics: result.suggestedTopics });
+    }
+    if (result.route === "gated") {
+      return json({
+        ok: true,
+        route: "answer",
+        answerId: `draft-${draft.rev}`,
+        text: "That detail is not included in the public information in your profile yet.",
+        cards: [],
+        suggestedTopics: view.defaultFollowUps,
+      });
+    }
+    return json({ ok: true, route: "decline" });
   } catch (error) {
     console.error(`[account-ai-test] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
     return bad("The assistant couldn't answer this test question. Try again shortly.", 502);

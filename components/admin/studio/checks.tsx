@@ -12,10 +12,10 @@ type Report = { results: Result[]; leaks: number; warnings: number; skipped?: st
 
 const KIND: Record<Result["kind"], string> = { golden: "Your test", leak: "Privacy", injection: "Trick" };
 
-export function ChecksTab({ slug, draft, doc, ai }: TabProps) {
+export function ChecksTab({ slug, draft, doc, ai, mode }: TabProps) {
   const set = draft.update;
   const checks = doc.checks ?? [];
-  const job = useJob();
+  const job = useJob(mode, slug);
   const report = job.job?.progress.result?.checks as Report | undefined;
   const questions = (doc.questions ?? []).map((q) => ({ id: q.id, label: enText(q.label) || q.id }));
 

@@ -8,7 +8,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   if (!session) return bad("Sign in to view this job.", 401);
   const { id } = await context.params;
   const job = await getJob(id);
-  if (!job || job.kind !== "publish" || !(await personaOwnedBy(job.slug, session.userId))) {
+  if (!job || (job.kind !== "publish" && job.kind !== "checks") || !(await personaOwnedBy(job.slug, session.userId))) {
     return bad("Job not found.", 404);
   }
   return json({ ok: true, job });
