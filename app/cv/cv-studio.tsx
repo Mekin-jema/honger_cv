@@ -19,6 +19,9 @@ const templates = [
   { id: "navy-rail", name: "Navy Profile Rail", description: "A dark profile column paired with a crisp white experience page." },
   { id: "slate-sidebar", name: "Slate Sidebar", description: "A soft gray profile panel with centered section labels." },
   { id: "wide-professional", name: "Wide Professional", description: "A full-width header and date-led experience rows." },
+  { id: "lavender-split", name: "Lavender Split", description: "A colorful two-column profile with a contrasting experience panel." },
+  { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right." },
+  { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings." },
 ] as const;
 
 const palettes = [
@@ -27,6 +30,14 @@ const palettes = [
   { id: "forest", name: "Forest", color: "#18745e" },
   { id: "plum", name: "Plum", color: "#7b3fa1" },
   { id: "slate", name: "Slate", color: "#475569" },
+  { id: "ocean", name: "Ocean", color: "#087e8b" },
+  { id: "rose", name: "Rose", color: "#be456b" },
+  { id: "amber", name: "Amber", color: "#a65b00" },
+  { id: "indigo", name: "Indigo", color: "#5145a8" },
+  { id: "emerald", name: "Emerald", color: "#238636" },
+  { id: "coral", name: "Coral", color: "#d44a3a" },
+  { id: "teal", name: "Teal", color: "#087f68" },
+  { id: "berry", name: "Berry", color: "#a12f79" },
 ] as const;
 
 export function CvStudio({ cv }: { cv: CvData }) {
@@ -82,7 +93,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
                   type="button"
                   className={`cv-color-swatch${accentColor === item.color ? " is-selected" : ""}`}
                   style={{ "--swatch-color": item.color } as CSSProperties}
-                  aria-label={`${item.name} color`}
+                  aria-label={`${item.name} color ${item.color}`}
                   aria-pressed={accentColor === item.color}
                   title={item.name}
                   onClick={() => setAccentColor(item.color)}
@@ -160,7 +171,12 @@ export function CvStudio({ cv }: { cv: CvData }) {
             <CvSheet
               cv={cv}
               layout={
-                template === "navy-rail" || template === "slate-sidebar" || template === "wide-professional"
+                template === "navy-rail" ||
+                template === "slate-sidebar" ||
+                template === "wide-professional" ||
+                template === "lavender-split" ||
+                template === "minimalist" ||
+                template === "centered-blue"
                   ? template
                   : "default"
               }

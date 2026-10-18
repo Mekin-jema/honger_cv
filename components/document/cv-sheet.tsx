@@ -1,4 +1,16 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import {
+  Award,
+  BriefcaseBusiness,
+  GraduationCap,
+  Languages,
+  Lightbulb,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  UserRound,
+  Wrench,
+} from "lucide-react";
 import { Github, Linkedin } from "@/components/brand-icons";
 import { quotes } from "@/content/details";
 import { profile } from "@/content/profile";
@@ -11,18 +23,31 @@ import "./cv.css";
  * what the owner edits is exactly what gets printed. Contact details come from the profile.
  */
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, icon }: { title: string; children: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <section className="cv-section">
-      <h2 className="cv-h2">{title}</h2>
+      <h2 className="cv-h2">
+        {icon}
+        {title}
+      </h2>
       {children}
     </section>
   );
 }
 
-type CvSheetLayout = "default" | "navy-rail" | "slate-sidebar" | "wide-professional";
+type CvSheetLayout =
+  | "default"
+  | "navy-rail"
+  | "slate-sidebar"
+  | "wide-professional"
+  | "lavender-split"
+  | "minimalist"
+  | "centered-blue";
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
+  const isLavenderSplit = layout === "lavender-split";
+  const sectionIcon = (Icon: typeof UserRound) =>
+    isLavenderSplit ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = [
     { icon: MapPin, label: profile.location },
     { icon: Mail, label: profile.email, href: `mailto:${profile.email}` },
@@ -53,12 +78,12 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
   );
   const availability = <p className="cv-availability">{cv.availability}</p>;
   const profileSection = (
-    <Section title="Profile">
+    <Section title="Profile" icon={sectionIcon(UserRound)}>
       <p className="cv-text">{cv.profile}</p>
     </Section>
   );
   const highlightsSection = (
-    <Section title="Key achievements">
+    <Section title="Key achievements" icon={sectionIcon(Award)}>
       <ul className="cv-bullets">
         {cv.highlights.map((h, i) => (
           <li key={`${i}-${h}`}>{h}</li>
@@ -67,7 +92,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const skillsSection = (
-    <Section title="Core skills">
+    <Section title="Core skills" icon={sectionIcon(Wrench)}>
       <dl className="cv-skills">
         {cv.skills.map((s, i) => (
           <div key={`${i}-${s.k}`} className="cv-skill">
@@ -79,7 +104,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const experienceSection = (
-    <Section title="Professional experience">
+    <Section title="Professional experience" icon={sectionIcon(BriefcaseBusiness)}>
       <div className="cv-jobs">
         {cv.experience.map((job, j) => (
           <div key={`${j}-${job.company}`} className="cv-job">
@@ -119,7 +144,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const projectsSection = (
-    <Section title="Selected projects">
+    <Section title="Selected projects" icon={sectionIcon(Lightbulb)}>
       <ul className="cv-bullets cv-projects">
         {cv.projects.map((p, i) => (
           <li key={`${i}-${p.name}`}>
@@ -130,7 +155,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const educationSection = (
-    <Section title="Education">
+    <Section title="Education" icon={sectionIcon(GraduationCap)}>
       <div className="cv-avoid">
         <div className="cv-row">
           <h3 className="cv-h4">{cv.education.degree}</h3>
@@ -145,7 +170,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const languagesSection = (
-    <Section title="Languages">
+    <Section title="Languages" icon={sectionIcon(Languages)}>
       <ul className="cv-langs">
         {cv.languages.map((l, i) => (
           <li key={`${i}-${l.name}`}>
@@ -157,12 +182,21 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     </Section>
   );
   const referencesSection = (
-    <Section title="References">
+    <Section title="References" icon={sectionIcon(MessageCircle)}>
       <p className="cv-text">
         {quotes.length} recommendations from managers, clients and colleagues on{" "}
         <a href={profile.links.linkedinRecommendations}>LinkedIn (linkedin.com/in/marufbillah1020)</a>. References available on
         request.
       </p>
+    </Section>
+  );
+  const achievementsSection = (
+    <Section title={layout === "centered-blue" ? "Achievements" : "Key achievements"}>
+      <ul className="cv-bullets">
+        {cv.highlights.map((h, i) => (
+          <li key={`${i}-${h}`}>{h}</li>
+        ))}
+      </ul>
     </Section>
   );
 
@@ -184,6 +218,58 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {referencesSection}
     </>
   );
+
+  if (layout === "lavender-split") {
+    return (
+      <article className="cv-sheet cv-sheet-lavender-split">
+        <aside className="cv-split-profile">
+          {header}
+          {skillsSection}
+          {languagesSection}
+          {highlightsSection}
+        </aside>
+        <div className="cv-split-main">
+          {availability}
+          {profileSection}
+          {experienceSection}
+          {educationSection}
+          {projectsSection}
+          {referencesSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "minimalist") {
+    return (
+      <article className="cv-sheet cv-sheet-minimalist">
+        {header}
+        {profileSection}
+        {experienceSection}
+        {educationSection}
+        {skillsSection}
+        {languagesSection}
+        {projectsSection}
+        {achievementsSection}
+        {referencesSection}
+      </article>
+    );
+  }
+
+  if (layout === "centered-blue") {
+    return (
+      <article className="cv-sheet cv-sheet-centered-blue">
+        {header}
+        {profileSection}
+        {experienceSection}
+        {educationSection}
+        {skillsSection}
+        {languagesSection}
+        {achievementsSection}
+        {projectsSection}
+      </article>
+    );
+  }
 
   if (layout === "navy-rail" || layout === "slate-sidebar") {
     return (
