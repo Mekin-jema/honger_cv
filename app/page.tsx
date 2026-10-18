@@ -157,7 +157,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="relative min-w-0 lg:pl-5">
+          <div className="relative min-w-0 lg:translate-x-4 lg:pl-5">
             <div className="absolute -right-8 top-12 -z-10 hidden h-56 w-56 rounded-full border border-accent/20 sm:block" aria-hidden="true" />
             <HeroPreview />
             <p className="mt-3 text-center text-xs text-muted">A live preview, using Mekin&apos;s sample CV</p>
