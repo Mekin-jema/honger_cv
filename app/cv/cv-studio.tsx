@@ -29,6 +29,10 @@ const templates = [
   { id: "gold-timeline", name: "Gold Timeline", description: "A dark skills rail beside a gold-accented career timeline." },
   { id: "career-timeline", name: "Career Timeline", description: "A clean white timeline with contact details and skills in a side column." },
   { id: "studio-rail", name: "Studio Rail", description: "A photo-led navy sidebar with a structured experience column." },
+  { id: "teal-timeline", name: "Teal Timeline", description: "A deep teal profile rail beside a clear education and career timeline." },
+  { id: "cyan-timeline", name: "Cyan Timeline", description: "A vivid blue profile rail with cyan highlights and a structured work history." },
+  { id: "portrait-two-column", name: "Portrait Two-Column", description: "A portrait-led profile with skills and languages beside career details." },
+  { id: "mint-header", name: "Mint Header", description: "A teal masthead above a pale profile panel and an open experience column." },
   { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right." },
   { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings." },
 ] as const;
@@ -180,7 +184,11 @@ export function CvStudio({ cv }: { cv: CvData }) {
             <CvSheet
               cv={cv}
               layout={
-                template === "navy-rail" ||
+                template === "teal-timeline" || template === "cyan-timeline"
+                  ? "gold-timeline"
+                  : template === "portrait-two-column"
+                    ? "orange-split"
+                    : template === "navy-rail" ||
                 template === "slate-sidebar" ||
                 template === "wide-professional" ||
                 template === "lavender-split" ||
@@ -191,6 +199,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
                 template === "gold-timeline" ||
                 template === "career-timeline" ||
                 template === "studio-rail" ||
+                template === "mint-header" ||
                 template === "minimalist" ||
                 template === "centered-blue"
                   ? template

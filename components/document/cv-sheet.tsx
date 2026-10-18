@@ -48,6 +48,7 @@ type CvSheetLayout =
   | "gold-timeline"
   | "career-timeline"
   | "studio-rail"
+  | "mint-header"
   | "minimalist"
   | "centered-blue";
 
@@ -60,7 +61,8 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     layout === "reverse-rail" ||
     layout === "gold-timeline" ||
     layout === "career-timeline" ||
-    layout === "studio-rail";
+    layout === "studio-rail" ||
+    layout === "mint-header";
   const sectionIcon = (Icon: typeof UserRound) =>
     hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = [
@@ -319,6 +321,26 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
           {availability}
           {profileSection}
           {experienceSection}
+          {highlightsSection}
+          {projectsSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "mint-header") {
+    return (
+      <article className="cv-sheet cv-sheet-mint-header">
+        {header}
+        <aside className="cv-mint-profile">
+          {contactSection}
+          {profileSection}
+          {skillsSection}
+          {languagesSection}
+        </aside>
+        <div className="cv-mint-main">
+          {experienceSection}
+          {educationSection}
           {highlightsSection}
           {projectsSection}
         </div>
