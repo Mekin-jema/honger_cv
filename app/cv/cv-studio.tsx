@@ -6,7 +6,7 @@ import { CvSheet } from "@/components/document/cv-sheet";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { CvData } from "@/lib/persona/cv";
 import { profile } from "@/content/profile";
-import { withBase } from "@/lib/utils";
+import { withBase } from "@/lib/utils"
 import { PrintButton } from "./print-button";
 
 const templates = [
@@ -22,6 +22,7 @@ const templates = [
   { id: "slate-sidebar", name: "Slate Sidebar", description: "A soft gray profile panel with centered section labels." },
   { id: "wide-professional", name: "Wide Professional", description: "A full-width header and date-led experience rows." },
   { id: "lavender-split", name: "Lavender Split", description: "A colorful two-column profile with a contrasting experience panel." },
+  { id: "orange-split", name: "Orange Split", description: "A portrait-led header with a light profile rail and clear experience column." },
   { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right." },
   { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings." },
 ] as const;
@@ -177,6 +178,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
                 template === "slate-sidebar" ||
                 template === "wide-professional" ||
                 template === "lavender-split" ||
+                template === "orange-split" ||
                 template === "minimalist" ||
                 template === "centered-blue"
                   ? template

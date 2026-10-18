@@ -41,13 +41,14 @@ type CvSheetLayout =
   | "slate-sidebar"
   | "wide-professional"
   | "lavender-split"
+  | "orange-split"
   | "minimalist"
   | "centered-blue";
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
-  const isLavenderSplit = layout === "lavender-split";
+  const hasSectionIcons = layout === "lavender-split" || layout === "orange-split";
   const sectionIcon = (Icon: typeof UserRound) =>
-    isLavenderSplit ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
+    hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = [
     { icon: MapPin, label: profile.location },
     { icon: Mail, label: profile.email, href: `mailto:${profile.email}` },
@@ -218,6 +219,29 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {referencesSection}
     </>
   );
+
+  if (layout === "orange-split") {
+    return (
+      <article className="cv-sheet cv-sheet-orange-split">
+        {header}
+        <div className="cv-orange-columns">
+          <aside className="cv-orange-profile">
+            {availability}
+            {profileSection}
+            {skillsSection}
+            {languagesSection}
+            {highlightsSection}
+          </aside>
+          <div className="cv-orange-main">
+            {experienceSection}
+            {educationSection}
+            {projectsSection}
+            {referencesSection}
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   if (layout === "lavender-split") {
     return (
