@@ -34,6 +34,7 @@ function create() {
   return betterAuth(
     authOptions({
       pool: getPool(),
+      allowCustomerSignUp: true,
       sendOTP: ({ user, otp }) => sendLoginCode(user.email, otp),
       trustedOrigins: personaOrigins(),
       hooks: {

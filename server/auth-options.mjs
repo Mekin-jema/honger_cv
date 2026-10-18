@@ -1,6 +1,7 @@
 // The admin login's Better Auth configuration, shared by the app (src/server/auth.ts), the schema
 // generator (scripts/auth-schema.mjs) and the account script (scripts/admin-create.mjs). Plain
-// JavaScript so the scripts run with plain Node. Exactly one account (the owner) can ever exist.
+// JavaScript so the scripts run with plain Node. Customer signup is enabled separately from admin
+// bootstrap, and the public registration flow cannot assign privileged roles.
 //
 // Sign-in is email + password, then a 6-digit code (the two-factor plugin's OTP mode). While
 // ADMIN_OTP_STATIC is set (e.g. 112233), the code a sign-in expects is that fixed value instead of a
@@ -66,13 +67,14 @@ function storeOTP() {
  *   pool: import("pg").Pool,
  *   sendOTP?: (data: { user: { email: string }, otp: string }) => Promise<void> | void,
  *   allowSignUp?: boolean,
+ *   allowCustomerSignUp?: boolean,
  *   hooks?: import("better-auth").BetterAuthOptions["hooks"],
  *   plugins?: import("better-auth").BetterAuthPlugin[],
  *   trustedOrigins?: string[],
  * }} options
  * @returns {import("better-auth").BetterAuthOptions}
  */
-export function authOptions({ pool, sendOTP, allowSignUp = false, hooks, plugins = [], trustedOrigins = [] }) {
+export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerSignUp = false, hooks, plugins = [], trustedOrigins = [] }) {
   const hops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
   const behindProxy = Number.isInteger(hops) && hops > 0;
   return {
@@ -82,8 +84,13 @@ export function authOptions({ pool, sendOTP, allowSignUp = false, hooks, plugins
     secret: authSecret(),
     database: pool,
     trustedOrigins: [authBaseUrl(), ...trustedOrigins].filter((o) => !!o),
-    emailAndPassword: { enabled: true, disableSignUp: !allowSignUp, minPasswordLength: 12, maxPasswordLength: 128, autoSignIn: false },
-    user: { modelName: "admin_users" },
+    emailAndPassword: { enabled: true, disableSignUp: !allowSignUp && !allowCustomerSignUp, minPasswordLength: 12, maxPasswordLength: 128, autoSignIn: false },
+    user: {
+      modelName: "admin_users",
+      additionalFields: {
+        role: { type: "string", required: false, defaultValue: "customer", input: false },
+      },
+    },
     account: { modelName: "admin_accounts" },
     verification: { modelName: "admin_verifications" },
     session: {
@@ -117,13 +124,16 @@ export function authOptions({ pool, sendOTP, allowSignUp = false, hooks, plugins
     },
     databaseHooks: {
       user: {
-        create: {
-          // Exactly one account, ever: a second sign-up is refused even if sign-up were switched on.
-          before: async (user) => {
-            const { rows } = await pool.query('SELECT 1 FROM admin_users LIMIT 1').catch(() => ({ rows: [] }));
-            return rows.length ? false : { data: user };
-          },
-        },
+        create: allowCustomerSignUp
+          ? {}
+          : {
+              // The explicit admin bootstrap allows one administrator; public customer registration
+              // is enabled by a separate option and the role field is never client-writable.
+              before: async (user) => {
+                const { rows } = await pool.query("SELECT 1 FROM admin_users WHERE role = 'admin' LIMIT 1").catch(() => ({ rows: [] }));
+                return rows.length ? false : { data: { ...user, role: "customer" } };
+              },
+            },
       },
     },
     hooks,

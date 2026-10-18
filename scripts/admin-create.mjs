@@ -127,7 +127,7 @@ function printBackupCodes(codes) {
 
 try {
   await runMigrations(pool, { dir: path.join(root, "migrations"), log: (m) => console.log(`[migrate] ${m}`) });
-  const { rows } = await q('SELECT id, email, name, "twoFactorEnabled" FROM admin_users LIMIT 1');
+  const { rows } = await q('SELECT id, email, name, "twoFactorEnabled" FROM admin_users WHERE role = \'admin\' ORDER BY "createdAt" LIMIT 1');
   const user = rows[0];
 
   if (flag("show")) {
@@ -172,7 +172,8 @@ try {
     const name = value("name") ?? "Admin";
     const password = await newPassword(email);
     const auth = betterAuth(authOptions({ pool, allowSignUp: true }));
-    await auth.api.signUpEmail({ body: { email, password, name } });
+    const created = await auth.api.signUpEmail({ body: { email, password, name } });
+    await q("UPDATE admin_users SET role = 'admin' WHERE id = $1", [created.user.id]);
     const codes = await enable2fa(auth, email, password);
     console.log(`\nAdmin account created for ${email}. Sign in at /admin/login/ with this email, the password and then the code.`);
     if (process.env.ADMIN_OTP_STATIC) console.log(`The code is currently fixed by ADMIN_OTP_STATIC (no email is sent).`);
