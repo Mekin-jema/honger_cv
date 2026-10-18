@@ -115,6 +115,12 @@ The script prompts for a password without displaying it, enables two-factor auth
 
 Admin links are hidden from non-admin visitors, but authorization is also enforced on admin pages and API routes.
 
+### Customer accounts and profiles
+
+Customers can register at `/register/`, sign in at `/login/`, and manage their profiles from `/account/`. Each profile has a private AI-training draft, a draft-grounded assistant test, a CV design studio, and an explicit publish action. Published profiles are available at `/u/<profile-slug>/`; their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo.
+
+Persona ownership is checked on customer APIs, publishing jobs, and profile pages. Platform event totals are visible only to administrators in the `/admin/` dashboard. Apply the pending migrations before enabling customer registration in an existing deployment.
+
 ### Database migrations
 
 The server applies pending migrations at startup. To run them manually or check migration status:

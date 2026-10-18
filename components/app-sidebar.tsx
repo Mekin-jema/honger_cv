@@ -106,7 +106,10 @@ export function AppSidebar({
         {isAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            <SidebarMenu>{linkItem("Admin", "/admin/", <Shield />)}</SidebarMenu>
+            <SidebarMenu>
+              {linkItem("AI Training", "/admin/personas/", <BrainCircuit />)}
+              {linkItem("Admin", "/admin/", <Shield />)}
+            </SidebarMenu>
           </SidebarGroup>
         )}
       </SidebarContent>

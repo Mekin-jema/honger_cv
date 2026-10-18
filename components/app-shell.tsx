@@ -22,13 +22,15 @@ export function AppShell({
   const isAdminInbox = routePath === "/admin"
   const isDashboardPage = routePath === "/dashboard"
   const isCvPage = routePath === "/cv"
+  const isAccountPage = routePath === "/login" || routePath === "/register" || routePath === "/account" || routePath.startsWith("/account/")
   const isPersonaAdmin = routePath === "/admin/personas" || routePath.startsWith("/admin/personas/")
   const isAdminSettings = routePath === "/admin/settings"
+  const isPublicProfile = routePath === "/u" || routePath.startsWith("/u/")
   const isPortfolioPage =
     ["/about", "/contact", "/experience", "/projects", "/skills"].includes(routePath) ||
     routePath.startsWith("/projects/")
 
-  if (isLandingPage || isPortfolioPage) return <>{children}</>
+  if (isLandingPage || isPortfolioPage || isAccountPage || isPublicProfile) return <>{children}</>
 
   return (
     <SidebarProvider>
