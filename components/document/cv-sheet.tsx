@@ -53,6 +53,7 @@ type CvSheetLayout =
   | "centered-blue";
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
+  const name = cv.identity?.name ?? profile.name;
   const hasSectionIcons =
     layout === "lavender-split" ||
     layout === "orange-split" ||
@@ -65,22 +66,36 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     layout === "mint-header";
   const sectionIcon = (Icon: typeof UserRound) =>
     hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
-  const contacts = [
-    { icon: MapPin, label: profile.location },
-    { icon: Mail, label: profile.email, href: `mailto:${profile.email}` },
-    { icon: Phone, label: profile.phone, href: profile.phoneHref },
-    { icon: Linkedin, label: profile.links.linkedinHandle, href: profile.links.linkedin },
-    { icon: Github, label: "github.com/maruf1020", href: profile.links.github },
-  ];
+  const contacts = cv.identity
+    ? [
+        ...(cv.identity.location ? [{ icon: MapPin, label: cv.identity.location }] : []),
+        ...(cv.identity.email ? [{ icon: Mail, label: cv.identity.email, href: `mailto:${cv.identity.email}` }] : []),
+        ...(cv.identity.phone ? [{ icon: Phone, label: cv.identity.phone, href: `tel:${encodeURIComponent(cv.identity.phone)}` }] : []),
+        ...cv.identity.links.flatMap(({ label, href }) => {
+          try {
+            const url = new URL(href);
+            return ["http:", "https:"].includes(url.protocol) ? [{ icon: UserRound, label, href: url.href }] : [];
+          } catch {
+            return [];
+          }
+        }),
+      ]
+    : [
+        { icon: MapPin, label: profile.location },
+        { icon: Mail, label: profile.email, href: `mailto:${profile.email}` },
+        { icon: Phone, label: profile.phone, href: profile.phoneHref },
+        { icon: Linkedin, label: profile.links.linkedinHandle, href: profile.links.linkedin },
+        { icon: Github, label: "github.com/maruf1020", href: profile.links.github },
+      ];
 
   const header = (
     <header className="cv-header">
-      {cv.showPhoto && (
+      {cv.showPhoto && cv.photo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={withBase(cv.photo)} alt={`Photo of ${profile.name}`} width={240} height={240} className="cv-photo" />
+        <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={240} height={240} className="cv-photo" />
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="cv-name">{profile.name}</h1>
+        <h1 className="cv-name">{name}</h1>
         <p className="cv-title">{cv.title}</p>
         <ul className="cv-contacts">
           {contacts.map((c) => (
@@ -244,7 +259,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {educationSection}
       {skillsSection}
       {projectsSection}
-      {referencesSection}
+      {!cv.identity && referencesSection}
     </>
   );
 

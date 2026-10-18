@@ -4,8 +4,20 @@
  * anything missing or malformed falls back to the code content.
  */
 
+import type { Lang } from "./types";
+import type { PersonaDoc } from "./schema";
+import { lt } from "./text";
+
 export type CvEngagement = { title: string; period: string; bullets: string[]; stack: string };
 export type CvJob = { company: string; role: string; period: string; location: string; context: string; bullets: string[]; engagements: CvEngagement[] };
+export type CvIdentity = {
+  name: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  photo?: string;
+  links: { label: string; href: string }[];
+};
 export type CvData = {
   showPhoto: boolean;
   title: string;
@@ -19,6 +31,7 @@ export type CvData = {
   education: { degree: string; school: string; year: string; note: string };
   courses: string[];
   languages: { name: string; level: string }[];
+  identity?: CvIdentity;
 };
 
 type Rec = Record<string, unknown>;
@@ -52,5 +65,71 @@ export function readCv(value: unknown, fallback: CvData): CvData {
     education: { degree: str(edu.degree, fallback.education.degree), school: str(edu.school, fallback.education.school), year: str(edu.year, fallback.education.year), note: str(edu.note, fallback.education.note) },
     courses: strs(v.courses, fallback.courses),
     languages: list(v.languages, fallback.languages, (r) => ({ name: str(r.name, ""), level: str(r.level, "") })),
+  };
+}
+
+function itemText(item: PersonaDoc["sections"][number]["items"][number], lang: Lang) {
+  return lt(item.text, lang) || lt(item.value, lang) || lt(item.label, lang);
+}
+
+export function personaToCvData(doc: PersonaDoc, lang: Lang): CvData {
+  const section = (key: string) => {
+    const found = doc.sections.find((item) => item.key === key && item.visibility === "public");
+    return found?.items.filter((item) => !item.visibility || item.visibility === "public") ?? [];
+  };
+  const bullets = (item: PersonaDoc["sections"][number]["items"][number]) =>
+    (item.details ?? []).map((detail) => lt(detail, lang)).filter(Boolean);
+  const education = section("education");
+  const cvIdentity: CvIdentity = {
+    name: doc.identity.name,
+    email: doc.identity.email,
+    phone: doc.identity.phone,
+    location: lt(doc.identity.location, lang),
+    photo: doc.identity.avatar?.src ?? doc.identity.photos.find((photo) => photo.visibility === "public")?.src,
+    links: doc.identity.links.map(({ label, href }) => ({ label, href })),
+  };
+
+  return {
+    showPhoto: doc.document.showPhoto,
+    title: lt(doc.identity.role ?? doc.identity.headline, lang) || "Professional profile",
+    availability: doc.availability.show ? "Open to new opportunities" : "",
+    photo: cvIdentity.photo ?? "",
+    profile: lt(doc.identity.summary, lang),
+    highlights: section("highlights").map((item) => itemText(item, lang)).filter(Boolean),
+    skills: section("skills").map((item) => ({
+      k: lt(item.label, lang) || item.tags?.[0] || itemText(item, lang),
+      v: lt(item.value, lang) || item.tags?.slice(1).join(", ") || "",
+    })).filter((item) => item.k || item.v),
+    experience: section("experience").map((item) => ({
+      company: lt(item.meta, lang),
+      role: lt(item.label, lang) || itemText(item, lang),
+      period: item.period ?? "",
+      location: "",
+      context: "",
+      bullets: bullets(item),
+      engagements: (item.sub ?? []).map((entry) => ({
+        title: lt(entry.title, lang),
+        period: entry.period ?? "",
+        bullets: entry.details.map((detail) => lt(detail, lang)),
+        stack: "",
+      })),
+    })).filter((item) => item.role || item.company || item.bullets.length),
+    projects: section("projects").map((item) => ({
+      name: lt(item.label, lang) || itemText(item, lang),
+      meta: lt(item.meta, lang) || item.period || "",
+      text: lt(item.value, lang) || (item.details ?? []).map((detail) => lt(detail, lang)).join(" "),
+    })).filter((item) => item.name || item.text),
+    education: {
+      degree: education[0] ? lt(education[0].label, lang) || itemText(education[0], lang) : "",
+      school: education[0] ? lt(education[0].meta, lang) : "",
+      year: education[0]?.period ?? "",
+      note: education[0] ? lt(education[0].value, lang) || bullets(education[0]).join(" ") : "",
+    },
+    courses: education.slice(1).map((item) => itemText(item, lang)).filter(Boolean),
+    languages: section("languages").map((item) => ({
+      name: lt(item.label, lang) || itemText(item, lang),
+      level: lt(item.value, lang),
+    })).filter((item) => item.name || item.level),
+    identity: cvIdentity,
   };
 }

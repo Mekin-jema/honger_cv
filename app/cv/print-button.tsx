@@ -2,11 +2,22 @@
 
 import { Printer } from "lucide-react";
 
-export function PrintButton({ label = "Print", className = "" }: { label?: string; className?: string }) {
+export function PrintButton({
+  label = "Print",
+  className = "",
+  onPrint,
+}: {
+  label?: string;
+  className?: string;
+  onPrint?: () => void;
+}) {
   return (
     <button
       type="button"
-      onClick={() => window.print()}
+      onClick={() => {
+        onPrint?.();
+        window.print();
+      }}
       className={`cv-tool ${className}`.trim()}
       title="In the print dialog, choose Save as PDF to download the selected layout and color."
     >

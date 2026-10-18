@@ -5,35 +5,8 @@ import { CvSheet } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { CvData } from "@/lib/persona/cv";
+import { CV_TEMPLATES, type CvTemplateId } from "@/lib/persona/cv-templates";
 import { PrintButton } from "./print-button";
-
-const templates = [
-  { id: "modern", name: "Soft Modern", description: "A crisp profile with subtle color and gentle section rules." },
-  { id: "classic", name: "Centered Serif", description: "A polished, traditional layout with a centered masthead." },
-  { id: "section-bands", name: "Section Bands", description: "Compact sections with clear, centered gray headings." },
-  { id: "executive-grid", name: "Executive Grid", description: "A compact, information-dense layout for experienced candidates." },
-  { id: "sidebar", name: "Sidebar", description: "Contact and credentials alongside experience." },
-  { id: "timeline", name: "Timeline", description: "A visual path through your career history." },
-  { id: "editorial", name: "Editorial", description: "A magazine-inspired grid with a bold masthead." },
-  { id: "compact", name: "Compact", description: "Tighter spacing for a shorter, denser CV." },
-  { id: "navy-rail", name: "Navy Profile Rail", description: "A dark profile column paired with a crisp white experience page." },
-  { id: "slate-sidebar", name: "Slate Sidebar", description: "A soft gray profile panel with centered section labels." },
-  { id: "wide-professional", name: "Wide Professional", description: "A full-width header and date-led experience rows." },
-  { id: "lavender-split", name: "Lavender Split", description: "A colorful two-column profile with a contrasting experience panel." },
-  { id: "orange-split", name: "Orange Split", description: "A portrait-led header with a light profile rail and clear experience column." },
-  { id: "navy-contrast", name: "Navy Contrast", description: "A dark profile rail with education and languages beside a light experience column." },
-  { id: "orange-frame", name: "Orange Frame", description: "A bright framed page with a photo-led header and clear section rules." },
-  { id: "reverse-rail", name: "Reverse Profile Rail", description: "A light experience page with a dark profile panel on the right." },
-  { id: "gold-timeline", name: "Gold Timeline", description: "A dark skills rail beside a gold-accented career timeline." },
-  { id: "career-timeline", name: "Career Timeline", description: "A clean white timeline with contact details and skills in a side column." },
-  { id: "studio-rail", name: "Studio Rail", description: "A photo-led navy sidebar with a structured experience column." },
-  { id: "teal-timeline", name: "Teal Timeline", description: "A deep teal profile rail beside a clear education and career timeline." },
-  { id: "cyan-timeline", name: "Cyan Timeline", description: "A vivid blue profile rail with cyan highlights and a structured work history." },
-  { id: "portrait-two-column", name: "Portrait Two-Column", description: "A portrait-led profile with skills and languages beside career details." },
-  { id: "mint-header", name: "Mint Header", description: "A teal masthead above a pale profile panel and an open experience column." },
-  { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right." },
-  { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings." },
-] as const;
 
 const palettes = [
   { id: "cobalt", name: "Cobalt", color: "#2855c5" },
@@ -51,10 +24,34 @@ const palettes = [
   { id: "berry", name: "Berry", color: "#a12f79" },
 ] as const;
 
-export function CvStudio({ cv }: { cv: CvData }) {
-  const [template, setTemplate] = useState<(typeof templates)[number]["id"]>("modern");
-  const [accentColor, setAccentColor] = useState<string>(palettes[1].color);
-  const selectedTemplate = templates.find((item) => item.id === template) ?? templates[0];
+export type CvDesign = { template: CvTemplateId; accentColor: string };
+
+export function CvStudio({
+  cv,
+  initialTemplate = "modern",
+  initialAccentColor = palettes[1].color,
+  onDesignChange,
+  onPrint,
+  showSidebarToggle = true,
+}: {
+  cv: CvData;
+  initialTemplate?: CvTemplateId;
+  initialAccentColor?: string;
+  onDesignChange?: (design: CvDesign) => void;
+  onPrint?: () => void;
+  showSidebarToggle?: boolean;
+}) {
+  const [template, setTemplate] = useState<CvTemplateId>(initialTemplate);
+  const [accentColor, setAccentColor] = useState<string>(initialAccentColor);
+  const selectTemplate = (next: CvTemplateId) => {
+    setTemplate(next);
+    onDesignChange?.({ template: next, accentColor });
+  };
+  const selectAccent = (next: string) => {
+    setAccentColor(next);
+    onDesignChange?.({ template, accentColor: next });
+  };
+  const selectedTemplate = CV_TEMPLATES.find((item) => item.id === template) ?? CV_TEMPLATES[0];
   const selectedPalette = palettes.find((item) => item.color === accentColor);
 
   return (
@@ -75,7 +72,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
     >
       <section className="cv-studio-heading no-print">
         <div className="cv-studio-heading-main">
-          <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />
+          {showSidebarToggle && <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />}
           <ThemeToggle className="cv-tool cv-theme-toggle" />
           <div className="cv-studio-heading-copy">
             <p className="cv-studio-eyebrow">CV STUDIO</p>
@@ -84,7 +81,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
           </div>
         </div>
         <div className="cv-studio-heading-side">
-          <PrintButton label="Save selected PDF" className="cv-tool-primary" />
+          <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
           <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>
             <div className="cv-color-options">
@@ -97,7 +94,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
                   aria-label={`${item.name} color ${item.color}`}
                   aria-pressed={accentColor === item.color}
                   title={item.name}
-                  onClick={() => setAccentColor(item.color)}
+                  onClick={() => selectAccent(item.color)}
                 />
               ))}
               <label className="cv-custom-color">
@@ -106,7 +103,7 @@ export function CvStudio({ cv }: { cv: CvData }) {
                   value={accentColor}
                   aria-label="Choose any custom accent color"
                   title="Choose any custom accent color"
-                  onChange={(event) => setAccentColor(event.target.value)}
+                  onChange={(event) => selectAccent(event.target.value)}
                 />
                 <span>Custom</span>
               </label>
@@ -122,16 +119,16 @@ export function CvStudio({ cv }: { cv: CvData }) {
               <h2 id="cv-template-heading">Choose a layout</h2>
               <p>Pick a design to update the preview.</p>
             </div>
-            <span className="cv-template-count">{templates.length}</span>
+            <span className="cv-template-count">{CV_TEMPLATES.length}</span>
           </div>
           <div className="cv-template-grid" role="group" aria-label="CV design options">
-            {templates.map((item) => (
+            {CV_TEMPLATES.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 className={`cv-template-card${template === item.id ? " is-selected" : ""}`}
                 aria-pressed={template === item.id}
-                onClick={() => setTemplate(item.id)}
+                onClick={() => selectTemplate(item.id)}
               >
                 <span className="cv-template-art" data-template-art={item.id} aria-hidden="true">
                   <span className="cv-art-rail" />
