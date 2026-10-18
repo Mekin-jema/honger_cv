@@ -3058,3 +3058,471 @@
       box-shadow: none;
     }
   }
+
+  .cv-root[data-template="reverse-rail"] .cv-sheet-reverse-rail,
+  .cv-root[data-template="gold-timeline"] .cv-sheet-gold-timeline,
+  .cv-root[data-template="studio-rail"] .cv-sheet-studio-rail {
+    display: grid;
+    align-items: stretch;
+    gap: 0;
+    max-width: 210mm;
+    overflow: hidden;
+    padding: 0;
+    font-size: 8pt;
+    line-height: 1.3;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-sheet-reverse-rail {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    background: #fffdfa;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-main {
+    min-width: 0;
+    padding: 11mm 9mm;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile {
+    min-width: 0;
+    padding: 11mm 8mm;
+    background: #d8cec3;
+    color: #222;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0;
+    text-align: center;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-header > img {
+    order: 0;
+    width: 23mm;
+    height: 23mm;
+    margin-bottom: 3mm;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-header > div {
+    display: contents;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-name {
+    color: #141414;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17pt;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-title {
+    color: #343434;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-contacts {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 7pt;
+    text-align: left;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-section {
+    margin-top: 5mm;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-h2 {
+    border-bottom: 1px solid var(--cv-accent);
+    color: #202020;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-text,
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-langs li span:last-child {
+    color: #393632;
+  }
+  .cv-root[data-template="reverse-rail"] .cv-reverse-profile .cv-availability {
+    border-left-color: var(--cv-accent);
+    background: rgb(255 255 255 / 0.45);
+    color: #262320;
+    font-size: 7pt;
+  }
+
+  .cv-root[data-template="gold-timeline"] .cv-sheet-gold-timeline {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    background: #fff;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile,
+  .cv-root[data-template="gold-timeline"] .cv-gold-main {
+    min-width: 0;
+    padding: 11mm 8mm;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile {
+    background: #192536;
+    color: #f5f6f8;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0;
+    padding-bottom: 5mm;
+    border: 0;
+    text-align: center;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-header > img {
+    order: 0;
+    width: 30mm;
+    height: 30mm;
+    margin-bottom: 4mm;
+    border: 2px solid #f2ca28;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-header > div {
+    display: contents;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-name {
+    color: #f2ca28;
+    font-size: 17pt;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-title,
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-contacts,
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-text,
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-bullets,
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-langs li span:last-child {
+    color: #e5e9ef;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-contacts {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 7pt;
+    text-align: left;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-icon,
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-section-icon {
+    color: #f2ca28;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-h2 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid #f2ca28;
+    color: #f2ca28;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-skill {
+    display: block;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-skill dt {
+    color: #fff;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-profile .cv-skill dd {
+    color: #d5dbe4;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-section {
+    margin-top: 5mm;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main > .cv-section:first-child {
+    margin-top: 0;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-h2 {
+    border-bottom: 1px solid #d7dce3;
+    color: #202c3c;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-section-icon,
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-date {
+    color: #c9a900;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-jobs {
+    gap: 0;
+    margin-left: 3px;
+    border-left: 1px solid #d7dce3;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-job {
+    position: relative;
+    padding: 0 0 5mm 11px;
+    break-inside: avoid;
+  }
+  .cv-root[data-template="gold-timeline"] .cv-gold-main .cv-job::before {
+    position: absolute;
+    top: 4px;
+    left: -4px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: #f2ca28;
+    content: "";
+  }
+
+  .cv-root[data-template="career-timeline"] .cv-sheet-career-timeline {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    grid-template-areas:
+      "header header"
+      "profile main";
+    column-gap: 8mm;
+    max-width: 210mm;
+    padding: 13mm;
+    background: #fff;
+    font-size: 8.5pt;
+    line-height: 1.34;
+  }
+  .cv-root[data-template="career-timeline"] .cv-sheet-career-timeline > .cv-header {
+    grid-area: header;
+    display: block;
+    padding-bottom: 5mm;
+    border-bottom: 2px solid #344153;
+  }
+  .cv-root[data-template="career-timeline"] .cv-header > img,
+  .cv-root[data-template="career-timeline"] .cv-header .cv-contacts {
+    display: none;
+  }
+  .cv-root[data-template="career-timeline"] .cv-name {
+    color: #303b4d;
+    font-size: 25pt;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .cv-root[data-template="career-timeline"] .cv-title {
+    color: #424b58;
+    font-size: 12pt;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-profile {
+    grid-area: profile;
+    min-width: 0;
+    padding-top: 4mm;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-main {
+    grid-area: main;
+    min-width: 0;
+    padding-top: 4mm;
+  }
+  .cv-root[data-template="career-timeline"] .cv-section {
+    margin-top: 5mm;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-profile > .cv-section:first-child,
+  .cv-root[data-template="career-timeline"] .cv-career-main > .cv-section:first-child {
+    margin-top: 0;
+  }
+  .cv-root[data-template="career-timeline"] .cv-h2 {
+    border-bottom: 1px solid #303b4d;
+    color: #303b4d;
+    font-size: 9pt;
+    letter-spacing: 0.06em;
+  }
+  .cv-root[data-template="career-timeline"] .cv-section-icon {
+    width: 13px;
+    height: 13px;
+    color: #303b4d;
+  }
+  .cv-root[data-template="career-timeline"] .cv-contact-list {
+    display: grid;
+    gap: 7px;
+    color: var(--cv-muted);
+  }
+  .cv-root[data-template="career-timeline"] .cv-contact-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    overflow-wrap: anywhere;
+  }
+  .cv-root[data-template="career-timeline"] .cv-contact-list .cv-icon {
+    flex: 0 0 11px;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-main .cv-jobs {
+    gap: 0;
+    margin-left: 5px;
+    border-left: 1px solid #303b4d;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-main .cv-job {
+    position: relative;
+    padding: 0 0 5mm 12px;
+    break-inside: avoid;
+  }
+  .cv-root[data-template="career-timeline"] .cv-career-main .cv-job::before {
+    position: absolute;
+    top: 4px;
+    left: -4px;
+    width: 7px;
+    height: 7px;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    background: #303b4d;
+    content: "";
+  }
+  .cv-root[data-template="career-timeline"] .cv-date {
+    color: #303b4d;
+  }
+
+  .cv-root[data-template="studio-rail"] .cv-sheet-studio-rail {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    background: #fff;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile,
+  .cv-root[data-template="studio-rail"] .cv-studio-main {
+    min-width: 0;
+    padding: 11mm 8mm;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile {
+    background: #26364b;
+    color: #f4f6f9;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0;
+    padding-bottom: 5mm;
+    border: 0;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-header > img {
+    width: 38mm;
+    height: 31mm;
+    margin-bottom: 4mm;
+    border: 2px solid #a9b3c1;
+    border-radius: 0;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-name {
+    color: #fff;
+    font-size: 16pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-title,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-contacts,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-text,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-meta,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-langs li span:last-child {
+    color: #dce2ea;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-contacts {
+    flex-direction: column;
+    gap: 5px;
+    font-size: 7pt;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-icon,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-section-icon {
+    color: #d7b45a;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-h2 {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid #8290a3;
+    color: #fff;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-h3,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-h4,
+  .cv-root[data-template="studio-rail"] .cv-studio-profile .cv-stack span {
+    color: #fff;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-main .cv-section {
+    margin-top: 5mm;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-main > .cv-section:first-child {
+    margin-top: 0;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-main .cv-h2 {
+    border-bottom: 1px solid #aab3bf;
+    color: #28364a;
+  }
+  .cv-root[data-template="studio-rail"] .cv-studio-main .cv-date,
+  .cv-root[data-template="studio-rail"] .cv-studio-main .cv-section-icon {
+    color: #536780;
+  }
+
+  .cv-template-art[data-template-art="reverse-rail"] {
+    background: linear-gradient(90deg, #fffdfa 0 60%, #d8cec3 60% 100%);
+  }
+  .cv-template-art[data-template-art="reverse-rail"] .cv-art-header,
+  .cv-template-art[data-template-art="reverse-rail"] .cv-art-section {
+    margin-left: auto;
+    background: #b5400f;
+  }
+  .cv-template-art[data-template-art="gold-timeline"] {
+    background: linear-gradient(90deg, #192536 0 40%, #fff 40% 100%);
+    padding-left: 36px;
+  }
+  .cv-template-art[data-template-art="gold-timeline"] .cv-art-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    width: 32px;
+    background: #192536;
+  }
+  .cv-template-art[data-template-art="gold-timeline"] .cv-art-photo {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #f2ca28;
+  }
+  .cv-template-art[data-template-art="gold-timeline"] .cv-art-header,
+  .cv-template-art[data-template-art="gold-timeline"] .cv-art-section {
+    background: #f2ca28;
+  }
+  .cv-template-art[data-template-art="career-timeline"] .cv-art-header {
+    width: 48%;
+    background: #303b4d;
+  }
+  .cv-template-art[data-template-art="career-timeline"] .cv-art-section {
+    background: #303b4d;
+  }
+  .cv-template-art[data-template-art="career-timeline"] .cv-art-lines {
+    border-left: 1px solid #303b4d;
+    padding-left: 4px;
+  }
+  .cv-template-art[data-template-art="studio-rail"] {
+    background: linear-gradient(90deg, #26364b 0 40%, #fff 40% 100%);
+    padding-left: 36px;
+  }
+  .cv-template-art[data-template-art="studio-rail"] .cv-art-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    width: 32px;
+    background: #26364b;
+  }
+  .cv-template-art[data-template-art="studio-rail"] .cv-art-photo {
+    position: absolute;
+    top: 8px;
+    left: 7px;
+    display: block;
+    width: 18px;
+    height: 16px;
+    background: #a9b3c1;
+  }
+  .cv-template-art[data-template-art="studio-rail"] .cv-art-header,
+  .cv-template-art[data-template-art="studio-rail"] .cv-art-section {
+    background: #d7b45a;
+  }
+  @media screen and (max-width: 640px) {
+    .cv-root[data-template="reverse-rail"] .cv-sheet-reverse-rail,
+    .cv-root[data-template="gold-timeline"] .cv-sheet-gold-timeline,
+    .cv-root[data-template="studio-rail"] .cv-sheet-studio-rail {
+      display: block;
+    }
+    .cv-root[data-template="reverse-rail"] .cv-reverse-main,
+    .cv-root[data-template="reverse-rail"] .cv-reverse-profile,
+    .cv-root[data-template="gold-timeline"] .cv-gold-profile,
+    .cv-root[data-template="gold-timeline"] .cv-gold-main,
+    .cv-root[data-template="studio-rail"] .cv-studio-profile,
+    .cv-root[data-template="studio-rail"] .cv-studio-main {
+      padding: 22px 18px;
+    }
+    .cv-root[data-template="career-timeline"] .cv-sheet-career-timeline {
+      grid-template-columns: 1fr;
+      grid-template-areas: "header" "profile" "main";
+      padding: 22px 18px;
+    }
+  }
+  @media print {
+    .cv-root[data-template="reverse-rail"] .cv-sheet-reverse-rail,
+    .cv-root[data-template="reverse-rail"] .cv-reverse-profile,
+    .cv-root[data-template="reverse-rail"] .cv-reverse-profile *,
+    .cv-root[data-template="gold-timeline"] .cv-sheet-gold-timeline,
+    .cv-root[data-template="gold-timeline"] .cv-gold-profile,
+    .cv-root[data-template="gold-timeline"] .cv-gold-profile *,
+    .cv-root[data-template="studio-rail"] .cv-sheet-studio-rail,
+    .cv-root[data-template="studio-rail"] .cv-studio-profile,
+    .cv-root[data-template="studio-rail"] .cv-studio-profile * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .cv-root[data-template="reverse-rail"] .cv-sheet-reverse-rail,
+    .cv-root[data-template="gold-timeline"] .cv-sheet-gold-timeline,
+    .cv-root[data-template="studio-rail"] .cv-sheet-studio-rail,
+    .cv-root[data-template="career-timeline"] .cv-sheet-career-timeline {
+      max-width: none;
+      box-shadow: none;
+    }
+  }

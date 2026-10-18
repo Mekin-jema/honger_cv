@@ -44,12 +44,23 @@ type CvSheetLayout =
   | "orange-split"
   | "navy-contrast"
   | "orange-frame"
+  | "reverse-rail"
+  | "gold-timeline"
+  | "career-timeline"
+  | "studio-rail"
   | "minimalist"
   | "centered-blue";
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
   const hasSectionIcons =
-    layout === "lavender-split" || layout === "orange-split" || layout === "navy-contrast" || layout === "orange-frame";
+    layout === "lavender-split" ||
+    layout === "orange-split" ||
+    layout === "navy-contrast" ||
+    layout === "orange-frame" ||
+    layout === "reverse-rail" ||
+    layout === "gold-timeline" ||
+    layout === "career-timeline" ||
+    layout === "studio-rail";
   const sectionIcon = (Icon: typeof UserRound) =>
     hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = [
@@ -79,6 +90,18 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
         </ul>
       </div>
     </header>
+  );
+  const contactSection = (
+    <Section title="Contact" icon={sectionIcon(MapPin)}>
+      <ul className="cv-contact-list">
+        {contacts.map((contact) => (
+          <li key={contact.label}>
+            <contact.icon className="cv-icon" aria-hidden="true" />
+            {contact.href ? <a href={contact.href}>{contact.label}</a> : <span>{contact.label}</span>}
+          </li>
+        ))}
+      </ul>
+    </Section>
   );
   const availability = <p className="cv-availability">{cv.availability}</p>;
   const profileSection = (
@@ -222,6 +245,86 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {referencesSection}
     </>
   );
+
+  if (layout === "reverse-rail") {
+    return (
+      <article className="cv-sheet cv-sheet-reverse-rail">
+        <div className="cv-reverse-main">
+          {experienceSection}
+          {educationSection}
+          {skillsSection}
+          {projectsSection}
+        </div>
+        <aside className="cv-reverse-profile">
+          {header}
+          {availability}
+          {profileSection}
+          {languagesSection}
+          {highlightsSection}
+        </aside>
+      </article>
+    );
+  }
+
+  if (layout === "gold-timeline") {
+    return (
+      <article className="cv-sheet cv-sheet-gold-timeline">
+        <aside className="cv-gold-profile">
+          {header}
+          {availability}
+          {skillsSection}
+          {languagesSection}
+          {highlightsSection}
+        </aside>
+        <div className="cv-gold-main">
+          {profileSection}
+          {experienceSection}
+          {educationSection}
+          {projectsSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "career-timeline") {
+    return (
+      <article className="cv-sheet cv-sheet-career-timeline">
+        {header}
+        <aside className="cv-career-profile">
+          {contactSection}
+          {skillsSection}
+          {languagesSection}
+          {highlightsSection}
+        </aside>
+        <div className="cv-career-main">
+          {profileSection}
+          {experienceSection}
+          {educationSection}
+          {projectsSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "studio-rail") {
+    return (
+      <article className="cv-sheet cv-sheet-studio-rail">
+        <aside className="cv-studio-profile">
+          {header}
+          {skillsSection}
+          {educationSection}
+          {languagesSection}
+        </aside>
+        <div className="cv-studio-main">
+          {availability}
+          {profileSection}
+          {experienceSection}
+          {highlightsSection}
+          {projectsSection}
+        </div>
+      </article>
+    );
+  }
 
   if (layout === "navy-contrast") {
     return (
