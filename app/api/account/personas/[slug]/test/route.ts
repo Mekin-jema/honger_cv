@@ -1,6 +1,7 @@
 import { PersonaDocSchema, formatIssues } from "@/lib/persona/schema";
+import { lt } from "@/lib/persona/text";
 import { customerSession } from "@/server/admin-session";
-import { answerQuestion } from "@/server/brain/answer";
+import { answerQuestion, type AiTurn } from "@/server/brain/answer";
 import { aiEnabled } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
@@ -22,9 +23,19 @@ export async function POST(req: Request, context: Context) {
     return bad("Too many test questions. Try again in a few minutes.", 429);
   }
 
-  const body = await readJson(req, 4_000);
+  const body = await readJson(req, 8_000);
   const question = str(body?.question, 300);
   if (!question || question.length < 2) return bad("Enter a question to test.");
+  const history: AiTurn[] = [];
+  if (Array.isArray(body?.history)) {
+    for (const turn of body.history.slice(-6)) {
+      if (!turn || typeof turn !== "object" || Array.isArray(turn)) continue;
+      const record = turn as Record<string, unknown>;
+      const q = str(record.q, 300);
+      const a = str(record.a, 600);
+      if (q && a) history.push({ q, a });
+    }
+  }
   const draft = await loadDraft(slug);
   if (!draft) return bad("This profile has no training draft.", 404);
   const parsed = PersonaDocSchema.safeParse(draft.doc);
@@ -32,9 +43,20 @@ export async function POST(req: Request, context: Context) {
 
   try {
     const compiled = compilePersona(slug, parsed.data, { versionId: null, number: 0 });
-    const answer = await answerQuestion({ compiled, tier: "public", question, history: [] });
+    const answer = await answerQuestion({ compiled, tier: "public", question, history });
+    const result = answer.result;
+    let text: string;
+    if (result.route === "answer") text = result.text;
+    else if (result.route === "topic") {
+      const savedAnswer = parsed.data.questions.find((item) => item.id === result.intentId)?.answers[0];
+      text = result.text || (savedAnswer ? lt(savedAnswer, parsed.data.site.defaultLang) : "") || "I found a related topic in your profile.";
+    } else if (result.route === "gated") {
+      text = "That detail is not included in the public information in your profile yet.";
+    } else {
+      text = "I couldn't find that information in your profile. Add it in AI Training to teach me.";
+    }
     await recordPlatformEventSafely(session.userId, "assistant_tested", slug, { route: answer.result.route });
-    return json({ ok: true, result: answer.result });
+    return json({ ok: true, text, result: answer.result });
   } catch (error) {
     console.error(`[account-ai-test] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
     return bad("The assistant couldn't answer this test question. Try again shortly.", 502);

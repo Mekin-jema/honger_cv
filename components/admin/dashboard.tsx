@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -34,7 +35,7 @@ import type { VisitorInfo } from "@/server/store";
 import { cn, plain, withBase } from "@/lib/utils";
 import { getAuthClient } from "@/lib/auth-client";
 
-type Props = { data: AdminData; labels: Record<string, string>; personas?: { slug: string; name: string }[]; persona?: string };
+type Props = { data: AdminData; labels: Record<string, string>; personas?: { slug: string; name: string }[]; persona?: string; topContent?: ReactNode };
 type Tab = "all" | "messages" | "feedback" | "votes" | "ai" | "visitors" | "analytics";
 
 type Item = {
@@ -246,7 +247,7 @@ function useEdgeFade(ref: React.RefObject<HTMLElement | null>) {
 }
 
 // ---------- page ----------
-export function AdminDashboard({ data: db, labels, personas = [], persona }: Props) {
+export function AdminDashboard({ data: db, labels, personas = [], persona, topContent }: Props) {
   const now = useNow();
   const lastSeen = useLastSeen();
   const [tab, setTab] = useState<Tab>("all");
@@ -377,6 +378,8 @@ export function AdminDashboard({ data: db, labels, personas = [], persona }: Pro
           </div>
         </div>
       </header>
+
+      {topContent}
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 py-5 md:px-6 md:py-6">
         <section className="relative isolate overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-card via-card to-accent-soft/55 p-5 md:flex md:items-center md:justify-between md:gap-6 md:p-6">

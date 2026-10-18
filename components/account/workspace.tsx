@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, LoaderCircle, Plus } from "lucide-react";
+import { ArrowRight, Bot, FileText, LoaderCircle, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { PersonaRow } from "@/server/persona/repo";
 import { withBase } from "@/lib/utils";
@@ -38,18 +38,34 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
     }
   };
 
+  const publishedCount = personas.filter((persona) => persona.publishedVersionId).length;
+  const draftCount = personas.length - publishedCount;
+
   return (
     <div className="space-y-8">
+      <section aria-label="Your profile summary" className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "Your profiles", value: personas.length },
+          { label: "Published", value: publishedCount },
+          { label: "Private drafts", value: draftCount },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-2xl border border-line bg-card p-5">
+            <p className="text-sm font-medium text-muted">{label}</p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums">{value}</p>
+          </div>
+        ))}
+      </section>
+
       {personas.length > 0 && (
         <section aria-labelledby="profiles-heading" className="space-y-3">
-          <h2 id="profiles-heading" className="text-lg font-semibold">Your profiles</h2>
-          <ul className="space-y-3">
+          <div>
+            <h2 id="profiles-heading" className="text-lg font-semibold">Your dashboard</h2>
+            <p className="mt-1 text-sm text-muted">Open your AI, update its training, or continue designing your CV.</p>
+          </div>
+          <ul className="grid gap-4 lg:grid-cols-2">
             {personas.map((persona) => (
-              <li key={persona.slug}>
-                <Link
-                  href={`/account/training/${persona.slug}/`}
-                  className="flex items-center gap-4 rounded-2xl border border-line bg-card p-4 transition hover:border-accent/50 hover:bg-surface"
-                >
+              <li key={persona.slug} className="rounded-2xl border border-line bg-card p-5">
+                <div className="flex items-center gap-4">
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">
                     {persona.name.slice(0, 2).toUpperCase()}
                   </span>
@@ -59,18 +75,37 @@ export function AccountWorkspace({ personas }: { personas: PersonaRow[] }) {
                       {persona.publishedVersionId ? "Published profile" : "Private draft"}
                     </span>
                   </span>
-                  <ArrowRight className="size-4 text-muted" aria-hidden="true" />
-                </Link>
-                {persona.publishedVersionId && (
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
                   <Link
-                    href={`/u/${persona.slug}/`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ml-4 inline-flex min-h-9 items-center gap-2 text-sm font-semibold text-accent hover:underline"
+                    href={`/account/ai/${persona.slug}/`}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-3.5 text-sm font-semibold text-on-accent"
                   >
-                    View public profile <ArrowRight className="size-3.5" aria-hidden="true" />
+                    <Bot className="size-4" aria-hidden="true" /> Open my AI
                   </Link>
-                )}
+                  <Link
+                    href={`/account/training/${persona.slug}/`}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
+                  >
+                    <Sparkles className="size-4" aria-hidden="true" /> Train AI
+                  </Link>
+                  <Link
+                    href={`/account/training/${persona.slug}/design/`}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
+                  >
+                    <FileText className="size-4" aria-hidden="true" /> CV design
+                  </Link>
+                  {persona.publishedVersionId && (
+                    <Link
+                      href={`/u/${persona.slug}/`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line-strong bg-bg px-3.5 text-sm font-semibold hover:border-accent/50"
+                    >
+                      Public profile <ArrowRight className="size-3.5" aria-hidden="true" />
+                    </Link>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

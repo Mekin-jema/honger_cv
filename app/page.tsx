@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  BrainCircuit,
   Check,
   FileDown,
   LayoutTemplate,
@@ -50,6 +51,12 @@ const features = [
     description:
       "Preview your CV on the page, then save a crisp, print-ready PDF of the design you selected.",
   },
+  {
+    icon: BrainCircuit,
+    title: "Train your own AI profile",
+    description:
+      "Add your experience, skills, education, and projects. Your private assistant answers from your information, not someone else's.",
+  },
 ];
 
 export default function Home() {
@@ -90,7 +97,7 @@ export default function Home() {
               href="/register/"
               className="hidden text-sm font-medium text-muted transition-colors hover:text-fg sm:inline-flex"
             >
-              Create account
+              Train your AI
             </Link>
             <Link
               href="/cv/"
@@ -123,7 +130,7 @@ export default function Home() {
               tune the details, and leave with a polished PDF—without fighting
               with formatting.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/cv/"
                 className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-accent px-6 text-base font-semibold text-on-accent shadow-lg shadow-accent/20 transition hover:-translate-y-0.5 hover:shadow-xl"
@@ -131,8 +138,14 @@ export default function Home() {
                 Create your CV <ArrowRight className="size-5" aria-hidden="true" />
               </Link>
               <Link
-                href="/ask/"
+                href="/register/?next=%2Faccount%2F"
                 className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-line-strong bg-card px-6 text-base font-semibold transition hover:bg-surface"
+              >
+                Train your AI profile <BrainCircuit className="size-5" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/ask/"
+                className="inline-flex min-h-14 items-center justify-center gap-2 px-4 text-base font-semibold text-muted transition hover:text-fg"
               >
                 Explore with AI
               </Link>
@@ -285,7 +298,7 @@ export default function Home() {
             and memorable application.
           </p>
         </div>
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
+        <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {features.map(({ icon: Icon, title, description }, index) => (
             <article key={title} className="rounded-3xl border border-line bg-card p-7 shadow-sm">
               <div className="flex items-center justify-between">
@@ -327,6 +340,7 @@ export default function Home() {
           <div className="flex gap-5">
             <Link href="/cv/" className="hover:text-fg">CV Studio</Link>
             <Link href="/ask/" className="hover:text-fg">Ask AI</Link>
+            <Link href="/register/" className="hover:text-fg">Train your AI</Link>
           </div>
         </div>
       </footer>

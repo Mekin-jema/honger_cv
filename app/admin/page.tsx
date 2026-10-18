@@ -30,9 +30,12 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   }
   // Only summaries of the event log reach the browser, not every raw event.
   return (
-    <>
-      {platformAnalytics && <PlatformAnalyticsPanel data={platformAnalytics} />}
-      <AdminDashboard data={buildAdminData(db, labels)} labels={labels} personas={personas.map((p) => ({ slug: p.slug, name: p.name }))} persona={chosen} />
-    </>
+    <AdminDashboard
+      data={buildAdminData(db, labels)}
+      labels={labels}
+      personas={personas.map((p) => ({ slug: p.slug, name: p.name }))}
+      persona={chosen}
+      topContent={platformAnalytics ? <PlatformAnalyticsPanel data={platformAnalytics} /> : undefined}
+    />
   );
 }
