@@ -66,6 +66,10 @@ export function CvStudio({ cv }: { cv: CvData }) {
         {
           "--cv-accent": accentColor,
           "--cv-line": `color-mix(in srgb, ${accentColor} 25%, #fff)`,
+          "--cv-rail-dark": `color-mix(in srgb, ${accentColor} 32%, #1c3443)`,
+          "--cv-rail-light": `color-mix(in srgb, ${accentColor} 13%, #f1f4f7)`,
+          "--cv-rail-light-warm": `color-mix(in srgb, ${accentColor} 12%, #fffdfa)`,
+          "--cv-rail-light-mint": `color-mix(in srgb, ${accentColor} 12%, #eaf5f1)`,
         } as CSSProperties
       }
     >
