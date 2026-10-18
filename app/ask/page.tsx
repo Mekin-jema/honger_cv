@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     : personaAlternates(persona, await headers(), "/ask/");
 
   return {
-    title: `Ask AI - ${name}`,
+    title: "Ask AI",
     description: doc.legacy
       ? describe(
           `${profile.name}, Software Engineer and AI Engineer. Explore my projects, technical skills, and experience through my AI-powered portfolio assistant.`,
