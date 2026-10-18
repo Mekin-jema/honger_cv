@@ -32,6 +32,27 @@ export function authBaseUrl() {
   return (process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "") || undefined;
 }
 
+/** @returns {{ google?: { clientId: string, clientSecret: string }, github?: { clientId: string, clientSecret: string, scope: string[] } }} */
+export function socialProviderOptions() {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  const githubClientId = process.env.GITHUB_CLIENT_ID?.trim();
+  const githubClientSecret = process.env.GITHUB_CLIENT_SECRET?.trim();
+
+  return {
+    ...(googleClientId && googleClientSecret ? { google: { clientId: googleClientId, clientSecret: googleClientSecret } } : {}),
+    ...(githubClientId && githubClientSecret
+      ? { github: { clientId: githubClientId, clientSecret: githubClientSecret, scope: ["read:user", "user:email"] } }
+      : {}),
+  };
+}
+
+/** @returns {("google" | "github")[]} */
+export function configuredSocialProviders() {
+  const providers = socialProviderOptions();
+  return [...(providers.google ? ["google"] : []), ...(providers.github ? ["github"] : [])];
+}
+
 // AES-256-GCM for the stored fixed code (the store format is "<value>:<attempts>", so no ":" allowed).
 const sealKey = () => createHash("sha256").update(`admin-otp:${authSecret() ?? ""}`).digest();
 function seal(text) {
@@ -69,12 +90,13 @@ function storeOTP() {
  *   allowSignUp?: boolean,
  *   allowCustomerSignUp?: boolean,
  *   hooks?: import("better-auth").BetterAuthOptions["hooks"],
+ *   databaseHooks?: import("better-auth").BetterAuthOptions["databaseHooks"],
  *   plugins?: import("better-auth").BetterAuthPlugin[],
  *   trustedOrigins?: string[],
  * }} options
  * @returns {import("better-auth").BetterAuthOptions}
  */
-export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerSignUp = false, hooks, plugins = [], trustedOrigins = [] }) {
+export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerSignUp = false, hooks, databaseHooks, plugins = [], trustedOrigins = [] }) {
   const hops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
   const behindProxy = Number.isInteger(hops) && hops > 0;
   return {
@@ -91,7 +113,12 @@ export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerS
         role: { type: "string", required: false, defaultValue: "customer", input: false },
       },
     },
-    account: { modelName: "admin_accounts" },
+    account: {
+      modelName: "admin_accounts",
+      // Admins must retain email + OTP sign-in; OAuth cannot implicitly link to their password account.
+      accountLinking: { requireLocalEmailVerified: false },
+    },
+    socialProviders: socialProviderOptions(),
     verification: { modelName: "admin_verifications" },
     session: {
       modelName: "admin_sessions",
@@ -117,20 +144,45 @@ export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerS
     advanced: {
       cookiePrefix: "fb",
       defaultCookieAttributes: { sameSite: "strict", httpOnly: true, path: "/" },
+      // OAuth callbacks return as cross-site top-level navigations; their state cookies must be Lax.
+      cookies: {
+        state: { attributes: { sameSite: "lax" } },
+        oauth_state: { attributes: { sameSite: "lax" } },
+        // The callback sets a session and immediately redirects to the app; Strict withholds it on that redirect.
+        session_token: { attributes: { sameSite: "lax" } },
+      },
       // Only trust a client address set by our own proxy (TRUST_PROXY_HOPS); otherwise a visitor could
       // send any X-Forwarded-For and dodge the per-address limits. Without one, the per-email and
       // global limits (src/server/auth.ts) still apply.
       ipAddress: behindProxy ? { ipAddressHeaders: ["x-real-ip"] } : { disableIpTracking: true },
     },
     databaseHooks: {
+      ...databaseHooks,
+      account: {
+        ...databaseHooks?.account,
+        create: {
+          ...databaseHooks?.account?.create,
+          before: async (account, context) => {
+            const existing = await databaseHooks?.account?.create?.before?.(account, context);
+            if (existing === false) return false;
+            const { rows } = await pool.query("SELECT role FROM admin_users WHERE id = $1 LIMIT 1", [account.userId]);
+            if (rows[0]?.role === "admin") return false;
+            return existing;
+          },
+        },
+      },
       user: {
+        ...databaseHooks?.user,
         create: allowCustomerSignUp
-          ? {}
+          ? databaseHooks?.user?.create
           : {
+              ...databaseHooks?.user?.create,
               // The explicit admin bootstrap allows one administrator; public customer registration
               // is enabled by a separate option and the role field is never client-writable.
-              before: async (user) => {
-                const { rows } = await pool.query("SELECT 1 FROM admin_users WHERE role = 'admin' LIMIT 1").catch(() => ({ rows: [] }));
+              before: async (user, context) => {
+                const existing = await databaseHooks?.user?.create?.before?.(user, context);
+                if (existing === false || existing) return existing;
+                const { rows } = await pool.query("SELECT 1 FROM admin_users WHERE role = 'admin' LIMIT 1");
                 return rows.length ? false : { data: { ...user, role: "customer" } };
               },
             },

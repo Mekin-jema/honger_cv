@@ -5,6 +5,7 @@ import { AccountAuthForm } from "@/components/account/auth-form";
 import { getAdminSession, getCustomerSession } from "@/server/admin-session";
 import { dbConfigured } from "@/server/db";
 import { safeAccountNext } from "@/lib/account-next";
+import { configuredSocialProviders } from "@/server/auth-options.mjs";
 
 export const metadata: Metadata = { title: "Create your account", robots: { index: false, follow: false } };
 
@@ -26,7 +27,7 @@ export default async function RegisterPage({
         {!dbConfigured() ? (
           <p role="alert" className="mt-6 rounded-xl bg-accent-soft p-4 text-sm text-accent">Registration is temporarily unavailable because account storage is not configured.</p>
         ) : (
-          <div className="mt-7"><AccountAuthForm mode="register" next={next} /></div>
+          <div className="mt-7"><AccountAuthForm mode="register" next={next} socialProviders={configuredSocialProviders()} socialError={typeof params.error === "string" ? params.error : undefined} /></div>
         )}
         <p className="mt-7 border-t border-line pt-5 text-center text-xs leading-5 text-muted">
           Looking at the demo? <Link href="/ask/" className="font-semibold text-fg underline-offset-4 hover:underline">Explore Mekin&apos;s AI portfolio</Link>

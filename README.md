@@ -86,6 +86,10 @@ Open [http://localhost:3000](http://localhost:3000). The portfolio and curated c
 | `DATABASE_URL` | Persistent features and admin | PostgreSQL connection string. Schema migrations are applied automatically when the server starts; you can also run them explicitly. |
 | `BETTER_AUTH_SECRET` | Admin authentication | Use a private secret of at least 32 characters. |
 | `BETTER_AUTH_URL` | Admin authentication | Public app origin, for example `http://localhost:3000` locally. |
+| `GOOGLE_CLIENT_ID` | Google customer sign-in | OAuth client ID. Configure the callback URI as `<BETTER_AUTH_URL>/api/auth/callback/google`. |
+| `GOOGLE_CLIENT_SECRET` | Google customer sign-in | OAuth client secret; keep it server-side. |
+| `GITHUB_CLIENT_ID` | GitHub customer sign-in | OAuth app client ID. Grant the `user:email` scope and configure `<BETTER_AUTH_URL>/api/auth/callback/github`. |
+| `GITHUB_CLIENT_SECRET` | GitHub customer sign-in | OAuth app client secret; keep it server-side. |
 | `PERSONA_SIGNING_SECRET` | Signed persona access and preview tokens | Use a private secret of at least 32 characters. |
 | `NEXT_PUBLIC_SITE_URL` | Canonical metadata and sitemap | Public HTTPS origin in production. Defaults to localhost for local development. |
 | `GEMINI_API_KEY` | Optional generated answers | Without it, curated answers remain available. |
@@ -118,6 +122,8 @@ Admin links are hidden from non-admin visitors, but authorization is also enforc
 ### Customer accounts and profiles
 
 Customers can register at `/register/`, sign in at `/login/`, and manage their CVs from `/account/`. Each customer can create Job CVs by entering a professional role; the role names the CV (for example, “Product Engineer CV” or “Product Engineer CV 2”), and the signed-in user's name seeds the CV identity. The customer Studio uses all nine Persona Studio tabs, including JSON, with owner-scoped APIs for drafts, AI helpers, checks, access management, and publishing. Their sidebar includes the public Portfolio navigation plus links to their own dashboard, AI, training, and CV form/design. The CV form saves to that customer's draft and is used by their own CV page and AI knowledge; it does not use the demo portfolio's data. Admins keep the same Portfolio sidebar and receive the administration links; the admin navigation label is **User**.
+
+Customer login and registration support Google and GitHub when the matching client ID and secret are configured. Register each callback URI with the provider, including `/api/auth/callback/google` or `/api/auth/callback/github` after the app origin (and any configured base path). For GitHub OAuth Apps, Better Auth requests `user:email`; for GitHub Apps, grant **Account permissions → Email addresses → Read-only** as well. OAuth may link to an existing customer account only when the provider verifies the matching email. Admin accounts cannot be linked to social providers; administrators continue to use email/password plus the existing email verification code. OAuth state and session cookies use `SameSite=Lax` to support the cross-site callback and its immediate redirect; all other auth cookies remain `SameSite=Strict`.
 
 The private assistant uses the selected customer's saved draft. If its Job CV has no personal training information yet, opening Ask AI redirects to the Knowledge training tab. Customers can publish explicitly; published profiles are available at `/u/<profile-slug>/`, where their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
 

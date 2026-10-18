@@ -1,0 +1,44 @@
+# services:
+#   postgres:
+#     image: postgres:17
+#     container_name: local-postgres
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_DB: myapp
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: local_dev_password
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres -d myapp"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+
+# volumes:
+#   postgres_data:
+
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: local-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d myapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

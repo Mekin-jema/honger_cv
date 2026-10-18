@@ -6,6 +6,7 @@ import { AccountAuthForm } from "@/components/account/auth-form";
 import { getAdminSession, getCustomerSession, safeNext } from "@/server/admin-session";
 import { dbConfigured } from "@/server/db";
 import { safeAccountNext } from "@/lib/account-next";
+import { configuredSocialProviders } from "@/server/auth-options.mjs";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: false } };
 
@@ -30,7 +31,7 @@ export default async function CustomerLoginPage({
         {!dbConfigured() ? (
           <p role="alert" className="mt-6 rounded-xl bg-accent-soft p-4 text-sm text-accent">Sign-in is temporarily unavailable because account storage is not configured.</p>
         ) : (
-          <div className="mt-7"><AccountAuthForm mode="login" next={next} adminNext={adminNext} pendingAdminVerification={pendingAdminVerification} /></div>
+          <div className="mt-7"><AccountAuthForm mode="login" next={next} adminNext={adminNext} pendingAdminVerification={pendingAdminVerification} socialProviders={configuredSocialProviders()} socialError={typeof params.error === "string" ? params.error : undefined} /></div>
         )}
       </section>
     </main>

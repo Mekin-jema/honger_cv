@@ -69,6 +69,13 @@ export function getAuth(): Auth {
 export function authWarnings(): string[] {
   const out: string[] = [];
   if (!authSecret()) out.push("[auth] BETTER_AUTH_SECRET is missing or shorter than 32 characters: admin sign-in is disabled.");
+  for (const [provider, clientId, clientSecret] of [
+    ["Google", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    ["GitHub", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"],
+  ]) {
+    if (!!process.env[clientId]?.trim() !== !!process.env[clientSecret]?.trim())
+      out.push(`[auth] ${provider} sign-in is disabled: configure both ${clientId} and ${clientSecret}.`);
+  }
   if (staticOtp())
     out.push(
       [
