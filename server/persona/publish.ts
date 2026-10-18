@@ -12,6 +12,7 @@ import { invalidatePersona } from "./cache";
 import { compilePersona, docHash, type CompiledPersona } from "./compile";
 import { renderDocumentPdf } from "./pdf";
 import { loadDraft, nextVersionNumber } from "./repo";
+import { recordPlatformEventSafely } from "../platform-events";
 
 /**
  * "Publish & train": turns the current draft into a new live version. Steps (each recorded in
@@ -129,6 +130,12 @@ export async function runPublish(jobId: string, slug: string, doc: PersonaDoc, h
         await client.query("DELETE FROM persona_hosts WHERE slug = $1", [slug]);
         for (const host of doc.site.hosts) await client.query("INSERT INTO persona_hosts (host, slug) VALUES ($1, $2)", [host, slug]);
       });
+      try {
+        const { rows } = await query<{ owner_user_id: string | null }>("SELECT owner_user_id FROM personas WHERE slug = $1", [slug]);
+        if (rows[0]?.owner_user_id) await recordPlatformEventSafely(rows[0].owner_user_id, "profile_published", slug);
+      } catch (error) {
+        console.error(`[publish] Could not record platform publication for ${slug}:`, error instanceof Error ? error.message : error);
+      }
       invalidatePersona(slug);
       await pruneIndexes(slug).catch((err) => console.error("[publish] Could not prune old search indexes:", err));
       return "live";
