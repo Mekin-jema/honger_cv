@@ -192,7 +192,7 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
         </div>
         <p className="cv-meta">{cv.education.school}</p>
         <p className="cv-text">{cv.education.note}</p>
-        <p className="cv-stack">
+        <p className="cv-stack cv-courses">
           <span>Courses:</span> {cv.courses.join(", ")}
         </p>
       </div>

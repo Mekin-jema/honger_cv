@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { Download } from "lucide-react";
 import { CvSheet } from "@/components/document/cv-sheet";
+import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { CvData } from "@/lib/persona/cv";
-import { profile } from "@/content/profile";
-import { withBase } from "@/lib/utils"
 import { PrintButton } from "./print-button";
 
 const templates = [
@@ -71,32 +69,18 @@ export function CvStudio({ cv }: { cv: CvData }) {
         } as CSSProperties
       }
     >
-      <nav aria-label="CV actions" className="cv-toolbar no-print">
-        <div className="cv-toolbar-navigation">
-          <SidebarTrigger className="cv-tool cv-sidebar-toggle" />
-        </div>
-        <div className="cv-toolbar-actions">
-          <PrintButton label="Save selected PDF" />
-          <a
-            href={withBase(profile.cvPdf)}
-            download
-            className="cv-tool cv-tool-primary"
-            aria-label="Download the original CV PDF without the selected design or color"
-          >
-            <Download className="size-4" aria-hidden="true" />
-            <span>Original PDF</span>
-          </a>
-        </div>
-      </nav>
-
       <section className="cv-studio-heading no-print">
-        <div>
-          <p className="cv-studio-eyebrow">CV STUDIO</p>
-          <h1>Choose your CV design</h1>
-          <p>Select a template to preview your CV, then save that design as a PDF.</p>
+        <div className="cv-studio-heading-main">
+          <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />
+          <ThemeToggle className="cv-tool cv-theme-toggle" />
+          <div className="cv-studio-heading-copy">
+            <p className="cv-studio-eyebrow">CV STUDIO</p>
+            <h1>Choose your CV design</h1>
+            <p>Select a template to preview your CV, then save that design as a PDF.</p>
+          </div>
         </div>
         <div className="cv-studio-heading-side">
-          <span className="cv-page-format">A4 · Print-ready</span>
+          <PrintButton label="Save selected PDF" className="cv-tool-primary" />
           <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>
             <div className="cv-color-options">
