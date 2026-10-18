@@ -30,7 +30,8 @@ The portfolio and curated answers work without a database or AI credentials. Pos
 
 | Route | What you’ll find |
 | --- | --- |
-| `/` | Conversational portfolio and suggested questions |
+| `/` | CV Studio landing page with 25+ CV design options |
+| `/ask/` | AI-powered conversational portfolio |
 | `/ask/[intent]/` | Shareable chat answer for a topic |
 | `/dashboard/` | Career summary and selected work |
 | `/about/` | Profile and background |
@@ -42,12 +43,13 @@ The portfolio and curated answers work without a database or AI credentials. Pos
 | `/admin/` | Private inbox, analytics, and visitor activity |
 | `/admin/personas/` | Persona management and content studio |
 
-The public portfolio pages use their own site navigation rather than the dashboard sidebar. The sidebar’s **Ask AI** item opens the chat; **Summary** opens the career dashboard.
+The CV Studio landing page is the public home page. The **Open CV Studio** action opens the template picker and PDF preview; **Ask AI** opens the conversational portfolio. The public portfolio pages use their own site navigation rather than the dashboard sidebar; **Summary** opens the career dashboard.
 
 ## What’s inside
 
 - **Conversational portfolio** — curated, source-grounded answers, follow-up prompts, feedback controls, and optional AI responses.
 - **Project storytelling** — full-width project covers, summaries, technology stacks, and detailed case studies.
+- **CV Studio** — 25+ layouts, custom accent colors, live previews, and print-ready PDF export.
 - **CV and public pages** — responsive About, Experience, Projects, Skills, and Contact pages, plus a downloadable PDF.
 - **Admin inbox** — review messages, feedback, answer votes, AI answers, and visitor activity.
 - **Privacy-first analytics** — aggregated traffic and engagement insights; visitor-level analytics are available only when consent is given.

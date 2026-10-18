@@ -17,7 +17,8 @@ export function AppShell({
 }) {
   const pathname = usePathname()
   const routePath = pathname.replace(/\/+$/, "") || "/"
-  const isChatPage = routePath === "/" || routePath.startsWith("/ask/")
+  const isChatPage = routePath === "/ask" || routePath.startsWith("/ask/")
+  const isLandingPage = routePath === "/"
   const isAdminInbox = routePath === "/admin"
   const isDashboardPage = routePath === "/dashboard"
   const isCvPage = routePath === "/cv"
@@ -27,7 +28,7 @@ export function AppShell({
     ["/about", "/contact", "/experience", "/projects", "/skills"].includes(routePath) ||
     routePath.startsWith("/projects/")
 
-  if (isPortfolioPage) return <>{children}</>
+  if (isLandingPage || isPortfolioPage) return <>{children}</>
 
   return (
     <SidebarProvider>

@@ -24,6 +24,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 {p.label}
               </Link>
             ))}
+            <Link href="/ask/" className="rounded-lg px-2.5 py-2 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-surface hover:text-fg">
+              Ask AI
+            </Link>
           </nav>
           <ThemeToggle className="shrink-0 border border-line-strong bg-card text-fg shadow-sm" />
         </div>
@@ -41,7 +44,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
               {profile.role} · {profile.headline}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link href="/" className="btn btn-primary py-2 text-sm">
+              <Link href="/ask/" className="btn btn-primary py-2 text-sm">
                 <MessageSquareText className="size-4" /> Ask me in the chat
               </Link>
               <a href={withBase(profile.cvPdf)} download className="btn btn-ghost py-2 text-sm">

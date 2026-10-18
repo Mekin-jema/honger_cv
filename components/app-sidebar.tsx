@@ -29,7 +29,7 @@ import { usePersona } from "@/lib/persona/context"
 
 const portfolioLinks = [
   { title: "Summary", path: "/dashboard/", icon: Gauge },
-  { title: "Ask AI", path: "/", icon: BrainCircuit },
+  { title: "Ask AI", path: "/ask/", icon: BrainCircuit },
   { title: "About", questionId: "about", icon: UserRound },
   { title: "Experience", questionId: "experience", icon: BriefcaseBusiness },
   { title: "Projects", questionId: "projects", icon: FolderKanban },
