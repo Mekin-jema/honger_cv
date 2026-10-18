@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -11,13 +12,13 @@ import {
 import { ThemeToggle } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "CV Studio",
+  title: "Honger CV",
   description:
     "Create a standout CV with 25+ polished layouts, flexible color themes, and a print-ready PDF preview.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    title: "CV Studio — Make your next move stand out",
+    title: "Honger CV — Make your next move stand out",
     description:
       "Choose from 25+ CV designs, customize your colors, and export a polished PDF.",
     url: "/",
@@ -59,11 +60,16 @@ export default function Home() {
           aria-label="Main navigation"
           className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-4 px-5 sm:px-8"
         >
-          <Link href="/" className="flex items-center gap-3" aria-label="CV Studio home">
-            <span className="grid size-10 place-items-center rounded-2xl bg-accent text-on-accent shadow-sm">
-              <FileDown className="size-5" aria-hidden="true" />
-            </span>
-            <span className="font-semibold tracking-tight">CV Studio</span>
+          <Link href="/" className="flex items-center gap-3" aria-label="Honger CV home">
+            <Image
+              src="/honger-cv-logo.webp"
+              alt=""
+              width={44}
+              height={44}
+              priority
+              className="size-11 rounded-xl object-cover"
+            />
+            <span className="font-semibold tracking-tight">Honger CV</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-5">
             <Link
@@ -303,7 +309,7 @@ export default function Home() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>CV Studio · Build a CV that feels like you.</p>
+          <p>Honger CV · Build a CV that feels like you.</p>
           <div className="flex gap-5">
             <Link href="/cv/" className="hover:text-fg">CV Studio</Link>
             <Link href="/ask/" className="hover:text-fg">Ask AI</Link>
