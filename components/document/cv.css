@@ -97,8 +97,18 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 28px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: calc(100% + 32px);
+  margin-top: -24px;
   margin-bottom: 20px;
+  margin-right: -16px;
+  margin-left: -16px;
+  padding: 12px 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--cv-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--bg-soft) 94%, transparent);
+  backdrop-filter: blur(12px);
 }
 .cv-studio-heading-main {
   display: flex;
@@ -395,7 +405,7 @@
   .cv-studio-heading {
     align-items: flex-start;
     flex-direction: column;
-    margin-top: 22px;
+    margin-top: -24px;
   }
   .cv-studio-heading-side {
     align-items: flex-start;
@@ -406,6 +416,11 @@
   .cv-root {
     padding-right: 12px;
     padding-left: 12px;
+  }
+  .cv-studio-heading {
+    width: calc(100% + 24px);
+    margin-right: -12px;
+    margin-left: -12px;
   }
   .cv-template-section {
     padding: 13px;
@@ -912,8 +927,7 @@
   font-size: 12px;
 }
 .cv-studio-heading {
-  max-width: 1200px;
-  margin-top: 26px;
+  max-width: none;
 }
 .cv-heading-color-picker {
   display: grid;
@@ -1405,14 +1419,14 @@
 }
 .cv-template-art[data-template-art="navy-rail"] {
   padding-left: 23px;
-  background: #1c3443;
+  background: var(--cv-rail-dark);
 }
 .cv-template-art[data-template-art="navy-rail"] .cv-art-rail {
   position: absolute;
   inset: 0 auto 0 0;
   display: block;
   width: 16px;
-  background: #1c3443;
+  background: var(--cv-rail-dark);
 }
 .cv-template-art[data-template-art="navy-rail"] .cv-art-header,
 .cv-template-art[data-template-art="navy-rail"] .cv-art-section {
@@ -1503,7 +1517,7 @@
     "projects projects"
     "references references";
   gap: 0 7mm;
-  background: linear-gradient(90deg, #1c3443 0 42%, var(--cv-paper) 42% 100%);
+  background: linear-gradient(90deg, var(--cv-rail-dark) 0 42%, var(--cv-paper) 42% 100%);
   padding: 14mm;
 }
 .cv-root[data-template="navy-rail"] .cv-header {
@@ -1651,7 +1665,7 @@
   .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(1),
   .cv-root[data-template="navy-rail"] .cv-sheet > .cv-section:nth-of-type(2),
   .cv-root[data-template="navy-rail"] .cv-two > .cv-section:last-child {
-    background: #1c3443;
+    background: var(--cv-rail-dark);
     color: #f4f6f7;
     padding: 12px;
   }
@@ -1727,7 +1741,7 @@
 .cv-root[data-template="navy-rail"] .cv-profile-rail .cv-availability {
   margin: 2px 0 0;
   border-left: 2px solid var(--cv-accent);
-  background: color-mix(in srgb, var(--cv-accent) 21%, #1c3443);
+  background: color-mix(in srgb, var(--cv-accent) 21%, var(--cv-rail-dark));
   padding: 7px 8px;
   color: #fff;
   font-size: 8pt;
@@ -1738,7 +1752,7 @@
 .cv-root[data-template="navy-rail"] .cv-profile-rail .cv-h2 {
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--cv-accent) 70%, #fff);
-  background: color-mix(in srgb, var(--cv-accent) 21%, #1c3443);
+  background: color-mix(in srgb, var(--cv-accent) 21%, var(--cv-rail-dark));
   padding: 4px 6px;
   color: #fff;
   text-align: center;
@@ -1813,14 +1827,14 @@
 }
 .cv-template-art[data-template-art="slate-sidebar"] {
   padding-left: 23px;
-  background: #e7e9e9;
+  background: var(--cv-rail-light);
 }
 .cv-template-art[data-template-art="slate-sidebar"] .cv-art-rail {
   position: absolute;
   inset: 0 auto 0 0;
   display: block;
   width: 18px;
-  background: #354b59;
+  background: var(--cv-rail-dark);
 }
 .cv-template-art[data-template-art="slate-sidebar"] .cv-art-photo {
   position: absolute;
@@ -1834,7 +1848,7 @@
 }
 .cv-template-art[data-template-art="slate-sidebar"] .cv-art-header {
   width: 56%;
-  background: #354b59;
+  background: var(--cv-rail-dark);
 }
 .cv-template-art[data-template-art="slate-sidebar"] .cv-art-section {
   width: 70%;
@@ -2637,7 +2651,7 @@
     content: "";
   }
   .cv-template-art[data-template-art="teal-timeline"] {
-    background: linear-gradient(90deg, #06465a 0 40%, #fff 40% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-dark) 0 40%, #fff 40% 100%);
     padding-left: 36px;
   }
   .cv-template-art[data-template-art="teal-timeline"] .cv-art-rail {
@@ -2645,7 +2659,7 @@
     inset: 0 auto 0 0;
     display: block;
     width: 32px;
-    background: #06465a;
+    background: var(--cv-rail-dark);
   }
   .cv-template-art[data-template-art="teal-timeline"] .cv-art-photo {
     position: absolute;
@@ -2662,7 +2676,7 @@
     background: #a9d7d8;
   }
   .cv-template-art[data-template-art="cyan-timeline"] {
-    background: linear-gradient(90deg, #10243f 0 40%, #fff 40% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-dark) 0 40%, #fff 40% 100%);
     padding-left: 36px;
   }
   .cv-template-art[data-template-art="cyan-timeline"] .cv-art-rail {
@@ -2670,7 +2684,7 @@
     inset: 0 auto 0 0;
     display: block;
     width: 32px;
-    background: #10243f;
+    background: var(--cv-rail-dark);
   }
   .cv-template-art[data-template-art="cyan-timeline"] .cv-art-header,
   .cv-template-art[data-template-art="cyan-timeline"] .cv-art-section {
@@ -2740,7 +2754,7 @@
     color: #26364b;
   }
   .cv-template-art[data-template-art="portrait-two-column"] {
-    background: linear-gradient(90deg, #f1f4f7 0 48%, #fff 48% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-light) 0 48%, #fff 48% 100%);
   }
   .cv-template-art[data-template-art="portrait-two-column"] .cv-art-photo {
     position: absolute;
@@ -2755,7 +2769,7 @@
   .cv-template-art[data-template-art="portrait-two-column"] .cv-art-header {
     width: 44%;
     margin-left: 22px;
-    background: #26364b;
+    background: var(--cv-rail-dark);
   }
 
   .cv-root[data-template="mint-header"] .cv-sheet-mint-header {
@@ -2831,7 +2845,7 @@
     flex: 0 0 11px;
   }
   .cv-template-art[data-template-art="mint-header"] {
-    background: linear-gradient(#17465a 0 22px, #eaf5f1 22px 100%);
+    background: linear-gradient(var(--cv-rail-dark) 0 22px, var(--cv-rail-light) 22px 100%);
   }
   .cv-template-art[data-template-art="mint-header"] .cv-art-photo {
     position: absolute;
@@ -3313,7 +3327,7 @@
   }
   .cv-template-art[data-template-art="navy-contrast"] {
     position: relative;
-    background: linear-gradient(90deg, #303f63 0 42%, #fffdfa 42% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-dark) 0 42%, #fffdfa 42% 100%);
     padding-left: 38px;
   }
   .cv-template-art[data-template-art="navy-contrast"] .cv-art-rail {
@@ -3321,7 +3335,7 @@
     inset: 0 auto 0 0;
     display: block;
     width: 34px;
-    background: #303f63;
+    background: var(--cv-rail-dark);
   }
   .cv-template-art[data-template-art="navy-contrast"] .cv-art-photo {
     position: absolute;
@@ -3852,7 +3866,7 @@
   }
 
   .cv-template-art[data-template-art="reverse-rail"] {
-    background: linear-gradient(90deg, #fffdfa 0 60%, #d8cec3 60% 100%);
+    background: linear-gradient(90deg, #fffdfa 0 60%, var(--cv-rail-light) 60% 100%);
   }
   .cv-template-art[data-template-art="reverse-rail"] .cv-art-header,
   .cv-template-art[data-template-art="reverse-rail"] .cv-art-section {
@@ -3860,7 +3874,7 @@
     background: #b5400f;
   }
   .cv-template-art[data-template-art="gold-timeline"] {
-    background: linear-gradient(90deg, #192536 0 40%, #fff 40% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-dark) 0 40%, #fff 40% 100%);
     padding-left: 36px;
   }
   .cv-template-art[data-template-art="gold-timeline"] .cv-art-rail {
@@ -3868,7 +3882,7 @@
     inset: 0 auto 0 0;
     display: block;
     width: 32px;
-    background: #192536;
+    background: var(--cv-rail-dark);
   }
   .cv-template-art[data-template-art="gold-timeline"] .cv-art-photo {
     position: absolute;
@@ -3896,7 +3910,7 @@
     padding-left: 4px;
   }
   .cv-template-art[data-template-art="studio-rail"] {
-    background: linear-gradient(90deg, #26364b 0 40%, #fff 40% 100%);
+    background: linear-gradient(90deg, var(--cv-rail-dark) 0 40%, #fff 40% 100%);
     padding-left: 36px;
   }
   .cv-template-art[data-template-art="studio-rail"] .cv-art-rail {
@@ -3904,7 +3918,7 @@
     inset: 0 auto 0 0;
     display: block;
     width: 32px;
-    background: #26364b;
+    background: var(--cv-rail-dark);
   }
   .cv-template-art[data-template-art="studio-rail"] .cv-art-photo {
     position: absolute;
