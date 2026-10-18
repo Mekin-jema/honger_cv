@@ -75,6 +75,33 @@ export function CvTemplateShowcase({ cv }: { cv: CvData }) {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const stage = templateStageRef.current;
+    const preview = stage?.querySelector<HTMLElement>(".cv-inline-preview");
+    if (!stage || !preview) return;
+
+    const updateHeight = () => {
+      const darkMode = document.documentElement.classList.contains("dark");
+      const extraSpace = darkMode ? 120 : 56;
+      const minimumHeight = Number.parseFloat(
+        getComputedStyle(stage).getPropertyValue("--cv-preview-min-height"),
+      ) || 900;
+      const contentHeight = Math.ceil(preview.getBoundingClientRect().height + extraSpace);
+      stage.style.height = `${Math.max(minimumHeight, contentHeight)}px`;
+    };
+
+    updateHeight();
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(preview);
+    const themeObserver = new MutationObserver(updateHeight);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    return () => {
+      resizeObserver.disconnect();
+      themeObserver.disconnect();
+    };
+  }, [currentTemplate.id, previewScale]);
+
   const selectCategory = (category: TemplateCategory) => {
     setActiveCategory(category);
     setCurrentIndex(0);
