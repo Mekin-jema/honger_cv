@@ -961,6 +961,83 @@
 .cv-root[data-template="classic"] .cv-h2 {
   border-bottom-width: 2px;
 }
+.cv-root[data-template="classic"] .cv-header {
+  justify-content: center;
+  text-align: center;
+}
+.cv-root[data-template="classic"] .cv-header > div {
+  flex: 0 1 auto;
+}
+.cv-root[data-template="classic"] .cv-contacts {
+  justify-content: center;
+}
+.cv-root[data-template="modern"] .cv-h2 {
+  border: 0;
+  background: #f0f1f2;
+  padding: 4px 7px;
+  color: #29323b;
+}
+.cv-root[data-template="modern"] .cv-section {
+  margin-top: 9px;
+}
+.cv-root[data-template="section-bands"] .cv-name {
+  font-size: 22pt;
+}
+.cv-root[data-template="section-bands"] .cv-h2 {
+  border: 0;
+  background: #eceeef;
+  padding: 4px 7px;
+  color: #29323b;
+  text-align: center;
+}
+.cv-root[data-template="section-bands"] .cv-section {
+  margin-top: 8px;
+}
+.cv-root[data-template="section-bands"] .cv-header {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #c9ccce;
+}
+.cv-root[data-template="executive-grid"] {
+  font-size: 8.5pt;
+  line-height: 1.3;
+}
+.cv-root[data-template="executive-grid"] .cv-sheet {
+  padding: 13mm 14mm 12mm;
+}
+.cv-root[data-template="executive-grid"] .cv-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22pt;
+  letter-spacing: 0;
+}
+.cv-root[data-template="executive-grid"] .cv-header {
+  padding-bottom: 7px;
+  border-bottom: 2px solid #555;
+}
+.cv-root[data-template="executive-grid"] .cv-section {
+  margin-top: 7px;
+}
+.cv-root[data-template="executive-grid"] .cv-h2 {
+  margin-bottom: 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #777;
+  color: #292929;
+}
+.cv-root[data-template="executive-grid"] .cv-jobs {
+  gap: 6px;
+}
+.cv-root[data-template="executive-grid"] .cv-skills {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+}
+.cv-root[data-template="executive-grid"] .cv-skill {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+@media (max-width: 640px) {
+  .cv-root[data-template="executive-grid"] .cv-skills {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Sidebar format groups profile details and credentials in a shaded rail. */
 .cv-root[data-template="sidebar"] .cv-sheet {
@@ -1792,6 +1869,46 @@
   grid-column: 2 / -1;
   grid-row: 5;
   width: 100%;
+}
+.cv-template-art[data-template-art="section-bands"] {
+  gap: 3px;
+  background: #fff;
+}
+.cv-template-art[data-template-art="section-bands"] .cv-art-header {
+  width: 48%;
+  background: #343a40;
+}
+.cv-template-art[data-template-art="section-bands"] .cv-art-section {
+  width: 100%;
+  height: 6px;
+  margin-top: 2px;
+  background: #e8eaec;
+}
+.cv-template-art[data-template-art="section-bands"] .cv-art-section-short {
+  width: 100%;
+  margin-top: 8px;
+}
+.cv-template-art[data-template-art="executive-grid"] {
+  gap: 3px;
+  background: #fff;
+}
+.cv-template-art[data-template-art="executive-grid"] .cv-art-header {
+  width: 48%;
+  background: #323232;
+}
+.cv-template-art[data-template-art="executive-grid"] .cv-art-section {
+  width: 48%;
+  height: 3px;
+  margin-top: 3px;
+  background: #555;
+}
+.cv-template-art[data-template-art="executive-grid"] .cv-art-section-short {
+  width: 36%;
+  margin-top: 8px;
+}
+.cv-template-art[data-template-art="executive-grid"] .cv-art-lines {
+  height: 2px;
+  box-shadow: 0 4px 0 #e2e2e2, 0 8px 0 #e2e2e2;
 }
 
 /* Gray sidebar template follows the supplied portrait-led, centered-label example. */

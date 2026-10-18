@@ -10,8 +10,10 @@ import { withBase } from "@/lib/utils";
 import { PrintButton } from "./print-button";
 
 const templates = [
-  { id: "modern", name: "Modern", description: "The current clean, balanced layout." },
-  { id: "classic", name: "Classic", description: "Traditional typography and a familiar reading flow." },
+  { id: "modern", name: "Soft Modern", description: "A crisp profile with subtle color and gentle section rules." },
+  { id: "classic", name: "Centered Serif", description: "A polished, traditional layout with a centered masthead." },
+  { id: "section-bands", name: "Section Bands", description: "Compact sections with clear, centered gray headings." },
+  { id: "executive-grid", name: "Executive Grid", description: "A compact, information-dense layout for experienced candidates." },
   { id: "sidebar", name: "Sidebar", description: "Contact and credentials alongside experience." },
   { id: "timeline", name: "Timeline", description: "A visual path through your career history." },
   { id: "editorial", name: "Editorial", description: "A magazine-inspired grid with a bold masthead." },
