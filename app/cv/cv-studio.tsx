@@ -23,6 +23,8 @@ const templates = [
   { id: "wide-professional", name: "Wide Professional", description: "A full-width header and date-led experience rows." },
   { id: "lavender-split", name: "Lavender Split", description: "A colorful two-column profile with a contrasting experience panel." },
   { id: "orange-split", name: "Orange Split", description: "A portrait-led header with a light profile rail and clear experience column." },
+  { id: "navy-contrast", name: "Navy Contrast", description: "A dark profile rail with education and languages beside a light experience column." },
+  { id: "orange-frame", name: "Orange Frame", description: "A bright framed page with a photo-led header and clear section rules." },
   { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right." },
   { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings." },
 ] as const;
@@ -179,6 +181,8 @@ export function CvStudio({ cv }: { cv: CvData }) {
                 template === "wide-professional" ||
                 template === "lavender-split" ||
                 template === "orange-split" ||
+                template === "navy-contrast" ||
+                template === "orange-frame" ||
                 template === "minimalist" ||
                 template === "centered-blue"
                   ? template

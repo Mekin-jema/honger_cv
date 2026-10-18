@@ -42,11 +42,14 @@ type CvSheetLayout =
   | "wide-professional"
   | "lavender-split"
   | "orange-split"
+  | "navy-contrast"
+  | "orange-frame"
   | "minimalist"
   | "centered-blue";
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
-  const hasSectionIcons = layout === "lavender-split" || layout === "orange-split";
+  const hasSectionIcons =
+    layout === "lavender-split" || layout === "orange-split" || layout === "navy-contrast" || layout === "orange-frame";
   const sectionIcon = (Icon: typeof UserRound) =>
     hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = [
@@ -219,6 +222,42 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {referencesSection}
     </>
   );
+
+  if (layout === "navy-contrast") {
+    return (
+      <article className="cv-sheet cv-sheet-navy-contrast">
+        <aside className="cv-navy-profile">
+          {header}
+          {availability}
+          {profileSection}
+          {educationSection}
+          {languagesSection}
+        </aside>
+        <div className="cv-navy-main">
+          {experienceSection}
+          {skillsSection}
+          {highlightsSection}
+          {projectsSection}
+          {referencesSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "orange-frame") {
+    return (
+      <article className="cv-sheet cv-sheet-orange-frame">
+        {header}
+        {profileSection}
+        {experienceSection}
+        {educationSection}
+        {languagesSection}
+        {highlightsSection}
+        {projectsSection}
+        {skillsSection}
+      </article>
+    );
+  }
 
   if (layout === "orange-split") {
     return (
