@@ -29,6 +29,7 @@ export function CvTemplateShowcase({ cv }: { cv: CvData }) {
   const [isCopied, setIsCopied] = useState(false);
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const templateStageRef = useRef<HTMLDivElement>(null);
+  const detailsPanelRef = useRef<HTMLElement>(null);
   const [previewScale, setPreviewScale] = useState(0.8);
 
   const filteredTemplates = useMemo(
@@ -77,30 +78,26 @@ export function CvTemplateShowcase({ cv }: { cv: CvData }) {
 
   useEffect(() => {
     const stage = templateStageRef.current;
-    const preview = stage?.querySelector<HTMLElement>(".cv-inline-preview");
-    if (!stage || !preview) return;
+    const detailsPanel = detailsPanelRef.current;
+    if (!stage || !detailsPanel) return;
 
     const updateHeight = () => {
-      const darkMode = document.documentElement.classList.contains("dark");
-      const extraSpace = darkMode ? 120 : 56;
-      const minimumHeight = Number.parseFloat(
-        getComputedStyle(stage).getPropertyValue("--cv-preview-min-height"),
-      ) || 900;
-      const contentHeight = Math.ceil(preview.getBoundingClientRect().height + extraSpace);
-      stage.style.height = `${Math.max(minimumHeight, contentHeight)}px`;
+      const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+      const height = isDesktop
+        ? detailsPanel.getBoundingClientRect().height
+        : 1122.52 * previewScale * 0.55;
+      stage.style.height = `${Math.round(height)}px`;
     };
 
     updateHeight();
-    const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(preview);
-    const themeObserver = new MutationObserver(updateHeight);
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(detailsPanel);
+    window.addEventListener("resize", updateHeight);
     return () => {
-      resizeObserver.disconnect();
-      themeObserver.disconnect();
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
     };
-  }, [currentTemplate.id, previewScale]);
+  }, [previewScale]);
 
   const selectCategory = (category: TemplateCategory) => {
     setActiveCategory(category);
@@ -215,7 +212,13 @@ export function CvTemplateShowcase({ cv }: { cv: CvData }) {
             </div>
           </div>
 
-          <div ref={templateStageRef} className="cv-template-stage mt-4 rounded-lg border border-line bg-surface">
+          <div
+            ref={templateStageRef}
+            className="cv-template-stage no-scrollbar mt-4 rounded-lg border border-line bg-surface"
+            role="region"
+            aria-label={`${currentTemplate.name} CV preview; scroll to view the full document`}
+            tabIndex={0}
+          >
             <div
               className="cv-root cv-inline-preview cv-template-paper"
               data-template={currentTemplate.id}
@@ -226,7 +229,7 @@ export function CvTemplateShowcase({ cv }: { cv: CvData }) {
           </div>
         </div>
 
-        <aside className="flex min-w-0 flex-col gap-5 rounded-xl border border-line bg-card p-5 shadow-[var(--card-shadow)] sm:p-7">
+        <aside ref={detailsPanelRef} className="flex min-w-0 flex-col gap-5 rounded-xl border border-line bg-card p-5 shadow-[var(--card-shadow)] sm:p-7">
           <div>
             <div className="flex items-center justify-between gap-2">
               <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
