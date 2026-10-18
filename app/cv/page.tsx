@@ -7,6 +7,7 @@ import { profile } from "@/content/profile";
 import { readCv } from "@/lib/persona/cv";
 import { describe } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
+import { isCvTemplateId } from "@/lib/persona/cv-templates";
 import { currentPersona } from "@/server/persona/resolve";
 import { CvStudio } from "./cv-studio";
 
@@ -34,7 +35,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function CvPage() {
+export default async function CvPage(props: {
+  searchParams?: Promise<{ template?: string; color?: string }>;
+}) {
+  const searchParams = props.searchParams ? await props.searchParams : undefined;
   // Another persona whose document lives at /cv/ shows it here, in its own page frame.
   const p = await currentPersona();
   if (!p.compiled.doc.legacy) {
@@ -43,6 +47,16 @@ export default async function CvPage() {
   }
   // The published CV (edited in the Studio), else the code content.
   const cv = readCv(p.compiled.doc.document.data, codeCv);
+  const initialTemplate = isCvTemplateId(searchParams?.template) ? searchParams.template : "modern";
+  const initialAccentColor = searchParams?.color
+    ? `#${searchParams.color.replace(/^#/, "")}`
+    : undefined;
 
-  return <CvStudio cv={cv} />;
+  return (
+    <CvStudio
+      cv={cv}
+      initialTemplate={initialTemplate}
+      initialAccentColor={initialAccentColor}
+    />
+  );
 }

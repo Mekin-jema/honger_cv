@@ -26,9 +26,50 @@
 }
 /* One page tone on /cv: the body behind a short sheet matches .cv-root, so there is no band. */
 @media screen {
-  html:has(.cv-root),
-  html:has(.cv-root) body {
+  html:has(.cv-root:not(.cv-inline-preview)),
+  html:has(.cv-root:not(.cv-inline-preview)) body {
     background: var(--bg-soft);
+  }
+}
+
+.cv-inline-preview {
+  display: flex;
+  width: 210mm;
+  min-height: 0;
+  flex: 0 0 210mm;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  transform: scale(var(--cv-inline-scale, 0.8));
+  transform-origin: top center;
+}
+.cv-template-stage {
+  display: flex;
+  height: 900px;
+  justify-content: center;
+  overflow: auto;
+}
+@media (max-width: 1023px) {
+  .cv-template-stage {
+    height: 940px;
+  }
+}
+@media (max-width: 640px) {
+  .cv-template-stage {
+    height: 720px;
+  }
+}
+.dark .cv-template-stage {
+  height: 1060px;
+}
+@media (max-width: 1023px) {
+  .dark .cv-template-stage {
+    height: 1100px;
+  }
+}
+@media (max-width: 640px) {
+  .dark .cv-template-stage {
+    height: 880px;
   }
 }
 

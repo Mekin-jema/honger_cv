@@ -15,6 +15,7 @@ import { Github, Linkedin } from "@/components/brand-icons";
 import { quotes } from "@/content/details";
 import { profile } from "@/content/profile";
 import type { CvData } from "@/lib/persona/cv";
+import type { CvTemplateId } from "@/lib/persona/cv-templates";
 import { withBase } from "@/lib/utils";
 import "./cv.css";
 
@@ -35,7 +36,7 @@ function Section({ title, children, icon }: { title: string; children: React.Rea
   );
 }
 
-type CvSheetLayout =
+export type CvSheetLayout =
   | "default"
   | "navy-rail"
   | "slate-sidebar"
@@ -51,6 +52,41 @@ type CvSheetLayout =
   | "mint-header"
   | "minimalist"
   | "centered-blue";
+
+const templateLayouts: Partial<Record<CvTemplateId, CvSheetLayout>> = {
+  "navy-rail": "navy-rail",
+  "slate-sidebar": "slate-sidebar",
+  "wide-professional": "wide-professional",
+  "lavender-split": "lavender-split",
+  "orange-split": "orange-split",
+  "navy-contrast": "navy-contrast",
+  "orange-frame": "orange-frame",
+  "reverse-rail": "reverse-rail",
+  "gold-timeline": "gold-timeline",
+  "career-timeline": "career-timeline",
+  "studio-rail": "studio-rail",
+  "mint-header": "mint-header",
+  minimalist: "minimalist",
+  "centered-blue": "centered-blue",
+  "teal-timeline": "gold-timeline",
+  "cyan-timeline": "gold-timeline",
+  "portrait-two-column": "orange-split",
+};
+
+export function cvSheetLayoutForTemplate(template: CvTemplateId): CvSheetLayout {
+  return templateLayouts[template] ?? "default";
+}
+
+export function cvTemplateStyle(accentColor: string): React.CSSProperties {
+  return {
+    "--cv-accent": accentColor,
+    "--cv-line": `color-mix(in srgb, ${accentColor} 25%, #fff)`,
+    "--cv-rail-dark": `color-mix(in srgb, ${accentColor} 32%, #1c3443)`,
+    "--cv-rail-light": `color-mix(in srgb, ${accentColor} 13%, #f1f4f7)`,
+    "--cv-rail-light-warm": `color-mix(in srgb, ${accentColor} 12%, #fffdfa)`,
+    "--cv-rail-light-mint": `color-mix(in srgb, ${accentColor} 12%, #eaf5f1)`,
+  } as React.CSSProperties;
+}
 
 export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvSheetLayout }) {
   const name = cv.identity?.name ?? profile.name;

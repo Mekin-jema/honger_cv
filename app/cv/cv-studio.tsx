@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { CvSheet } from "@/components/document/cv-sheet";
+import { CvSheet, cvSheetLayoutForTemplate, cvTemplateStyle } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { CvData } from "@/lib/persona/cv";
@@ -59,16 +59,7 @@ export function CvStudio({
       className="cv-root"
       data-template={template}
       data-color={selectedPalette?.id ?? "custom"}
-      style={
-        {
-          "--cv-accent": accentColor,
-          "--cv-line": `color-mix(in srgb, ${accentColor} 25%, #fff)`,
-          "--cv-rail-dark": `color-mix(in srgb, ${accentColor} 32%, #1c3443)`,
-          "--cv-rail-light": `color-mix(in srgb, ${accentColor} 13%, #f1f4f7)`,
-          "--cv-rail-light-warm": `color-mix(in srgb, ${accentColor} 12%, #fffdfa)`,
-          "--cv-rail-light-mint": `color-mix(in srgb, ${accentColor} 12%, #eaf5f1)`,
-        } as CSSProperties
-      }
+      style={cvTemplateStyle(accentColor)}
     >
       <section className="cv-studio-heading no-print">
         <div className="cv-studio-heading-main">
@@ -168,28 +159,7 @@ export function CvStudio({
           <main aria-label={`${selectedTemplate.name} CV preview`}>
             <CvSheet
               cv={cv}
-              layout={
-                template === "teal-timeline" || template === "cyan-timeline"
-                  ? "gold-timeline"
-                  : template === "portrait-two-column"
-                    ? "orange-split"
-                    : template === "navy-rail" ||
-                template === "slate-sidebar" ||
-                template === "wide-professional" ||
-                template === "lavender-split" ||
-                template === "orange-split" ||
-                template === "navy-contrast" ||
-                template === "orange-frame" ||
-                template === "reverse-rail" ||
-                template === "gold-timeline" ||
-                template === "career-timeline" ||
-                template === "studio-rail" ||
-                template === "mint-header" ||
-                template === "minimalist" ||
-                template === "centered-blue"
-                  ? template
-                  : "default"
-              }
+              layout={cvSheetLayoutForTemplate(template)}
             />
           </main>
         </section>
