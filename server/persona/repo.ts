@@ -4,7 +4,14 @@ import { query } from "../db";
 
 /** SQL for personas, drafts, versions and hosts. Documents are stored as jsonb and validated on the way in. */
 
-export type PersonaRow = { slug: string; name: string; publishedVersionId: string | null; accessEpoch: number; updatedAt: string };
+export type PersonaRow = {
+  slug: string;
+  name: string;
+  publishedVersionId: string | null;
+  accessEpoch: number;
+  ownerUserId: string | null;
+  updatedAt: string;
+};
 
 export type VersionRow = {
   id: string;
@@ -81,14 +88,56 @@ export async function hostRows(): Promise<{ host: string; slug: string }[]> {
 }
 
 export async function listPersonas(): Promise<PersonaRow[]> {
-  const { rows } = await query<{ slug: string; name: string; published_version_id: string | null; access_epoch: number; updated_at: Date }>(
-    "SELECT slug, name, published_version_id, access_epoch, updated_at FROM personas ORDER BY created_at, slug",
+  const { rows } = await query<{ slug: string; name: string; published_version_id: string | null; access_epoch: number; owner_user_id: string | null; updated_at: Date }>(
+    "SELECT slug, name, published_version_id, access_epoch, owner_user_id, updated_at FROM personas ORDER BY created_at, slug",
   );
-  return rows.map((r) => ({ slug: r.slug, name: r.name, publishedVersionId: r.published_version_id, accessEpoch: r.access_epoch, updatedAt: iso(r.updated_at)! }));
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    publishedVersionId: r.published_version_id,
+    accessEpoch: r.access_epoch,
+    ownerUserId: r.owner_user_id,
+    updatedAt: iso(r.updated_at)!,
+  }));
 }
 
-export async function createPersona(slug: string, name: string): Promise<boolean> {
-  const res = await query("INSERT INTO personas (slug, name) VALUES ($1, $2) ON CONFLICT (slug) DO NOTHING", [slug, name]);
+export async function listOwnedPersonas(ownerUserId: string): Promise<PersonaRow[]> {
+  const { rows } = await query<{
+    slug: string;
+    name: string;
+    published_version_id: string | null;
+    access_epoch: number;
+    owner_user_id: string;
+    updated_at: Date;
+  }>(
+    "SELECT slug, name, published_version_id, access_epoch, owner_user_id, updated_at FROM personas WHERE owner_user_id = $1 ORDER BY created_at, slug",
+    [ownerUserId],
+  );
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    publishedVersionId: r.published_version_id,
+    accessEpoch: r.access_epoch,
+    ownerUserId: r.owner_user_id,
+    updatedAt: iso(r.updated_at)!,
+  }));
+}
+
+export async function personaOwnedBy(slug: string, ownerUserId: string): Promise<boolean> {
+  const { rowCount } = await query("SELECT 1 FROM personas WHERE slug = $1 AND owner_user_id = $2", [slug, ownerUserId]);
+  return (rowCount ?? 0) > 0;
+}
+
+export async function personaOwnerUserId(slug: string): Promise<string | null> {
+  const { rows } = await query<{ owner_user_id: string | null }>("SELECT owner_user_id FROM personas WHERE slug = $1", [slug]);
+  return rows[0]?.owner_user_id ?? null;
+}
+
+export async function createPersona(slug: string, name: string, ownerUserId?: string): Promise<boolean> {
+  const res = await query(
+    "INSERT INTO personas (slug, name, owner_user_id) VALUES ($1, $2, $3) ON CONFLICT (slug) DO NOTHING",
+    [slug, name, ownerUserId ?? null],
+  );
   return (res.rowCount ?? 0) > 0;
 }
 

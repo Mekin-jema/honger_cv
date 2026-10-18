@@ -89,6 +89,8 @@ async function resolve(
   h: Headers,
   cookie: (name: string) => string | undefined,
 ): Promise<ResolvedPersona> {
+  const publicSlug = h.get("x-public-persona")?.trim() ?? "";
+  const publicRoute = SLUG.test(publicSlug);
   const printing = h.get("x-print-token")
     ? await printRequest(h.get("x-print-token"))
     : null;
@@ -100,7 +102,7 @@ async function resolve(
       preview: null,
       wrongLang: false,
     };
-  const wanted = cookie("pv") ? await previewRequest(h, cookie("pv")) : null;
+  const wanted = !publicRoute && cookie("pv") ? await previewRequest(h, cookie("pv")) : null;
   if (wanted && "compiled" in wanted) {
     const { compiled, tier } = wanted;
     return {
@@ -114,9 +116,11 @@ async function resolve(
       wrongLang: wrongLang(h, compiled),
     };
   }
-  const { slug, base } = wanted
-    ? { slug: wanted.slug, base: "" }
-    : await pickSlug(h);
+  const { slug, base } = publicRoute
+    ? { slug: publicSlug, base: `/u/${publicSlug}` }
+    : wanted
+      ? { slug: wanted.slug, base: "" }
+      : await pickSlug(h);
   let found = await getPersona(slug);
   let resolvedBase = base;
   if (!found && slug !== DEFAULT_PERSONA()) {

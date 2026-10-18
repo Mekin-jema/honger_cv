@@ -62,12 +62,20 @@ export default function Home() {
         >
           <Link href="/" className="flex items-center gap-3" aria-label="Honger CV home">
             <Image
+              src="/honger-cv-logo-light.webp"
+              alt=""
+              width={44}
+              height={44}
+              priority
+              className="size-11 rounded-xl object-cover dark:hidden"
+            />
+            <Image
               src="/honger-cv-logo.webp"
               alt=""
               width={44}
               height={44}
               priority
-              className="size-11 rounded-xl object-cover"
+              className="hidden size-11 rounded-xl object-cover dark:block"
             />
             <span className="font-semibold tracking-tight">Honger CV</span>
           </Link>
@@ -77,6 +85,12 @@ export default function Home() {
               className="hidden text-sm font-medium text-muted transition-colors hover:text-fg sm:inline-flex"
             >
               Ask AI
+            </Link>
+            <Link
+              href="/register/"
+              className="hidden text-sm font-medium text-muted transition-colors hover:text-fg sm:inline-flex"
+            >
+              Create account
             </Link>
             <Link
               href="/cv/"

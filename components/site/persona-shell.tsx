@@ -8,7 +8,7 @@ import { personaPath, sitePages } from "@/server/persona/pages";
 import type { ResolvedPersona } from "@/server/persona/resolve";
 
 /** The readable pages of a persona other than the job one: plain HTML that search engines index. */
-export function PersonaShell({ p, children }: { p: ResolvedPersona; children: React.ReactNode }) {
+export function PersonaShell({ p, children, wide = false }: { p: ResolvedPersona; children: React.ReactNode; wide?: boolean }) {
   const { doc } = p.compiled;
   const pages = sitePages(p);
   const labels = resolvedLabels(doc, p.lang);
@@ -36,7 +36,7 @@ export function PersonaShell({ p, children }: { p: ResolvedPersona; children: Re
         </div>
       </header>
 
-      <main id="main" className="mx-auto w-full max-w-3xl px-5 py-10 md:px-6 md:py-14">
+      <main id="main" className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-3xl"} px-5 py-10 md:px-6 md:py-14`}>
         {children}
       </main>
 
