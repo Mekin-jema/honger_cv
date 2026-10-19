@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/account/sign-out-button";
 
 export type AccountSidebarPersona = { slug: string; name: string; identityName: string; role: string; publishedVersionId: string | null };
 
@@ -27,6 +28,7 @@ export function AccountShell({ children, name, email, avatar, personas }: { chil
               <p className="truncate text-sm font-semibold">{section}</p>
               <p className="hidden truncate text-xs text-muted sm:block">Your private profile workspace</p>
             </div>
+            <SignOutButton />
             <ThemeToggle className="border border-line-strong bg-card text-fg shadow-sm" />
           </header>
         )}

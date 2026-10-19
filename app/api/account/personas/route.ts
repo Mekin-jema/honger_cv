@@ -21,7 +21,8 @@ export async function POST(req: Request) {
 
   const body = await readJson(req, 5_000);
   const headline = str(body?.headline, 160);
-  if (!headline || headline.length < 2) return bad("Enter a professional headline.");
+  const cvName = str(body?.cvName, 80) ?? headline;
+  if (!headline || headline.length < 2 || !cvName || cvName.length < 2) return bad("Enter a name for this CV.");
 
   const existing = await listOwnedPersonas(session.userId);
   let cvNumber = 1;
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       : undefined;
     if (typeof existingRole === "string" && roleCvName(existingRole).toLowerCase() === roleCvName(headline).toLowerCase()) cvNumber += 1;
   }
-  const cvName = roleCvName(headline, cvNumber);
+  const generatedName = cvName === headline ? roleCvName(headline, cvNumber) : cvName;
   const baseSlug = headline
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
     .slice(0, 22) || "profile";
   const slug = `${baseSlug}-${randomUUID().replaceAll("-", "").slice(0, 8)}`;
   const doc = customerStarterPersona(headline);
+  doc.name = generatedName;
   const parsed = PersonaDocSchema.safeParse(doc);
   if (!parsed.success) return bad("The CV starter couldn't be prepared.", 500);
 
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
      INSERT INTO persona_drafts (slug, doc, rev)
      SELECT slug, $4::jsonb, 1 FROM created
      RETURNING slug`,
-    [slug, cvName, session.userId, JSON.stringify(parsed.data)],
+    [slug, generatedName, session.userId, JSON.stringify(parsed.data)],
   );
   if (!rowCount) return bad("Couldn't reserve a CV address. Please try again.", 409);
   await recordPlatformEventSafely(session.userId, "profile_created", slug);

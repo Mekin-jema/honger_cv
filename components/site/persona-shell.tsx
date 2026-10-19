@@ -9,18 +9,19 @@ import { personaPath, sitePages } from "@/server/persona/pages";
 import type { ResolvedPersona } from "@/server/persona/resolve";
 
 /** The readable pages of a persona other than the job one: plain HTML that search engines index. */
-export function PersonaShell({ p, children, wide = false, showHeader = true }: { p: ResolvedPersona; children: React.ReactNode; wide?: boolean; showHeader?: boolean }) {
+export function PersonaShell({ p, children, wide = false, showHeader = true, fullHeight = false }: { p: ResolvedPersona; children: React.ReactNode; wide?: boolean; showHeader?: boolean; fullHeight?: boolean }) {
   const { doc } = p.compiled;
   const allPages = sitePages(p);
   const pages = allPages.filter((page) => page.kind !== "document");
+  const hasAboutPage = pages.some((page) => page.path === "/about/");
   const labels = resolvedLabels(doc, p.lang);
   const home = personaPath(p, "/");
   const docPage = allPages.find((x) => x.kind === "document");
-  const avatar = doc.identity.avatar?.src ?? doc.identity.photos[0]?.src;
+  const avatar = doc.identity.avatar?.src ?? doc.identity.photos.find((photo) => photo.visibility === "public")?.src;
   const cvPath = doc.document.kind === "cv" ? "/cv/" : doc.document.sections.length ? `/${doc.document.slug}/` : undefined;
   return (
-    <div className="min-h-dvh bg-bg">
-      {showHeader && <header className="no-print sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
+    <div className={fullHeight ? "flex h-dvh flex-col overflow-hidden bg-bg" : "min-h-dvh bg-bg"}>
+      {showHeader && <header className="no-print sticky top-0 z-20 shrink-0 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 md:px-6">
           <Link href={home} className="flex shrink-0 items-center gap-2.5 rounded-xl" aria-label={`${doc.identity.name} - home`}>
             {avatar ? (
@@ -32,6 +33,11 @@ export function PersonaShell({ p, children, wide = false, showHeader = true }: {
             <span className="hidden font-semibold tracking-tight sm:inline">{doc.identity.name}</span>
           </Link>
           <nav aria-label="Main" className="no-scrollbar ml-auto flex min-w-0 flex-1 items-center justify-start gap-0.5 overflow-x-auto sm:justify-end">
+            {!hasAboutPage && (
+              <Link href={personaPath(p, "/about/")} className="rounded-lg px-2.5 py-2 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-surface hover:text-fg">
+                About
+              </Link>
+            )}
             {pages.map((page) => (
               <Link key={page.path} href={personaPath(p, page.path)} className="rounded-lg px-2.5 py-2 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-surface hover:text-fg">
                 {page.title}
@@ -45,11 +51,16 @@ export function PersonaShell({ p, children, wide = false, showHeader = true }: {
         </div>
       </header>}
 
-      <main id="main" className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-3xl"} px-5 py-10 md:px-6 md:py-14`}>
+      <main
+        id="main"
+        className={fullHeight
+          ? "min-h-0 w-full flex-1"
+          : `mx-auto w-full ${wide ? "max-w-7xl" : "max-w-3xl"} px-5 py-10 md:px-6 md:py-14`}
+      >
         {children}
       </main>
 
-      <footer className="no-print border-t border-line">
+      {!fullHeight && <footer className="no-print border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-10 md:flex-row md:items-start md:justify-between md:px-6">
           <div className="max-w-sm">
             <p className="font-semibold">{doc.identity.name}</p>
@@ -73,19 +84,20 @@ export function PersonaShell({ p, children, wide = false, showHeader = true }: {
               <Link href={personaPath(p, "/ask/")} className="btn btn-ghost py-2 text-sm">Ask AI</Link>
             </div>
           </div>
-          {pages.length > 0 && (
+          {(pages.length > 0 || !hasAboutPage) && (
             <nav aria-label="Footer" className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm">
               {pages.map((page) => (
                 <Link key={page.path} href={personaPath(p, page.path)} className="text-muted hover:text-fg">
                   {page.title}
                 </Link>
               ))}
+              {!hasAboutPage && <Link href={personaPath(p, "/about/")} className="text-muted hover:text-fg">About</Link>}
               {cvPath && <Link href={personaPath(p, cvPath)} className="text-muted hover:text-fg">CV</Link>}
               <Link href={personaPath(p, "/ask/")} className="text-muted hover:text-fg">Ask AI</Link>
             </nav>
           )}
         </div>
-      </footer>
+      </footer>}
     </div>
   );
 }

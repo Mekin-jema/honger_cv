@@ -16,8 +16,8 @@ export default async function PublicPersonaIntent({
   if (!persona || !questionVisible(persona.compiled, intent, "public")) notFound();
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona}>
-        <ChatApp initialIntent={intent} aiEnabled={aiEnabled()} showSidebarToggle={false} />
+      <PersonaShell p={persona} fullHeight>
+        <ChatApp initialIntent={intent} aiEnabled={aiEnabled()} showSidebarToggle={false} heightMode="fill" />
       </PersonaShell>
     </PublicPersonaFrame>
   );

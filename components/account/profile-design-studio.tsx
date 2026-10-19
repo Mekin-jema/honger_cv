@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LoaderCircle, Plus, Save, Trash2 } from "lucide-react";
+import { LoaderCircle, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
 import type { CvData, CvIdentity } from "@/lib/persona/cv";
@@ -98,9 +98,12 @@ export function ProfileDesignStudio({
 
   return (
     <div className="space-y-4">
-      <p className="mx-auto max-w-7xl px-5 pt-5 text-sm leading-6 text-muted sm:px-8">
-        Start with Mekin&apos;s public demo CV: choose one of the 25 templates, then edit the complete CV information in the form.
-      </p>
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-5 pt-4 sm:px-8">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft/40 px-3 py-1 text-xs font-medium text-muted">
+          <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
+          Mekin&apos;s demo CV is included as editable starter content
+        </span>
+      </div>
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-8">
         <Link href={`/account/training/${slug}/`} className="text-sm font-semibold text-muted hover:text-fg">
           ← Back to AI training

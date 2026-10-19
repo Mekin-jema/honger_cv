@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { MessageSquareText } from "lucide-react";
+import { PublicPersonaProfile } from "@/components/site/public-persona-profile";
 import { SectionBody } from "@/components/blocks/section-block";
 import { RequestAccess } from "@/components/blocks/request-access";
 import { RichText } from "@/components/chat/rich-text";
@@ -19,6 +20,7 @@ export async function PersonaPage({ p, pageKey }: { p: ResolvedPersona; pageKey:
   const { doc } = p.compiled;
   if (pageKey === doc.document.slug && doc.document.sections.length) return <DocumentPage p={p} />;
   const page = sectionPage(p, pageKey);
+  if (!page && pageKey === "about") return <PublicPersonaProfile p={p} />;
   if (!page) notFound();
   const h = await headers();
   const labels = resolvedLabels(doc, p.lang);

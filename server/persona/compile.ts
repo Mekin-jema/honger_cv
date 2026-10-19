@@ -205,8 +205,8 @@ export function clientView(c: CompiledPersona, tier: Tier, lang: Lang): ClientPe
       label: labels.documentButton,
       download: labels.documentDownload,
       fileName: doc.document.fileName,
-      // The PDF link only when there is one this visitor may download (else the button opens the page).
-      pdfUrl: (doc.legacy || c.pdfPath) && documentOpen(doc, tier) ? documentPdfPath(doc) : undefined,
+      // A public CV has a stable PDF route that falls back to its selected printable design if no file was generated.
+      pdfUrl: (doc.legacy || c.pdfPath || (doc.document.kind === "cv" && !doc.document.gated)) && documentOpen(doc, tier) ? documentPdfPath(doc) : undefined,
       pageUrl: `/${doc.document.slug}/`,
       language: doc.document.language,
       updated: doc.document.updated,

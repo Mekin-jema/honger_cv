@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SignOutButton } from "@/components/account/sign-out-button";
 import { cn, withBase } from "@/lib/utils";
 import { studioFetch, type StudioMode } from "./api";
 import { ChecksTab } from "./checks";
@@ -141,7 +142,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
   const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode, notify };
   const issues = draft.status.issues.length;
   const busy = publish.running;
-  const publicPdfPath = mode === "customer" && !doc.document?.gated && typeof doc.document?.fileName === "string"
+  const publicPdfPath = mode === "customer" && doc.document?.kind === "cv" && !doc.document.gated && typeof doc.document.fileName === "string"
     ? `/u/${slug}/d/${encodeURIComponent(doc.document.fileName)}`
     : undefined;
 
@@ -166,6 +167,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
                 <Eye className="size-3.5" /> Previewing
               </span>
             )}
+            {mode === "customer" && <SignOutButton variant="compact" />}
             <ThemeToggle className="admin-icon-btn" />
             <button
               type="button"
@@ -213,8 +215,11 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
       </header>
 
       {mode === "customer" && (
-        <div className="border-b border-accent/20 bg-accent-soft/40 px-4 py-3 text-center text-sm leading-6">
-          This CV starts with Mekin&apos;s public demo information. Edit it in the form tabs or JSON, then choose <strong>Publish &amp; train</strong> before using its AI chat.
+        <div className="flex items-center justify-center gap-2 border-b border-accent/15 bg-accent-soft/25 px-4 py-2 text-center text-xs leading-5 text-muted sm:text-sm">
+          <Sparkles className="size-4 shrink-0 text-accent" aria-hidden="true" />
+          <span>
+            Pre-filled with Mekin&apos;s public demo information. Edit any fields or JSON, then <strong className="text-fg">Publish &amp; train</strong> to enable AI chat.
+          </span>
         </div>
       )}
 
@@ -226,7 +231,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href={`/u/${slug}/`} target="_blank" className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Portfolio</Link>
-            {publicPdfPath && <a href={withBase(publicPdfPath)} className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Download CV PDF</a>}
+            {publicPdfPath && <a href={withBase(publicPdfPath)} className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">CV PDF / Save as PDF</a>}
             <Link href={`/u/${slug}/ask/`} target="_blank" className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Public AI chat</Link>
             <Link href={`/account/#cv-${slug}`} className="rounded-lg bg-emerald-900 px-3 py-2 text-sm font-semibold text-white dark:bg-emerald-200 dark:text-emerald-950">Copy/share links</Link>
           </div>

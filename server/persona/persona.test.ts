@@ -73,6 +73,23 @@ describe("persona schema checks", () => {
     return r.success ? [] : formatIssues(r.error);
   };
 
+  it("keeps a public CV PDF link available when server-side PDF generation was skipped", () => {
+    const doc = PersonaDocSchema.parse(tiny({
+      document: {
+        kind: "cv",
+        slug: "cv",
+        fileName: "Test-CV.pdf",
+        title: "Test CV",
+        language: "English",
+        showPhoto: true,
+        gated: false,
+        sections: [],
+      },
+    }));
+    const view = clientView(compilePersona("customer", doc), "public", "en");
+    expect(view.document.pdfUrl).toBe("/d/Test-CV.pdf");
+  });
+
   it("accepts a minimal persona and fills defaults", () => {
     const doc = PersonaDocSchema.parse(tiny());
     expect(doc.access.mode).toBe("open");

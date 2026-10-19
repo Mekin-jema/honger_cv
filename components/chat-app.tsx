@@ -65,6 +65,7 @@ export function ChatApp({
   syncUrlPaths = true,
   privateMode = false,
   showSidebarToggle = true,
+  heightMode = "viewport",
 }: {
   initialIntent?: string;
   initialQuestion?: string;
@@ -74,6 +75,7 @@ export function ChatApp({
   syncUrlPaths?: boolean;
   privateMode?: boolean;
   showSidebarToggle?: boolean;
+  heightMode?: "viewport" | "fill";
 }) {
   const persona = usePersona();
   // The landing screen shows a short, curated set; "More" opens the full list.
@@ -240,7 +242,7 @@ export function ChatApp({
             hidden={activeIntent === "privacy"}
           />
         )}
-        <div className={`flex ${privateMode ? "h-[calc(var(--app-h,100dvh)-4rem)]" : "h-[var(--app-h,100dvh)]"} overflow-hidden`}>
+        <div className={`flex ${heightMode === "fill" ? "h-full" : privateMode ? "h-[calc(var(--app-h,100dvh)-4rem)]" : "h-[var(--app-h,100dvh)]"} overflow-hidden`}>
           <div className="flex min-w-0 flex-1 flex-col">
             <TopBar
               onNew={reset}

@@ -15,8 +15,8 @@ export default async function PublicPersonaChat({
   if (!persona) notFound();
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona}>
-        <ChatApp aiEnabled={aiEnabled()} showSidebarToggle={false} />
+      <PersonaShell p={persona} fullHeight>
+        <ChatApp aiEnabled={aiEnabled()} showSidebarToggle={false} heightMode="fill" />
       </PersonaShell>
     </PublicPersonaFrame>
   );

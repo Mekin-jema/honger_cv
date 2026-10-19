@@ -41,7 +41,7 @@ export default async function PublicCvPage({ params, searchParams }: Props) {
           cv={personaToCvData(doc, persona.lang)}
           initialTemplate={template}
           initialAccentColor={accentColor}
-          downloadUrl={persona.compiled.pdfPath ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          downloadUrl={persona.compiled.pdfPath && query.download !== "1" ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
           autoPrint={query.download === "1"}
           onDownload={() => {
             void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
