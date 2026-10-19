@@ -7,6 +7,7 @@ import { personaToCvData } from "@/lib/persona/cv";
 import { lt } from "@/lib/persona/text";
 import { isCvTemplateId } from "@/lib/persona/cv-templates";
 import { withBase } from "@/lib/utils";
+import { documentPdfPath } from "@/server/persona/compile";
 import { publicPersona } from "@/server/persona/public";
 
 export const dynamic = "force-dynamic";
@@ -35,14 +36,15 @@ export default async function PublicCvPage({ params }: Props) {
   const accentColor = typeof data.cvAccent === "string" && /^#[0-9a-f]{6}$/i.test(data.cvAccent) ? data.cvAccent : "#b5400f";
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona} wide>
+      <PersonaShell p={persona} wide showHeader={false}>
         <CvStudio
           cv={personaToCvData(doc, persona.lang)}
           initialTemplate={template}
           initialAccentColor={accentColor}
-          onPrint={() => {
+          downloadUrl={persona.compiled.pdfPath ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          onDownload={() => {
             void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
-              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));
+              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF download:", err));
           }}
           showSidebarToggle={false}
         />

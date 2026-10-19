@@ -110,7 +110,7 @@ export function ProfileDesignStudio({
           {error && <span role="alert" className="text-sm text-accent">{error}</span>}
           <div role="group" aria-label="CV editor steps" className="flex rounded-xl border border-line bg-card p-1">
             <button type="button" aria-pressed={view === "design"} onClick={() => setView("design")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "design" ? "bg-surface" : "text-muted"}`}>1. Choose template</button>
-            <button type="button" aria-pressed={view === "content"} onClick={() => setView("content")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "content" ? "bg-surface" : "text-muted"}`}>2. Edit CV fields</button>
+            <button type="button" aria-pressed={view === "content"} onClick={() => setView("content")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "content" ? "bg-surface" : "text-muted"}`}>2. Edit CV information</button>
           </div>
           <button
             type="button"
@@ -206,7 +206,7 @@ export function ProfileDesignStudio({
           initialAccentColor={design.accentColor}
           onDesignChange={setDesign}
           onNextStep={() => setView("content")}
-          nextStepLabel="Next: edit CV fields"
+          nextStepLabel="Next: edit your CV details"
           onPrint={() => {
             void fetch(withBase(`/api/account/personas/${slug}/pdf/`), { method: "POST" })
               .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));

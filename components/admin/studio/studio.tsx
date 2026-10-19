@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket, X } from "lucide-react";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn, withBase } from "@/lib/utils";
@@ -140,6 +141,10 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
   const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode, notify };
   const issues = draft.status.issues.length;
   const busy = publish.running;
+  const pdfStep = publish.job?.progress.steps.find((step) => step.id === "pdf");
+  const publicPdfPath = mode === "customer" && pdfStep?.state === "done" && !doc.document?.gated && typeof doc.document?.fileName === "string"
+    ? `/u/${slug}/d/${encodeURIComponent(doc.document.fileName)}`
+    : undefined;
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
@@ -212,6 +217,22 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
         <div className="border-b border-accent/20 bg-accent-soft/40 px-4 py-3 text-center text-sm leading-6">
           This CV starts with Mekin&apos;s public demo information. Edit it in the form tabs or JSON, then choose <strong>Publish &amp; train</strong> before using its AI chat.
         </div>
+      )}
+
+      {mode === "customer" && publish.job?.status === "succeeded" && (
+        <section className="mx-auto mt-4 grid w-full max-w-6xl gap-3 rounded-2xl border border-emerald-600/25 bg-emerald-50 px-4 py-4 text-emerald-950 dark:bg-emerald-950/30 dark:text-emerald-100 sm:grid-cols-[1fr_auto] sm:items-center" aria-label="Published CV links">
+          <div>
+            <h2 className="font-semibold">Your CV is live and its AI has been trained.</h2>
+            <p className="mt-1 text-sm">Share these links with anyone. They do not need an account; access-code protections you configured still apply.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/u/${slug}/`} target="_blank" className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Portfolio</Link>
+            {publicPdfPath && <a href={withBase(publicPdfPath)} className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Download CV PDF</a>}
+            <Link href={`/u/${slug}/ask/`} target="_blank" className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Public AI chat</Link>
+            <Link href={`/account/#cv-${slug}`} className="rounded-lg bg-emerald-900 px-3 py-2 text-sm font-semibold text-white dark:bg-emerald-200 dark:text-emerald-950">Copy/share links</Link>
+          </div>
+          {!publicPdfPath && <p className="text-xs sm:col-span-2">The PDF could not be generated during publishing. Check the PDF step in the publish report.</p>}
+        </section>
       )}
 
       {draft.status.state === "conflict" && (

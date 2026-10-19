@@ -105,6 +105,10 @@
 .cv-tool-primary:hover {
   background: #34312c;
 }
+.cv-tool[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 /* ---------- CV template studio ---------- */
 .cv-studio-heading,

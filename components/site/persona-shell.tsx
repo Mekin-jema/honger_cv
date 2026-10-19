@@ -8,7 +8,7 @@ import { personaPath, sitePages } from "@/server/persona/pages";
 import type { ResolvedPersona } from "@/server/persona/resolve";
 
 /** The readable pages of a persona other than the job one: plain HTML that search engines index. */
-export function PersonaShell({ p, children, wide = false }: { p: ResolvedPersona; children: React.ReactNode; wide?: boolean }) {
+export function PersonaShell({ p, children, wide = false, showHeader = true }: { p: ResolvedPersona; children: React.ReactNode; wide?: boolean; showHeader?: boolean }) {
   const { doc } = p.compiled;
   const pages = sitePages(p);
   const labels = resolvedLabels(doc, p.lang);
@@ -16,7 +16,7 @@ export function PersonaShell({ p, children, wide = false }: { p: ResolvedPersona
   const docPage = pages.find((x) => x.kind === "document");
   return (
     <div className="min-h-dvh bg-bg">
-      <header className="no-print sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
+      {showHeader && <header className="no-print sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 md:px-6">
           <Link href={home} className="flex shrink-0 items-center gap-2.5 rounded-xl" aria-label={`${doc.identity.name} - home`}>
             <span className="grid size-8 place-items-center rounded-full bg-fg text-sm font-semibold text-bg" aria-hidden="true">
@@ -34,7 +34,7 @@ export function PersonaShell({ p, children, wide = false }: { p: ResolvedPersona
           <LanguageSwitch />
           <ThemeToggle className="shrink-0 border border-line-strong bg-card text-fg shadow-sm" />
         </div>
-      </header>
+      </header>}
 
       <main id="main" className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-3xl"} px-5 py-10 md:px-6 md:py-14`}>
         {children}

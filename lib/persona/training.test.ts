@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { blankPersona, customerStarterPersona, isBlankCustomerPersona } from "@/server/persona/templates";
+import {
+  blankPersona,
+  customerStarterPersona,
+  isBlankCustomerPersona,
+  upgradeBlankCustomerPersona,
+} from "@/server/persona/templates";
 import { personaToCvData } from "./cv";
 import { PersonaDocSchema } from "./schema";
 import { hasTrainingContent, roleCvName } from "./training";
@@ -36,6 +41,51 @@ describe("hasTrainingContent", () => {
 
     expect(isBlankCustomerPersona(doc)).toBe(true);
     doc.hero.staticIntro = "I build thoughtful products.";
+    expect(isBlankCustomerPersona(doc)).toBe(false);
+  });
+
+  it("upgrades an empty draft that already saved design fields, preserving the user and design", () => {
+    const doc = PersonaDocSchema.parse(blankPersona("Test CV", "Yiha Abe"));
+    doc.identity.shortName = "Yiha";
+    doc.identity.initials = "YA";
+    doc.identity.role = "Test";
+    doc.identity.headline = "Test";
+    doc.hero.staticIntro = "Hi, I'm Yiha Abe, Test.";
+    doc.document.data = {
+      photo: "",
+      title: "Test",
+      skills: [],
+      courses: [],
+      profile: "",
+      cvAccent: "#b5400f",
+      identity: { name: "Yiha Abe", links: [], location: "" },
+      projects: [],
+      education: { note: "", year: "", degree: "", school: "" },
+      languages: [],
+      showPhoto: true,
+      cvTemplate: "navy-rail",
+      experience: [],
+      highlights: [],
+      availability: "",
+    };
+
+    expect(isBlankCustomerPersona(doc)).toBe(true);
+
+    const upgraded = upgradeBlankCustomerPersona(doc);
+    const cv = personaToCvData(upgraded, "en");
+    expect(upgraded.identity.name).toBe("Yiha Abe");
+    expect(upgraded.identity.role).toBe("Test");
+    expect(upgraded.document.data?.cvTemplate).toBe("navy-rail");
+    expect(upgraded.document.data?.cvAccent).toBe("#b5400f");
+    expect(cv.profile.length).toBeGreaterThan(0);
+    expect(cv.experience.length).toBeGreaterThan(0);
+    expect(cv.projects.length).toBeGreaterThan(0);
+  });
+
+  it("does not upgrade a blank-looking CV after personal content is entered", () => {
+    const doc = PersonaDocSchema.parse(blankPersona("Test CV", "Yiha Abe"));
+    doc.document.data = { profile: "I build useful software." };
+
     expect(isBlankCustomerPersona(doc)).toBe(false);
   });
 

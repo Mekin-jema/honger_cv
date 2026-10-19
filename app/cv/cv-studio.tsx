@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import { CvSheet, cvSheetLayoutForTemplate, cvTemplateStyle } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -33,6 +33,8 @@ export function CvStudio({
   initialAccentColor = palettes[1].color,
   onDesignChange,
   onPrint,
+  onDownload,
+  downloadUrl,
   onNextStep,
   nextStepLabel = "Continue to edit CV",
   showSidebarToggle = true,
@@ -42,6 +44,8 @@ export function CvStudio({
   initialAccentColor?: string;
   onDesignChange?: (design: CvDesign) => void;
   onPrint?: () => void;
+  onDownload?: () => void;
+  downloadUrl?: string | null;
   onNextStep?: () => void;
   nextStepLabel?: string;
   showSidebarToggle?: boolean;
@@ -86,7 +90,17 @@ export function CvStudio({
               {nextStepLabel} <ArrowRight className="size-4" aria-hidden="true" />
             </button>
           ) : (
-            <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+            downloadUrl === undefined ? (
+              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+            ) : downloadUrl ? (
+              <a href={downloadUrl} download onClick={onDownload} className="cv-tool cv-tool-primary" aria-label={`Download the selected ${selectedTemplate.name} CV as PDF`}>
+                <Download className="size-4" aria-hidden="true" /> Download selected PDF
+              </a>
+            ) : (
+              <span className="cv-tool cv-tool-primary" aria-disabled="true" title="The PDF is created during Publish & train.">
+                <Download className="size-4" aria-hidden="true" /> PDF ready after publishing
+              </span>
+            )
           )}
           <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>

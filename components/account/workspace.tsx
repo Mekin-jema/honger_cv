@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Bot, FileText, LoaderCircle, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -13,13 +13,60 @@ type AccountCv = {
   identityName: string;
   role: string;
   publishedVersionId: string | null;
+  pdfPath?: string;
 };
+
+function ShareLinks({ slug, pdfPath }: { slug: string; pdfPath?: string }) {
+  const [copied, setCopied] = useState<string>();
+  const [error, setError] = useState<string>();
+  const links = [
+    { label: "Portfolio", path: `/u/${slug}/` },
+    ...(pdfPath ? [{ label: "CV PDF", path: pdfPath }] : []),
+    { label: "Public AI chat", path: `/u/${slug}/ask/` },
+  ];
+
+  const copy = async (label: string, path: string) => {
+    setError(undefined);
+    try {
+      await navigator.clipboard.writeText(new URL(withBase(path), window.location.origin).toString());
+      setCopied(label);
+    } catch {
+      setError("Couldn't copy the link. Select and copy the URL instead.");
+    }
+  };
+
+  return (
+    <section className="mt-5 rounded-xl border border-line bg-bg p-4" aria-label="Public share links">
+      <h3 className="font-semibold">Share your CV</h3>
+      <p className="mt-1 text-sm text-muted">Anyone with a link can open the portfolio and AI chat without an account. Any access-code protections you configured still apply.</p>
+      <ul className="mt-3 space-y-2">
+        {links.map(({ label, path }) => (
+          <li key={label} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="w-28 shrink-0 font-medium">{label}</span>
+            <a href={withBase(path)} target="_blank" rel="noreferrer" className="min-w-0 flex-1 break-all text-accent underline underline-offset-2">{path}</a>
+            <button type="button" onClick={() => void copy(label, path)} className="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-semibold hover:bg-surface">
+              {copied === label ? "Copied" : "Copy"}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {!pdfPath && <p className="mt-3 text-xs text-muted">The PDF link will appear here once a PDF has been generated for this published design.</p>}
+      {error && <p role="alert" className="mt-2 text-xs text-accent">{error}</p>}
+      {copied && <p role="status" className="sr-only">{copied} link copied.</p>}
+    </section>
+  );
+}
 
 export function AccountWorkspace({ personas }: { personas: AccountCv[] }) {
   const router = useRouter();
   const [headline, setHeadline] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    if (window.location.hash !== "#create-job-profile") return;
+    requestAnimationFrame(() => document.getElementById("create-job-profile")?.scrollIntoView({ block: "start" }));
+  }, []);
 
   const createCv = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,7 +119,7 @@ export function AccountWorkspace({ personas }: { personas: AccountCv[] }) {
           </div>
           <ul className="grid gap-4 lg:grid-cols-2">
             {personas.map((persona) => (
-              <li key={persona.slug} className="rounded-2xl border border-line bg-card p-5">
+              <li id={`cv-${persona.slug}`} key={persona.slug} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5">
                 <div className="flex items-center gap-4">
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-sm font-bold text-accent">
                     {persona.name.slice(0, 2).toUpperCase()}
@@ -115,13 +162,14 @@ export function AccountWorkspace({ personas }: { personas: AccountCv[] }) {
                     </Link>
                   )}
                 </div>
+                {persona.publishedVersionId && <ShareLinks slug={persona.slug} pdfPath={persona.pdfPath} />}
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      <form id="create-job-profile" onSubmit={createCv} className="rounded-2xl border border-line bg-card p-5 sm:p-7">
+      <form id="create-job-profile" onSubmit={createCv} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5 sm:p-7">
         <div className="flex items-start gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
             <Plus className="size-5" aria-hidden="true" />

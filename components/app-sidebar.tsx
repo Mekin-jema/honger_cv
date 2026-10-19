@@ -19,6 +19,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -28,7 +29,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { usePersona } from "@/lib/persona/context"
-import { SignOutButton } from "@/components/account/sign-out-button"
+import { NavUser } from "@/components/account/nav-user"
 import { useState } from "react"
 
 type AccountSidebarPersona = { slug: string; name: string; identityName: string; role: string; publishedVersionId: string | null }
@@ -46,9 +47,11 @@ const portfolioLinks = [
 export function AppSidebar({
   isAdmin,
   accountName,
+  accountEmail,
+  accountAvatar,
   accountPersonas = [],
   ...props
-}: ComponentProps<typeof Sidebar> & { isAdmin: boolean; accountName?: string; accountPersonas?: AccountSidebarPersona[] }) {
+}: ComponentProps<typeof Sidebar> & { isAdmin: boolean; accountName?: string; accountEmail?: string; accountAvatar?: string | null; accountPersonas?: AccountSidebarPersona[] }) {
   const persona = usePersona()
   const pathname = usePathname().replace(/\/+$/, "") || "/"
   const routeSlug = pathname.match(/^\/account\/(?:ai|training)\/([^/]+)/)?.[1]
@@ -70,6 +73,11 @@ export function AppSidebar({
         <SidebarMenuButton
           isActive={active}
           tooltip={title}
+          onClick={() => {
+            if (accountName && href === "/account/#create-job-profile" && pathname === "/account") {
+              requestAnimationFrame(() => document.getElementById("create-job-profile")?.scrollIntoView({ block: "start" }));
+            }
+          }}
           render={<Link href={href} />}
         >
           {icon}
@@ -116,15 +124,17 @@ export function AppSidebar({
               linkItem(
                 title,
                 accountName
-                  ? questionId && activeSlug
-                    ? `${accountAsk}?ask=${encodeURIComponent(
+                  ? title === "Summary"
+                    ? "/account/"
+                    : questionId && activeSlug
+                      ? `${accountAsk}?ask=${encodeURIComponent(
                         title === "About" ? "Tell me about yourself."
                           : title === "Experience" ? "Tell me about your work experience."
                             : title === "Projects" ? "Tell me about your projects."
                               : title === "Skills" ? "What are your skills?"
                                 : "How can I contact you?",
                       )}`
-                    : title === "Ask AI" ? accountAsk : "/account/"
+                      : title === "Ask AI" ? accountAsk : "/account/#create-job-profile"
                   : questionId ? persona.askPath(questionId) : persona.href(path ?? "/"),
                 <Icon />,
               ),
@@ -153,15 +163,6 @@ export function AppSidebar({
             </SidebarMenu>
           </SidebarGroup>
         )}
-        {accountName && /^\/account\/training\/[^/]+$/.test(pathname) && (
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SignOutButton variant="sidebar" />
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        )}
         {isAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
@@ -173,6 +174,11 @@ export function AppSidebar({
           </SidebarGroup>
         )}
       </SidebarContent>
+      {accountName && (
+        <SidebarFooter className="border-t border-sidebar-border">
+          <NavUser user={{ name: accountName, email: accountEmail ?? "", avatar: accountAvatar ?? "" }} />
+        </SidebarFooter>
+      )}
       <SidebarRail />
     </Sidebar>
   )

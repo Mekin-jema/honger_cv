@@ -4,7 +4,7 @@ import { otherPersonaMetadata, otherPersonaPage } from "@/components/site/other-
 import { PersonaShell } from "@/components/site/persona-shell";
 import { cv as codeCv } from "@/content/cv";
 import { profile } from "@/content/profile";
-import { readCv } from "@/lib/persona/cv";
+import { personaToCvData, readCv } from "@/lib/persona/cv";
 import { describe } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/site";
 import { isCvTemplateId } from "@/lib/persona/cv-templates";
@@ -43,6 +43,23 @@ export default async function CvPage(props: {
   const p = await currentPersona();
   if (!p.compiled.doc.legacy) {
     if (p.wrongLang) notFound();
+    if (p.compiled.doc.document.kind === "cv") {
+      const doc = p.compiled.doc;
+      const data = doc.document.data ?? {};
+      const template = isCvTemplateId(data.cvTemplate) ? data.cvTemplate : "modern";
+      const accentColor = typeof data.cvAccent === "string" && /^#[0-9a-f]{6}$/i.test(data.cvAccent) ? data.cvAccent : "#b5400f";
+      return (
+        <PersonaShell p={p} wide>
+          <CvStudio
+            cv={personaToCvData(doc, p.lang)}
+            initialTemplate={template}
+            initialAccentColor={accentColor}
+            downloadUrl={null}
+            showSidebarToggle={false}
+          />
+        </PersonaShell>
+      );
+    }
     return <PersonaShell p={p}>{await otherPersonaPage("cv")}</PersonaShell>;
   }
   // The published CV (edited in the Studio), else the code content.

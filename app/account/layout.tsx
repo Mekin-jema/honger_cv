@@ -29,5 +29,5 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     usedNames.set(nameKey, number);
     return { ...persona, name: roleCvName(persona.role, number) };
   });
-  return <AccountShell name={customer.name} personas={personas}>{children}</AccountShell>;
+  return <AccountShell name={customer.name} email={customer.email} avatar={customer.image} personas={personas}>{children}</AccountShell>;
 }

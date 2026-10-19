@@ -1,16 +1,19 @@
 import "server-only";
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { signToken, verifyToken } from "../access/cookie";
+import type { Tier } from "@/lib/persona/types";
+import { documentOpen } from "./compile";
 import type { CompiledPersona } from "./compile";
 
 /**
  * The persona's document as a PDF, printed by headless Chrome from the site's own document page (so the
  * PDF always matches the page). Runs after a publish; a missing Chrome only skips the PDF (the page and
- * its Print button still work). Files live in DOCS_DIR (default var/documents), outside public/: they are
- * served by /d/<file> only to visitors allowed to see the document.
+ * its document page still works). Files live in DOCS_DIR (default var/documents), outside public/: they
+ * are served by /d/<file> or /u/<slug>/d/<file> only to visitors allowed to see the document.
  */
 
 export const docsDir = () => path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.DOCS_DIR?.trim() || "var/documents");
@@ -46,11 +49,49 @@ export function readPrintToken(value: string | null | undefined): { slug: string
   return { slug, versionId };
 }
 
+export async function servePersonaPdf(file: string, compiled: CompiledPersona, tier: Tier): Promise<Response> {
+  const { doc, pdfPath } = compiled;
+  const missing = () => new Response("Not found", {
+    status: 404,
+    headers: { "x-robots-tag": "noindex", "cache-control": "no-store" },
+  });
+  if (file !== doc.document.fileName || !documentOpen(doc, tier)) return missing();
+
+  let full: string;
+  if (pdfPath) {
+    const root = docsDir();
+    full = path.resolve(root, pdfPath);
+    if (!full.startsWith(root + path.sep)) return missing();
+  } else if (doc.legacy) {
+    full = path.join(/*turbopackIgnore: true*/ process.cwd(), "public", doc.document.fileName);
+  } else return missing();
+
+  let body: Buffer;
+  try {
+    body = await readFile(full);
+  } catch {
+    if (!doc.legacy || !pdfPath) return missing();
+    try {
+      body = await readFile(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", doc.document.fileName));
+    } catch {
+      return missing();
+    }
+  }
+  return new Response(new Uint8Array(body), {
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": `${doc.legacy ? "inline" : "attachment"}; filename="${doc.document.fileName}"`,
+      ...(doc.legacy ? {} : { "x-robots-tag": "noindex" }),
+      "cache-control": doc.document.gated ? "private, no-store" : "public, max-age=3600",
+    },
+  });
+}
+
 /** Prints the live version's document page to DOCS_DIR/<slug>/v<number>.pdf. */
 export async function renderDocumentPdf(c: CompiledPersona, selfOrigin: string): Promise<{ path: string; bytes: number; pages: number } | { skipped: string }> {
   if (!c.versionId) return { skipped: "Not a published version." };
   // The job persona prints its CV (/cv/); others print the sections chosen for their document.
-  if (!c.doc.legacy && !c.doc.document.sections.length) return { skipped: "The document has no sections to print." };
+  if (!c.doc.legacy && c.doc.document.kind !== "cv" && !c.doc.document.sections.length) return { skipped: "The document has no sections to print." };
   const chrome = chromePath();
   if (!chrome) return { skipped: "No Chrome or Edge on this server (set CHROME_PATH): the PDF was not made. The document page still works." };
   const token = printToken(c.slug, c.versionId);

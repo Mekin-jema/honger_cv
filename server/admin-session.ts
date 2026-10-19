@@ -10,8 +10,8 @@ import { dbConfigured, ensureSchema } from "./db";
  * this itself (src/proxy.ts only redirects visitors without a session cookie, as a convenience).
  */
 
-export type AdminSession = { userId: string; email: string; name: string; role: "admin"; sessionId: string; createdAt: string };
-export type CustomerSession = { userId: string; email: string; name: string; role: "customer"; sessionId: string; createdAt: string };
+export type AdminSession = { userId: string; email: string; name: string; image?: string | null; role: "admin"; sessionId: string; createdAt: string };
+export type CustomerSession = { userId: string; email: string; name: string; image?: string | null; role: "customer"; sessionId: string; createdAt: string };
 
 async function sessionFrom<R extends "admin" | "customer">(h: Headers, role: R): Promise<(R extends "admin" ? AdminSession : CustomerSession) | null> {
   if (!dbConfigured()) return null;
@@ -19,7 +19,7 @@ async function sessionFrom<R extends "admin" | "customer">(h: Headers, role: R):
     await ensureSchema();
     const s = await getAuth().api.getSession({ headers: h });
     if (!s) return null;
-    const user = s.user as { role?: string; twoFactorEnabled?: boolean | null };
+    const user = s.user as { role?: string; twoFactorEnabled?: boolean | null; image?: string | null };
     if (user.role !== role) return null;
     // Administrators continue to require the existing two-factor sign-in.
     if (role === "admin" && !user.twoFactorEnabled) return null;
@@ -27,6 +27,7 @@ async function sessionFrom<R extends "admin" | "customer">(h: Headers, role: R):
       userId: s.user.id,
       email: s.user.email,
       name: s.user.name,
+      image: user.image ?? null,
       role,
       sessionId: s.session.id,
       createdAt: new Date(s.session.createdAt).toISOString(),

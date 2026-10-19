@@ -16,6 +16,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const OWN_HEADERS = [
   "x-persona",
   "x-persona-base",
+  "x-public-persona",
   "x-lang",
   "x-print-token",
 ] as const;

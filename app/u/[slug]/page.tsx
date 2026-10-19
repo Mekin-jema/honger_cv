@@ -36,7 +36,7 @@ export default async function PublicPersonaHome({ params }: Props) {
 
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona}>
+      <PersonaShell p={persona} showHeader={false}>
         <div className="space-y-10">
           <header className="space-y-4">
             <p className="eyebrow">{lt(doc.identity.role, persona.lang) || "Professional profile"}</p>

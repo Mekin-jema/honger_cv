@@ -1,5 +1,6 @@
 import "server-only";
 import { PersonaDocSchema, type BlockRef, type PersonaDoc, type PersonaDocInput } from "@/lib/persona/schema";
+import { isCvTemplateId } from "@/lib/persona/cv-templates";
 import type { DraftRow } from "./repo";
 import { loadDraft, saveDraft } from "./repo";
 import { jobPersonaDoc } from "./import-job";
@@ -76,24 +77,81 @@ export function customerStarterPersona(headline = "Software Engineer"): PersonaD
   return parsed.data;
 }
 
-/** Recognizes only the untouched blank customer starter, never a partially edited profile. */
+function hasOnlyBlankCvData(value: unknown, identityName: string, headline: string): boolean {
+  if (value === undefined) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const data = value as Record<string, unknown>;
+  const allowed = new Set([
+    "showPhoto", "title", "availability", "photo", "profile", "highlights", "skills", "experience",
+    "projects", "education", "courses", "languages", "identity", "cvTemplate", "cvAccent",
+  ]);
+  if (Object.keys(data).some((key) => !allowed.has(key))) return false;
+  if (data.showPhoto !== undefined && typeof data.showPhoto !== "boolean") return false;
+  if (data.title !== undefined && data.title !== headline) return false;
+  if (data.photo !== undefined && data.photo !== "") return false;
+  if (data.availability !== undefined && data.availability !== "") return false;
+  if (data.profile !== undefined && data.profile !== "") return false;
+  for (const key of ["highlights", "skills", "experience", "projects", "courses", "languages"]) {
+    if (data[key] !== undefined && (!Array.isArray(data[key]) || data[key].length > 0)) return false;
+  }
+  if (data.education !== undefined) {
+    if (!data.education || typeof data.education !== "object" || Array.isArray(data.education)) return false;
+    const education = data.education as Record<string, unknown>;
+    if (Object.keys(education).some((key) => !["degree", "school", "year", "note"].includes(key))) return false;
+    if (Object.values(education).some((field) => field !== "")) return false;
+  }
+  if (data.identity !== undefined) {
+    if (!data.identity || typeof data.identity !== "object" || Array.isArray(data.identity)) return false;
+    const identity = data.identity as Record<string, unknown>;
+    if (Object.keys(identity).some((key) => !["name", "email", "phone", "location", "photo", "links"].includes(key))) return false;
+    if (identity.name !== identityName) return false;
+    if (identity.links !== undefined && (!Array.isArray(identity.links) || identity.links.length > 0)) return false;
+    if (["email", "phone", "location", "photo"].some((key) => identity[key] !== undefined && identity[key] !== "")) return false;
+  }
+  if (data.cvTemplate !== undefined && !isCvTemplateId(data.cvTemplate)) return false;
+  if (data.cvAccent !== undefined && (typeof data.cvAccent !== "string" || !/^#[0-9a-f]{6}$/i.test(data.cvAccent))) return false;
+  return true;
+}
+
+/** Recognizes the empty customer starter, including drafts that only saved template/default CV fields. */
 export function isBlankCustomerPersona(doc: PersonaDoc): boolean {
+  const headlineValue = doc.identity.role ?? doc.identity.headline;
+  const headline = typeof headlineValue === "string" ? headlineValue : headlineValue?.en ?? "";
+  if (!hasOnlyBlankCvData(doc.document.data, doc.identity.name, headline)) return false;
   const blank = PersonaDocSchema.parse(blankPersona(doc.name, doc.identity.name));
   blank.identity.role = doc.identity.role;
   blank.identity.headline = doc.identity.headline;
-  const headline = doc.identity.role ?? doc.identity.headline;
-  const role = typeof headline === "string" ? headline : headline?.en;
-  if (role) blank.hero.staticIntro = `Hi, I'm ${doc.identity.name}, ${role}.`;
-  return JSON.stringify(doc) === JSON.stringify(blank);
+  if (headline) blank.hero.staticIntro = `Hi, I'm ${doc.identity.name}, ${headline}.`;
+  const candidate = structuredClone(doc);
+  candidate.document.data = undefined;
+  return JSON.stringify(candidate) === JSON.stringify(blank);
+}
+
+/** Replaces a blank legacy customer draft while retaining the owner's identity and chosen design. */
+export function upgradeBlankCustomerPersona(doc: PersonaDoc): PersonaDoc {
+  const headlineValue = doc.identity.role ?? doc.identity.headline;
+  const headline = (typeof headlineValue === "string" ? headlineValue : headlineValue?.en)?.trim() || "Software Engineer";
+  const previousData = doc.document.data ?? {};
+  const template = previousData.cvTemplate;
+  const accent = previousData.cvAccent;
+  const starter = customerStarterPersona(headline);
+  starter.identity.name = doc.identity.name;
+  starter.identity.shortName = doc.identity.shortName;
+  starter.identity.initials = doc.identity.initials;
+  starter.hero.staticIntro = `Hi, I'm ${doc.identity.name}, ${headline}.`;
+  starter.document.data = {
+    ...starter.document.data,
+    ...(isCvTemplateId(template) ? { cvTemplate: template } : {}),
+    ...(typeof accent === "string" && /^#[0-9a-f]{6}$/i.test(accent) ? { cvAccent: accent } : {}),
+  };
+  return starter;
 }
 
 /** Upgrades the old empty customer starter once, using the draft revision to avoid overwriting edits. */
 export async function ensureCustomerStarterDraft(slug: string, draft: DraftRow): Promise<DraftRow> {
   const parsed = PersonaDocSchema.safeParse(draft.doc);
   if (!parsed.success || !isBlankCustomerPersona(parsed.data)) return draft;
-  const headlineValue = parsed.data.identity.role ?? parsed.data.identity.headline;
-  const headline = typeof headlineValue === "string" ? headlineValue : headlineValue?.en;
-  const starter = customerStarterPersona(headline?.trim() || "Software Engineer");
+  const starter = upgradeBlankCustomerPersona(parsed.data);
   const rev = await saveDraft(slug, starter, draft.rev);
   return rev === null ? (await loadDraft(slug)) ?? draft : { ...draft, doc: starter, rev };
 }
