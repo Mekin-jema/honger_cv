@@ -18,16 +18,18 @@ export type CvIdentity = {
   photo?: string;
   links: { label: string; href: string }[];
 };
+export type CvProject = { name: string; meta: string; text: string; image?: string; imagePublicId?: string };
 export type CvData = {
   showPhoto: boolean;
   title: string;
   availability: string;
   photo: string;
+  photoPublicId?: string;
   profile: string;
   highlights: string[];
   skills: { k: string; v: string }[];
   experience: CvJob[];
-  projects: { name: string; meta: string; text: string }[];
+  projects: CvProject[];
   education: { degree: string; school: string; year: string; note: string };
   courses: string[];
   languages: { name: string; level: string }[];
@@ -39,6 +41,7 @@ const emptyCv: CvData = {
   title: "",
   availability: "",
   photo: "",
+  photoPublicId: "",
   profile: "",
   highlights: [],
   skills: [],
@@ -64,6 +67,7 @@ export function readCv(value: unknown, fallback: CvData): CvData {
     title: str(v.title, fallback.title),
     availability: str(v.availability, fallback.availability),
     photo: str(v.photo, fallback.photo),
+    photoPublicId: str(v.photoPublicId, fallback.photoPublicId ?? ""),
     profile: str(v.profile, fallback.profile),
     highlights: strs(v.highlights, fallback.highlights),
     skills: list(v.skills, fallback.skills, (r) => ({ k: str(r.k, ""), v: str(r.v, "") })),
@@ -76,7 +80,13 @@ export function readCv(value: unknown, fallback: CvData): CvData {
       bullets: strs(r.bullets, []),
       engagements: list(r.engagements, [], (e) => ({ title: str(e.title, ""), period: str(e.period, ""), bullets: strs(e.bullets, []), stack: str(e.stack, "") })),
     })),
-    projects: list(v.projects, fallback.projects, (r) => ({ name: str(r.name, ""), meta: str(r.meta, ""), text: str(r.text, "") })),
+    projects: list(v.projects, fallback.projects, (r) => ({
+      name: str(r.name, ""),
+      meta: str(r.meta, ""),
+      text: str(r.text, ""),
+      image: str(r.image, "") || undefined,
+      imagePublicId: str(r.imagePublicId, "") || undefined,
+    })),
     education: { degree: str(edu.degree, fallback.education.degree), school: str(edu.school, fallback.education.school), year: str(edu.year, fallback.education.year), note: str(edu.note, fallback.education.note) },
     courses: strs(v.courses, fallback.courses),
     languages: list(v.languages, fallback.languages, (r) => ({ name: str(r.name, ""), level: str(r.level, "") })),
@@ -133,6 +143,7 @@ export function personaToCvData(doc: PersonaDoc, lang: Lang): CvData {
       name: lt(item.label, lang) || itemText(item, lang),
       meta: lt(item.meta, lang) || item.period || "",
       text: lt(item.value, lang) || (item.details ?? []).map((detail) => lt(detail, lang)).join(" "),
+      image: item.src,
     })).filter((item) => item.name || item.text),
     education: {
       degree: education[0] ? lt(education[0].label, lang) || itemText(education[0], lang) : "",

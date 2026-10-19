@@ -117,6 +117,10 @@ Open [http://localhost:3000](http://localhost:3000). The portfolio and curated c
 | `PERSONA_SIGNING_SECRET` | Signed persona access and preview tokens | Use a private secret of at least 32 characters. |
 | `NEXT_PUBLIC_SITE_URL` | Canonical metadata and sitemap | Public HTTPS origin in production, normally the same origin as `BETTER_AUTH_URL`. Defaults to localhost for local development. |
 | `GEMINI_API_KEY` | Optional generated answers | Without it, curated answers remain available. |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Customer CV photo uploads | Public cloud name from the Cloudinary dashboard. |
+| `CLOUDINARY_API_KEY` | Customer CV photo uploads | Cloudinary API key; used only by the server. |
+| `CLOUDINARY_API_SECRET` | Customer CV photo uploads | Cloudinary API secret; keep private and never prefix it with `NEXT_PUBLIC_`. |
+| `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Optional unsigned image uploads | Not used by the current signed server upload route; leave blank unless a restricted unsigned upload is deliberately added. |
 | `MAIL_PROVIDER` | Email delivery for sign-in codes | `resend`, `log`, or `none`. Production email needs `RESEND_API_KEY` and `MAIL_FROM`. |
 | `RESEND_API_KEY` | Resend email delivery | Needed when `MAIL_PROVIDER=resend`. |
 | `MAIL_FROM` | Resend email delivery | Verified sender address for outgoing sign-in codes. |
@@ -130,6 +134,18 @@ openssl rand -base64 32
 ```
 
 Set the generated value for each secret independently. Do not reuse a production secret in development or commit it to the repository.
+
+### Customer CV photos
+
+Create a Cloudinary account and add its cloud name, API key, and API secret to `.env.local` for local development and to the Vercel project's Production environment for deployment. Customer uploads are accepted only for authenticated CV owners and are limited to JPG, PNG, and WebP images up to 3 MB. The server verifies the file signature, stores the image in that customer's Cloudinary folder, and serves a resized, automatically optimized secure URL. The server signs uploads; `CLOUDINARY_API_SECRET` is never included in browser code. `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` is included in the template for configuration compatibility but is not required by this signed upload flow.
+
+### Source CV uploads
+
+Uploaded source PDFs are validated and sent directly to the configured Gemini service for mapping into the existing CV form. The PDF is held in request memory for processing and isn't retained in a file store. The reviewed CV fields and Cloudinary photo URL/public ID are saved with the persona's existing JSON document in Neon PostgreSQL.
+
+### Neon PostgreSQL
+
+The app already uses Neon-compatible PostgreSQL through the `pg` connection pool and its existing ordered SQL migration system; it does not use Drizzle or Prisma. Keep the existing `DATABASE_URL` unchanged. For a serverless deployment, use the Neon pooled connection string from the Neon dashboard. Migrations are additive and run through the app's existing migration runner; no database is reset or recreated.
 
 For Vercel, set `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` in the project's Production environment to the exact deployed origin, such as `https://honger-cv.vercel.app` (no trailing text or path), then redeploy. Keep the localhost values in your local `.env.local`; Vercel does not use that file for its project environment variables.
 

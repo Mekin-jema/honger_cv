@@ -4,7 +4,10 @@ import { twMerge } from "tailwind-merge";
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 /** Prefix a public path with the configured basePath (needed for plain <a> tags and history URLs). */
-export const withBase = (path: string) => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${path}`;
+export const withBase = (path: string) =>
+  /^[a-z][a-z\d+.-]*:/i.test(path) || path.startsWith("//")
+    ? path
+    : `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${path}`;
 
 export const askPath = (intentId: string) => withBase(`/ask/${intentId}/`);
 

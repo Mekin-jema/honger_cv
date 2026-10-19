@@ -14,7 +14,7 @@ function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = fal
   const doc = structuredClone(initial);
   const previousSections = doc.sections;
   const previousQuestions = doc.questions;
-  const cvSectionKeys = new Set(["about", "highlights", "skills", "experience", "education", "projects", "languages"]);
+  const cvSectionKeys = new Set(["about", "highlights", "skills", "experience", "education", "projects", "project-images", "languages"]);
   const identity = cv.identity ?? { name: "Your Name", links: [] };
   const links = identity.links.filter((link) => {
     try {
@@ -106,7 +106,25 @@ function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = fal
     label: project.name,
     meta: project.meta || undefined,
     text: project.text || undefined,
+    src: project.image || undefined,
   })));
+  const projectImages = cv.projects.flatMap((project, index) =>
+    project.image
+      ? [{ id: `project-image-${index + 1}`, src: project.image, label: project.name || `Project ${index + 1}` }]
+      : [],
+  );
+  if (projectImages.length) {
+    sections.push({
+      key: "project-images",
+      title: "Project images",
+      display: "gallery",
+      visibility: "public",
+      inChat: false,
+      inDocument: false,
+      inSite: true,
+      items: projectImages,
+    });
+  }
   add("languages", "Languages", "facts", cv.languages.map((language, index) => ({
     id: `language-${index + 1}`,
     label: language.name,
@@ -124,7 +142,7 @@ function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = fal
     projects: { label: "Projects", prompt: "What projects have you worked on?", keywords: ["projects", "portfolio"], answer: "Here are the projects in my CV." },
     languages: { label: "Languages", prompt: "What languages do you speak?", keywords: ["languages"], answer: "Here are the languages listed in my CV." },
   };
-  const cvQuestions: PersonaDoc["questions"] = sections.map((section, index) => {
+  const cvQuestions: PersonaDoc["questions"] = sections.filter((section) => section.key !== "project-images").map((section, index) => {
     const prompt = prompts[section.key];
     return {
       id: section.key,
@@ -199,6 +217,7 @@ export function ProfileDesignStudio({
   const [view, setView] = useState<"content" | "design">("design");
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [importedCv, setImportedCv] = useState(false);
   const [status, setStatus] = useState<string>();
   const [error, setError] = useState<string>();
@@ -214,7 +233,7 @@ export function ProfileDesignStudio({
   };
 
   const save = async () => {
-    if (busy) return false;
+    if (busy || importing || photoUploading) return false;
     setBusy(true);
     setStatus(undefined);
     setError(undefined);
@@ -237,8 +256,8 @@ export function ProfileDesignStudio({
           const kind = existing?.kind ?? (label.includes("github") ? "github" : label.includes("linkedin") ? "linkedin" : "other");
           return { kind, label: link.label, href: link.href };
         });
-        if (identity.photo?.trim()) {
-          nextDoc.identity.avatar = { src: identity.photo.trim(), alt: nextDoc.identity.avatar?.alt ?? "" };
+        if (cvData.photo.trim()) {
+          nextDoc.identity.avatar = { src: cvData.photo.trim(), alt: nextDoc.identity.avatar?.alt ?? "" };
         } else {
           delete nextDoc.identity.avatar;
           nextDoc.identity.photos = [];
@@ -261,6 +280,7 @@ export function ProfileDesignStudio({
         return false;
       }
       setRev(result.rev);
+      setDoc(nextDoc);
       setStatus("Your CV form and design are saved to your private draft.");
       return true;
     } catch {
@@ -271,11 +291,76 @@ export function ProfileDesignStudio({
     }
   };
 
+  const uploadImage = async (file: File, assetType: "profile" | "project") => {
+    if (photoUploading || busy || importing) return;
+    if (file.size > 3_000_000) {
+      setError("Choose an image smaller than 3 MB.");
+      setStatus(undefined);
+      return null;
+    }
+    setPhotoUploading(true);
+    setError(undefined);
+    setStatus(assetType === "profile" ? "Uploading and optimizing your photo…" : "Uploading and optimizing your project image…");
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("assetType", assetType);
+      const response = await fetch(withBase(`/api/account/personas/${slug}/studio/photo-upload/`), {
+        method: "POST",
+        body,
+        credentials: "same-origin",
+      });
+      const result = (await response.json()) as {
+        url?: string;
+        publicId?: string;
+        error?: string;
+      };
+      if (!response.ok || !result.url || !result.publicId) {
+        setError(result.error || "We couldn't upload this image. Try another file.");
+        setStatus(undefined);
+        return null;
+      }
+      setStatus("Your image is uploaded and optimized.");
+      return { url: result.url, publicId: result.publicId };
+    } catch {
+      setError("Couldn't reach the image service. Check your connection and try again.");
+      setStatus(undefined);
+      return null;
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const uploadPhoto = async (file: File) => {
+    const uploaded = await uploadImage(file, "profile");
+    if (uploaded) {
+      setCvData((current) => ({
+        ...current,
+        photo: uploaded.url,
+        photoPublicId: uploaded.publicId,
+        showPhoto: true,
+        identity: { ...(current.identity ?? { name: "", links: [] }), photo: uploaded.url },
+      }));
+    }
+  };
+
+  const uploadProjectImage = async (file: File, projectIndex: number) => {
+    const uploaded = await uploadImage(file, "project");
+    if (uploaded) {
+      setCvData((current) => {
+        const next = structuredClone(current);
+        next.projects[projectIndex].image = uploaded.url;
+        next.projects[projectIndex].imagePublicId = uploaded.publicId;
+        return next;
+      });
+    }
+  };
+
   const importCv = async (file: File) => {
     if (importing || busy) return;
     setImporting(true);
     setError(undefined);
-    setStatus("Reading your CV securely with AI…");
+    setStatus("Reading your PDF securely with AI…");
     try {
       const body = new FormData();
       body.set("file", file);
@@ -351,7 +436,7 @@ export function ProfileDesignStudio({
   };
 
   const finish = async () => {
-    if (busy || importing) return;
+    if (busy || importing || photoUploading) return;
     if (!(await save())) return;
     setBusy(true);
     setError(undefined);
@@ -418,7 +503,7 @@ export function ProfileDesignStudio({
           <button
             type="button"
             onClick={() => void save()}
-            disabled={busy || importing}
+            disabled={busy || importing || photoUploading}
             className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-60"
           >
             {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
@@ -432,7 +517,7 @@ export function ProfileDesignStudio({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1">
                 <h2 id="upload-cv-heading" className="font-semibold">Already have a CV?</h2>
-                <p className="mt-1 text-sm leading-6 text-muted">Upload a PDF and AI will map its details into these fields. Your file is used for this import only; review the result before saving.</p>
+                <p className="mt-1 text-sm leading-6 text-muted">Upload a PDF and AI will map its details into these fields. The file is processed for import and isn’t stored; review the result before saving.</p>
               </div>
               <label className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-4 text-sm font-semibold hover:border-accent/50 has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
                 {importing ? <LoaderCircle className="size-4 animate-spin" /> : <FileUp className="size-4" aria-hidden="true" />}
@@ -441,7 +526,7 @@ export function ProfileDesignStudio({
                   type="file"
                   accept="application/pdf,.pdf"
                   className="sr-only"
-                  disabled={importing || busy}
+                  disabled={importing || busy || photoUploading}
                   onChange={(event) => {
                     const file = event.currentTarget.files?.[0];
                     event.currentTarget.value = "";
@@ -464,7 +549,6 @@ export function ProfileDesignStudio({
                 ["email", "Email"],
                 ["phone", "Phone"],
                 ["location", "Location"],
-                ["photo", "Photo URL"],
               ] as const).map(([field, label]) => (
                 <label key={field} className="space-y-1.5 text-sm font-medium">
                   {label}
@@ -525,13 +609,22 @@ export function ProfileDesignStudio({
               </button>
             </fieldset>
           </section>
-          <CvEditor value={cvData} onChange={setCvData} fallbackCv={cv} />
+          <CvEditor
+            value={cvData}
+            onChange={setCvData}
+            fallbackCv={cv}
+            onPhotoUpload={uploadPhoto}
+            onProjectImageUpload={uploadProjectImage}
+            photoUploadBusy={photoUploading || busy || importing}
+            photoUploadError={error}
+            projectImageUploadBusy={photoUploading || busy || importing}
+          />
           <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-accent/20 bg-accent-soft/20 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div>
               <h2 className="font-semibold">Ready to finish?</h2>
               <p className="mt-1 text-sm leading-6 text-muted">We’ll save your CV, check it, train its AI from the information here, and publish the shareable portfolio.</p>
             </div>
-            <button type="button" onClick={() => void finish()} disabled={busy || importing} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-5 font-semibold text-on-accent disabled:opacity-60">
+            <button type="button" onClick={() => void finish()} disabled={busy || importing || photoUploading} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-5 font-semibold text-on-accent disabled:opacity-60">
               {busy ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />}
               {busy ? "Finishing your CV…" : "Finish & train AI"}
             </button>

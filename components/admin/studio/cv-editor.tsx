@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Plus } from "lucide-react";
+import { Eye, FileUp, Plus } from "lucide-react";
 import { CvSheet } from "@/components/document/cv-sheet";
 import { cv as codeCv } from "@/content/cv";
 import { readCv, type CvData, type CvJob } from "@/lib/persona/cv";
@@ -49,12 +49,22 @@ export function CvEditor({
   fallbackCv = codeCv,
   value,
   onChange,
+  onPhotoUpload,
+  onProjectImageUpload,
+  photoUploadBusy = false,
+  photoUploadError,
+  projectImageUploadBusy = false,
 }: {
   draft?: DraftApi;
   data?: unknown;
   fallbackCv?: CvData;
   value?: CvData;
   onChange?: (next: CvData) => void;
+  onPhotoUpload?: (file: File) => void | Promise<void>;
+  onProjectImageUpload?: (file: File, projectIndex: number) => void | Promise<void>;
+  photoUploadBusy?: boolean;
+  photoUploadError?: string;
+  projectImageUploadBusy?: boolean;
 }) {
   const cv = value ?? readCv(data, fallbackCv);
   const [preview, setPreview] = useState(true);
@@ -89,7 +99,45 @@ export function CvEditor({
           <TextInput label="Title under the name" value={cv.title} onChange={(v) => set((c) => void (c.title = v))} />
           <TextInput label="Availability line" value={cv.availability} onChange={(v) => set((c) => void (c.availability = v))} />
           <div className="flex flex-wrap items-end gap-4">
-            <TextInput label="Photo" value={cv.photo} onChange={(v) => set((c) => void (c.photo = v))} className="min-w-64 flex-1" mono />
+            {onPhotoUpload ? (
+              <div className="min-w-64 flex-1 space-y-1.5">
+                <p className="text-sm font-semibold">Profile photo</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-fg has-[:disabled]:cursor-wait has-[:disabled]:opacity-50">
+                    <FileUp className="size-4" aria-hidden="true" />
+                    {photoUploadBusy ? "Uploading photo…" : cv.photo ? "Replace photo" : "Upload photo"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      disabled={photoUploadBusy}
+                      onChange={(event) => {
+                        const file = event.currentTarget.files?.[0];
+                        event.currentTarget.value = "";
+                        if (file) void onPhotoUpload(file);
+                      }}
+                    />
+                  </label>
+                  {cv.photo && (
+                    <button
+                      type="button"
+                      className={smallBtn}
+                      onClick={() => set((current) => {
+                        current.photo = "";
+                        current.photoPublicId = "";
+                      })}
+                    >
+                      Remove photo
+                    </button>
+                  )}
+                  {cv.photo && <span role="status" className="text-sm text-muted">A photo is set.</span>}
+                </div>
+                <p className="text-xs text-muted">JPG, PNG or WebP, up to 3 MB. Images are optimized for your public CV.</p>
+                {photoUploadError && <p role="alert" className="text-sm text-accent">{photoUploadError}</p>}
+              </div>
+            ) : (
+              <TextInput label="Photo" value={cv.photo} onChange={(v) => set((c) => void (c.photo = v))} className="min-w-64 flex-1" mono />
+            )}
             <Toggle label="Show the photo" hint="Usual in Europe; leave out for UK/US applications." checked={cv.showPhoto} onChange={(v) => set((c) => void (c.showPhoto = v))} />
           </div>
           <TextArea label="Profile" rows={5} value={cv.profile} onChange={(v) => set((c) => void (c.profile = v))} />
@@ -158,6 +206,41 @@ export function CvEditor({
                 <RowActions index={i} count={cv.projects.length} what={`project ${p.name || i + 1}`} onMove={(dir) => set((c) => move(c.projects, i, dir))} onRemove={() => set((c) => void c.projects.splice(i, 1))} />
               </div>
               <TextArea label="Description" rows={2} value={p.text} onChange={(v) => set((c) => void (c.projects[i].text = v))} />
+                {onProjectImageUpload && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface hover:text-fg has-[:disabled]:cursor-wait has-[:disabled]:opacity-50">
+                      <FileUp className="size-4" aria-hidden="true" />
+                      {projectImageUploadBusy ? "Uploading image…" : p.image ? "Replace project image" : "Upload project image"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        disabled={projectImageUploadBusy}
+                        onChange={(event) => {
+                          const file = event.currentTarget.files?.[0];
+                          event.currentTarget.value = "";
+                          if (file) void onProjectImageUpload(file, i);
+                        }}
+                      />
+                    </label>
+                    {p.image && (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.image} alt={`${p.name || `Project ${i + 1}`} preview`} className="size-14 rounded-lg border border-line object-cover" />
+                        <button
+                          type="button"
+                          className={smallBtn}
+                          onClick={() => set((current) => {
+                            current.projects[i].image = undefined;
+                            current.projects[i].imagePublicId = undefined;
+                          })}
+                        >
+                          Remove image
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
             </div>
           ))}
           <button type="button" className={smallBtn} onClick={() => set((c) => void c.projects.push({ name: "", meta: "", text: "" }))}>

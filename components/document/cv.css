@@ -795,6 +795,15 @@
 .cv-bullets li::marker {
   color: var(--cv-faint);
 }
+.cv-project-image {
+  display: inline-block;
+  width: 0.52in;
+  height: 0.39in;
+  margin-right: 6px;
+  border-radius: 3px;
+  object-fit: cover;
+  vertical-align: middle;
+}
 .cv-stack {
   margin-top: 3px;
   font-size: 8.75pt;

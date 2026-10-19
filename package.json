@@ -23,6 +23,7 @@
     "ai": "^7.0.143",
     "better-auth": "^1.7.10",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
     "cn": "^0.5.0",
     "gsap": "^3.15.0",

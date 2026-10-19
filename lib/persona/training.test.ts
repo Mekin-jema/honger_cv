@@ -5,7 +5,7 @@ import {
   isBlankCustomerPersona,
   upgradeBlankCustomerPersona,
 } from "@/server/persona/templates";
-import { personaToCvData } from "./cv";
+import { personaToCvData, readCv } from "./cv";
 import { PersonaDocSchema } from "./schema";
 import { hasTrainingContent, roleCvName } from "./training";
 
@@ -18,6 +18,40 @@ describe("roleCvName", () => {
 });
 
 describe("hasTrainingContent", () => {
+  it("keeps Cloudinary photo URLs and public IDs in the canonical CV data", () => {
+    const cv = readCv({
+      photo: "https://res.cloudinary.com/example/image/upload/profile.webp",
+      photoPublicId: "honger-cv/customers/alex/profile",
+      projects: [{
+        name: "Portfolio",
+        meta: "Next.js",
+        text: "Portfolio platform",
+        image: "https://res.cloudinary.com/example/image/upload/project.webp",
+        imagePublicId: "honger-cv/customers/alex/projects/portfolio",
+      }],
+    }, {
+      showPhoto: true,
+      title: "",
+      availability: "",
+      photo: "",
+      profile: "",
+      highlights: [],
+      skills: [],
+      experience: [],
+      projects: [],
+      education: { degree: "", school: "", year: "", note: "" },
+      courses: [],
+      languages: [],
+    });
+
+    expect(cv.photo).toBe("https://res.cloudinary.com/example/image/upload/profile.webp");
+    expect(cv.photoPublicId).toBe("honger-cv/customers/alex/profile");
+    expect(cv.projects[0]).toMatchObject({
+      image: "https://res.cloudinary.com/example/image/upload/project.webp",
+      imagePublicId: "honger-cv/customers/alex/projects/portfolio",
+    });
+  });
+
   it("starts customer CVs from the validated public demo with editable CV content", () => {
     const doc = customerStarterPersona("Product Engineer");
     const cv = personaToCvData(doc, "en");
@@ -25,6 +59,7 @@ describe("hasTrainingContent", () => {
     expect(doc.legacy).toBe(false);
     expect(doc.site.indexable).toBe(false);
     expect(doc.identity.name).toBe("Mekin Jemal");
+    expect(doc.document.data?.customerStarter).toBe(true);
     expect(cv.title).toBe("Product Engineer");
     expect(cv.profile.length).toBeGreaterThan(0);
     expect(cv.experience.length).toBeGreaterThan(0);

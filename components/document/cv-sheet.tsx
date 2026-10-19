@@ -228,6 +228,10 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       <ul className="cv-bullets cv-projects">
         {cv.projects.map((p, i) => (
           <li key={`${i}-${p.name}`}>
+            {p.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={withBase(p.image)} alt="" width={96} height={72} className="cv-project-image" />
+            )}
             <strong>{p.name}</strong> <span className="cv-faint">({p.meta})</span> - {p.text}
           </li>
         ))}

@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { v2 as cloudinary } from "cloudinary";
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
 import { draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
 import { compileBrain } from "@/server/brain/compile";
@@ -24,7 +26,21 @@ import {
 type Context = { params: Promise<{ slug: string; parts: string[] }> };
 const SLUG = /^[a-z][a-z0-9-]{1,31}$/;
 const positive = (value: unknown, max: number) => (typeof value === "number" && Number.isInteger(value) && value > 0 && value <= max ? value : null);
+const MAX_PROFILE_IMAGE_BYTES = 3_000_000;
 export const maxDuration = 120;
+
+function profileImageFormat(bytes: Buffer): { mime: string } | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { mime: "image/jpeg" };
+  }
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return { mime: "image/png" };
+  }
+  if (bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP") {
+    return { mime: "image/webp" };
+  }
+  return null;
+}
 
 async function owned(req: Request, context: Context) {
   const session = await customerSession(req);
@@ -132,6 +148,76 @@ export async function POST(req: Request, context: Context) {
       console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
       return bad("We couldn't read this CV with AI. Try another PDF or enter the details manually.", 502);
     }
+  }
+
+  if (endpoint === "photo-upload") {
+    if (limited(`customer:photo-upload:${session.userId}`, 10, 10 * 60_000)) {
+      return bad("Too many image uploads. Please try again in a few minutes.", 429);
+    }
+    const requestSize = Number(req.headers.get("content-length") ?? 0);
+    if (requestSize > MAX_PROFILE_IMAGE_BYTES + 100_000) {
+      return bad("Choose an image smaller than 3 MB.", 413);
+    }
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return bad("We couldn't read this image upload. Choose a JPG, PNG or WebP image and try again.", 400);
+    }
+    const file = form.get("file");
+    if (!(file instanceof File) || !file.size) return bad("Choose an image to upload.");
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) return bad("Choose an image smaller than 3 MB.", 413);
+    const assetType = form.get("assetType");
+    if (assetType !== "profile" && assetType !== "project") return bad("Choose a supported image type.");
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const format = profileImageFormat(bytes);
+    if (!format || (file.type && file.type !== format.mime)) {
+      return bad("Upload a valid JPG, PNG or WebP image. SVG and other file types aren't supported.");
+    }
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    if (!cloudName || !apiKey || !apiSecret) {
+      return bad("Photo uploads aren't configured. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.", 503);
+    }
+
+    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
+    const folder = `honger-cv/customers/${slug}/${assetType === "profile" ? "profile" : "projects"}`;
+    let uploaded: { public_id: string };
+    try {
+      uploaded = await new Promise<{ public_id: string }>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder,
+            public_id: randomUUID(),
+            resource_type: "image",
+            overwrite: false,
+            allowed_formats: ["jpg", "png", "webp"],
+            transformation: [{ width: 1600, height: 1600, crop: "limit" }],
+            tags: [`customer-cv-${assetType}-image`],
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else if (result) resolve(result);
+            else reject(new Error("Cloudinary returned no uploaded image."));
+          },
+        );
+        stream.end(bytes);
+      });
+    } catch (error) {
+      console.error(`[customer-photo-upload] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
+      return bad("The image service couldn't store this image. Try again in a moment.", 502);
+    }
+
+    const url = cloudinary.url(uploaded.public_id, {
+      secure: true,
+      transformation: [
+        { width: 1600, height: 1600, crop: "limit" },
+        { quality: "auto:good", fetch_format: "auto" },
+      ],
+    });
+    return json({ ok: true, url, publicId: uploaded.public_id });
   }
 
   if (endpoint === "prompt" || endpoint === "ai") {
