@@ -63,7 +63,7 @@ export function AppSidebar({
   const activeSlug = (selection.pathname !== pathname ? routePersona?.slug : selection.slug) ?? accountPersonas[0]?.slug ?? ""
   const activePersona = accountPersonas.find((item) => item.slug === activeSlug)
   const documentPath = persona.legacy ? "/cv/" : persona.document.pageUrl
-  const accountAsk = activeSlug ? `/account/ai/${activeSlug}/` : "/account/#create-job-profile"
+  const accountAsk = activeSlug ? `/account/ai/${activeSlug}/` : "/account/new/"
 
   const linkItem = (title: string, href: string, icon: ReactNode) => {
     const target = href.split("#", 1)[0].replace(/\/+$/, "") || "/"
@@ -73,11 +73,6 @@ export function AppSidebar({
         <SidebarMenuButton
           isActive={active}
           tooltip={title}
-          onClick={() => {
-            if (accountName && href === "/account/#create-job-profile" && pathname === "/account") {
-              requestAnimationFrame(() => document.getElementById("create-job-profile")?.scrollIntoView({ block: "start" }));
-            }
-          }}
           render={<Link href={href} />}
         >
           {icon}
@@ -118,11 +113,11 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{accountName ? "My CV" : "Portfolio"}</SidebarGroupLabel>
+          <SidebarGroupLabel>{accountName ? "Workspace" : "Portfolio"}</SidebarGroupLabel>
           <SidebarMenu>
             {portfolioLinks.map(({ title, path, questionId, icon: Icon }) =>
               linkItem(
-                title,
+                accountName && title === "Summary" ? "My CVs" : title,
                 accountName
                   ? title === "Summary"
                     ? "/account/"
@@ -134,14 +129,15 @@ export function AppSidebar({
                               : title === "Skills" ? "What are your skills?"
                                 : "How can I contact you?",
                       )}`
-                      : title === "Ask AI" ? accountAsk : "/account/#create-job-profile"
+                      : title === "Ask AI" ? accountAsk : "/account/new/"
                   : questionId ? persona.askPath(questionId) : persona.href(path ?? "/"),
                 <Icon />,
               ),
             )}
+            {accountName && linkItem("Create CV", "/account/new/", <FileText />)}
             {linkItem(
               accountName ? "Edit CV" : persona.document.label || "CV",
-              accountName ? (activeSlug ? `/account/training/${activeSlug}/design/` : "/account/#create-job-profile") : persona.href(documentPath),
+              accountName ? (activeSlug ? `/account/training/${activeSlug}/design/` : "/account/new/") : persona.href(documentPath),
               <FileText />,
             )}
           </SidebarMenu>
@@ -159,7 +155,7 @@ export function AppSidebar({
               </select>
             )}
             <SidebarMenu className="mt-2">
-              {linkItem("Train this CV", activeSlug ? `/account/training/${activeSlug}/` : "/account/#create-job-profile", <Bot />)}
+              {linkItem("Train this CV", activeSlug ? `/account/training/${activeSlug}/` : "/account/new/", <Bot />)}
             </SidebarMenu>
           </SidebarGroup>
         )}

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { requireCustomer } from "@/server/admin-session";
 import { enText } from "@/lib/persona/edit";
 import { PersonaDocShape } from "@/lib/persona/schema";
-import { roleCvName } from "@/lib/persona/training";
 import { listOwnedPersonas, loadDraft } from "@/server/persona/repo";
 import { AccountShell } from "@/components/account/account-shell";
 
@@ -17,17 +16,11 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     const identityName = parsed.success ? enText(parsed.data.identity.name) || persona.name : persona.name;
     return {
       slug: persona.slug,
+      name: parsed.success ? parsed.data.name : persona.name,
       identityName,
       role: parsed.success ? enText(parsed.data.identity.role ?? parsed.data.identity.headline) : "",
       publishedVersionId: persona.publishedVersionId,
     };
   }));
-  const usedNames = new Map<string, number>();
-  const personas = loaded.map((persona) => {
-    const nameKey = roleCvName(persona.role).toLowerCase();
-    const number = (usedNames.get(nameKey) ?? 0) + 1;
-    usedNames.set(nameKey, number);
-    return { ...persona, name: roleCvName(persona.role, number) };
-  });
-  return <AccountShell name={customer.name} email={customer.email} avatar={customer.image} personas={personas}>{children}</AccountShell>;
+  return <AccountShell name={customer.name} email={customer.email} avatar={customer.image} personas={loaded}>{children}</AccountShell>;
 }

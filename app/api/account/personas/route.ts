@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   const body = await readJson(req, 5_000);
   const headline = str(body?.headline, 160);
-  const cvName = str(body?.cvName, 80) ?? headline;
+  const cvName = str(body?.cvName, 60) ?? headline;
   if (!headline || headline.length < 2 || !cvName || cvName.length < 2) return bad("Enter a name for this CV.");
 
   const existing = await listOwnedPersonas(session.userId);

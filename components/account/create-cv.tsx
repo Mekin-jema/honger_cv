@@ -58,12 +58,9 @@ export function CreateCv() {
                 autoFocus
                 required
                 minLength={2}
-                maxLength={80}
+                maxLength={60}
                 value={cvName}
-                onChange={(event) => {
-                  setCvName(event.target.value);
-                  if (!headline) setHeadline(event.target.value);
-                }}
+                onChange={(event) => setCvName(event.target.value)}
                 placeholder="e.g. Software Engineer"
                 className="w-full rounded-xl border border-line-strong bg-bg px-4 py-3 text-base font-normal outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
               />

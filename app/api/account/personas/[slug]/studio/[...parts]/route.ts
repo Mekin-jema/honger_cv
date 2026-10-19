@@ -1,5 +1,5 @@
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
-import { draftAnswer, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
+import { draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
 import { compileBrain } from "@/server/brain/compile";
 import { aiEnabled } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
@@ -24,6 +24,7 @@ import {
 type Context = { params: Promise<{ slug: string; parts: string[] }> };
 const SLUG = /^[a-z][a-z0-9-]{1,31}$/;
 const positive = (value: unknown, max: number) => (typeof value === "number" && Number.isInteger(value) && value > 0 && value <= max ? value : null);
+export const maxDuration = 120;
 
 async function owned(req: Request, context: Context) {
   const session = await customerSession(req);
@@ -102,6 +103,36 @@ export async function POST(req: Request, context: Context) {
   if ("response" in access) return access.response;
   const { slug, parts, session } = access;
   const endpoint = parts.join("/");
+
+  if (endpoint === "cv-import") {
+    if (!aiEnabled()) return bad("CV import needs the AI service to be enabled.", 503);
+    if (limited(`customer:cv-import:${session.userId}`, 5, 10 * 60_000)) {
+      return bad("Too many CV imports. Please try again in a few minutes.", 429);
+    }
+    const size = Number(req.headers.get("content-length") ?? 0);
+    if (size > 8_500_000) return bad("This PDF is too large. Choose a PDF under 8 MB.", 413);
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return bad("We couldn't read this upload. Choose a PDF and try again.", 400);
+    }
+    const file = form.get("file");
+    if (!(file instanceof File) || !file.size) return bad("Choose a PDF CV to upload.");
+    if (file.size > 8_000_000) return bad("This PDF is too large. Choose a PDF under 8 MB.", 413);
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      return bad("Upload a PDF file. You can also paste your CV details into the form.");
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") return bad("This file doesn't look like a readable PDF.");
+    try {
+      const cv = await mapCvPdf(bytes, file.name.slice(0, 120));
+      return json({ ok: true, cv });
+    } catch (error) {
+      console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
+      return bad("We couldn't read this CV with AI. Try another PDF or enter the details manually.", 502);
+    }
+  }
 
   if (endpoint === "prompt" || endpoint === "ai") {
     if (!aiEnabled()) return bad("AI helpers need GEMINI_API_KEY.", 503);

@@ -68,7 +68,7 @@ export function customerStarterPersona(headline = "Software Engineer"): PersonaD
   doc.identity.headline = headline;
   doc.document.title = `${headline} CV`;
   doc.document.fileName = "document.pdf";
-  doc.document.data = { ...doc.document.data, title: headline };
+  doc.document.data = { ...doc.document.data, title: headline, customerStarter: true };
   doc.questions = doc.questions.map((question) => ({ ...question, blocks: customerBlocks(question.blocks) }));
   doc.fallback.blocks = customerBlocks(doc.fallback.blocks);
 

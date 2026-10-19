@@ -4,8 +4,6 @@ import { Studio } from "@/components/admin/studio/studio";
 import { TABS, type TabId } from "@/components/admin/studio/tabs";
 import type { Doc } from "@/components/admin/studio/use-draft";
 import { PersonaDocShape } from "@/lib/persona/schema";
-import { roleCvName } from "@/lib/persona/training";
-import { enText } from "@/lib/persona/edit";
 import { requireCustomer } from "@/server/admin-session";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
 import { editableDraft, studioOverview } from "@/server/persona/studio";
@@ -50,7 +48,7 @@ export default async function TrainingPage({
     <Studio
       key={slug}
       slug={slug}
-      name={roleCvName(enText(parsed.data.identity.role ?? parsed.data.identity.headline))}
+      name={parsed.data.name}
       initial={{ doc: parsed.data as Doc, rev: draft.rev, issues: draft.issues, changed: draft.changed, source: draft.source }}
       overview={overview}
       tab={tab}

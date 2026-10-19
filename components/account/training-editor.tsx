@@ -27,7 +27,6 @@ function applyTrainingFields(
   const name = fields.name.trim();
   const headline = fields.headline.trim();
   const summary = fields.summary.trim();
-  doc.name = `${name.slice(0, 48)}'s profile`;
   doc.identity.name = name;
   doc.identity.shortName = name.split(/\s+/)[0] || name;
   doc.identity.initials = name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
