@@ -6,6 +6,7 @@ import { isCvTemplateId } from "@/lib/persona/cv-templates";
 import { PersonaDocShape } from "@/lib/persona/schema";
 import { requireCustomer } from "@/server/admin-session";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
+import { ensureCustomerStarterDraft } from "@/server/persona/templates";
 
 export const metadata: Metadata = { title: "CV design", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -18,8 +19,9 @@ export default async function CustomerCvDesignPage({
   const { slug } = await params;
   const customer = await requireCustomer(`/account/training/${slug}/design/`);
   if (!/^[a-z][a-z0-9-]{1,31}$/.test(slug) || !(await personaOwnedBy(slug, customer.userId))) notFound();
-  const draft = await loadDraft(slug);
+  let draft = await loadDraft(slug);
   if (!draft) notFound();
+  draft = await ensureCustomerStarterDraft(slug, draft);
   const parsed = PersonaDocShape.safeParse(draft.doc);
   if (!parsed.success) notFound();
   const data = parsed.data.document.data ?? {};

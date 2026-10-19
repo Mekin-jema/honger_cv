@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, CloudOff, Eye, LoaderCircle, RefreshCw, Rocket, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn, withBase } from "@/lib/utils";
@@ -32,7 +32,10 @@ export type TabProps = {
   /** Set by go(tab, focus): what the tab should open (a section key, a question id). */
   focus?: string;
   mode: StudioMode;
+  notify: (toast: StudioToast) => void;
 };
+
+export type StudioToast = { title: string; description: string; details?: string[] };
 
 type Props = {
   slug: string;
@@ -73,8 +76,26 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
   const [overview, setOverview] = useState(initialOverview);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const publish = useJob(mode, slug);
+  const [toast, setToast] = useState<StudioToast | null>(null);
+  const reportedPublishError = useRef("");
   const doc = draft.doc;
   const bangla = (doc.site?.languages ?? ["en"]).includes("bn");
+  const notify = useCallback((next: StudioToast) => setToast(next), []);
+  const publishError = publish.error ?? (publish.job?.status === "failed" ? publish.job.error ?? undefined : undefined);
+
+  useEffect(() => {
+    if (!publishError) {
+      reportedPublishError.current = "";
+      return;
+    }
+    if (reportedPublishError.current === publishError) return;
+    reportedPublishError.current = publishError;
+    notify({
+      title: "Publish & train could not finish",
+      description: publishError,
+      ...(publish.issues.length ? { details: publish.issues } : {}),
+    });
+  }, [notify, publish.issues, publishError]);
 
   const reloadOverview = useCallback(async () => {
     const res = await studioFetch<Overview>(mode, slug, `/api/admin/personas/${slug}/overview/`);
@@ -116,7 +137,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
     tabRefs.current[TABS[j].id]?.focus();
   };
 
-  const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode };
+  const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode, notify };
   const issues = draft.status.issues.length;
   const busy = publish.running;
 
@@ -187,6 +208,12 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
         </div>
       </header>
 
+      {mode === "customer" && (
+        <div className="border-b border-accent/20 bg-accent-soft/40 px-4 py-3 text-center text-sm leading-6">
+          This CV starts with Mekin&apos;s public demo information. Edit it in the form tabs or JSON, then choose <strong>Publish &amp; train</strong> before using its AI chat.
+        </div>
+      )}
+
       {draft.status.state === "conflict" && (
         <div role="alert" className="border-b border-accent/30 bg-accent-soft px-4 py-2.5 text-center text-sm font-medium text-accent">
           <AlertTriangle className="mr-1.5 inline size-4" />
@@ -207,6 +234,31 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
         {tab === "checks" && <ChecksTab {...props} />}
         {tab === "json" && <JsonTab {...props} />}
       </main>
+      {toast && (
+        <aside
+          role="alert"
+          aria-live="assertive"
+          className="fixed bottom-4 right-4 z-50 w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-red-300/70 bg-card p-4 text-fg shadow-2xl dark:border-red-900"
+        >
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
+              <AlertTriangle className="size-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold">{toast.title}</h2>
+              <p className="mt-1 break-words text-sm leading-5 text-muted">{toast.description}</p>
+              {toast.details && toast.details.length > 0 && (
+                <ul className="mt-2 max-h-40 list-disc space-y-1 overflow-auto pl-5 text-xs leading-5 text-muted">
+                  {toast.details.map((detail) => <li key={detail} className="break-words">{detail}</li>)}
+                </ul>
+              )}
+            </div>
+            <button type="button" onClick={() => setToast(null)} className="grid size-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-surface hover:text-fg" aria-label="Dismiss error notification">
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

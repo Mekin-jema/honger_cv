@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Download, RotateCcw } from "lucide-react";
+import { PersonaDocSchema, formatIssues } from "@/lib/persona/schema";
 import { cn } from "@/lib/utils";
 import { downloadText } from "./api";
 import { Panel, inputCls, smallBtn } from "./controls";
 import type { TabProps } from "./studio";
-import type { Doc } from "./use-draft";
 
 /** The whole draft as JSON: for nested details the forms don't cover, and for backups. */
-export function JsonTab({ slug, draft, doc }: TabProps) {
+export function JsonTab({ slug, draft, doc, notify }: TabProps) {
   const pretty = JSON.stringify(doc, null, 2);
   const [text, setText] = useState(pretty);
   const [error, setError] = useState<string>();
@@ -17,24 +17,35 @@ export function JsonTab({ slug, draft, doc }: TabProps) {
   const edited = text !== pretty;
 
   const apply = () => {
-    let parsed: unknown;
+    let value: unknown;
     try {
-      parsed = JSON.parse(text);
+      value = JSON.parse(text);
     } catch (err) {
-      return setError(`Not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
+      const message = `Not valid JSON: ${err instanceof Error ? err.message : String(err)}`;
+      setError(message);
+      notify({ title: "JSON could not be applied", description: message });
+      return;
     }
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return setError("The draft must be one JSON object { ... }.");
-    if ((parsed as { v?: unknown }).v !== 1) return setError('The draft needs "v": 1.');
+
+    const validation = PersonaDocSchema.safeParse(value);
+    if (!validation.success) {
+      const details = formatIssues(validation.error, 10);
+      const message = `The profile has ${validation.error.issues.length} validation ${validation.error.issues.length === 1 ? "error" : "errors"}.`;
+      setError(`${message} ${details.join("; ")}`);
+      notify({ title: "JSON validation failed", description: message, details });
+      return;
+    }
+
     setError(undefined);
-    draft.replace(parsed as Doc);
-    setText(JSON.stringify(parsed, null, 2));
+    draft.replace(validation.data);
+    setText(JSON.stringify(validation.data, null, 2));
     setApplied(true);
   };
 
   return (
     <Panel
       title="The draft as JSON"
-      description="Everything the forms edit, plus nested details they don't show (for example the entries inside a job). Applying replaces the draft; problems show in the Overview."
+      description="Everything the forms edit, plus nested details they don't show (for example the entries inside a job). Apply checks the full profile with Zod and shows field paths when it finds problems."
       actions={
         <>
           <button type="button" className={smallBtn} onClick={() => downloadText(`${slug}-draft.json`, pretty, "application/json")}>

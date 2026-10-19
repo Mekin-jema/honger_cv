@@ -3,7 +3,7 @@ import { PersonaDocSchema, PersonaDocShape } from "@/lib/persona/schema";
 import { bad, forbidden, json, readJson, sameOrigin, str } from "@/server/http";
 import { customerSession } from "@/server/admin-session";
 import { query } from "@/server/db";
-import { blankPersona } from "@/server/persona/templates";
+import { customerStarterPersona } from "@/server/persona/templates";
 import { listOwnedPersonas, loadDraft } from "@/server/persona/repo";
 import { recordPlatformEventSafely } from "@/server/platform-events";
 import { roleCvName } from "@/lib/persona/training";
@@ -41,12 +41,7 @@ export async function POST(req: Request) {
     .replace(/^[^a-z]+/, "")
     .slice(0, 22) || "profile";
   const slug = `${baseSlug}-${randomUUID().replaceAll("-", "").slice(0, 8)}`;
-  const identityName = session.name.trim().slice(0, 120) || "Your name";
-  const doc = blankPersona(cvName, identityName);
-  doc.identity.role = headline;
-  doc.identity.headline = headline;
-  doc.hero.staticIntro = `Hi, I'm ${identityName}, ${headline}.`;
-  doc.site = { ...doc.site, indexable: false };
+  const doc = customerStarterPersona(headline);
   const parsed = PersonaDocSchema.safeParse(doc);
   if (!parsed.success) return bad("The CV starter couldn't be prepared.", 500);
 

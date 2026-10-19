@@ -26,6 +26,30 @@ Visitors can follow curated topics or ask the assistant about work, skills, proj
 
 The portfolio and curated answers work without a database or AI credentials. PostgreSQL unlocks persistent features; a Gemini API key enables optional generated answers.
 
+## Product tour
+
+### Build a portfolio from your CV
+
+Start with a polished CV, explore the templates, or open Mekin's public demo.
+
+![Honger CV landing page with a live CV preview and calls to action](docs/images/readme/landing-page.png)
+
+### Ask the portfolio
+
+Visitors can ask about experience and projects, then explore the supporting details in the conversation.
+
+![Conversational portfolio showing an answer about professional experience](docs/images/readme/portfolio-chat.png)
+
+### Choose a CV design
+
+Preview the same CV across a collection of layouts and accent colors before saving it as a PDF.
+
+![CV Studio preview using the Sidebar template with a forest accent](docs/images/readme/cv-template-forest.png)
+
+![CV Studio preview using the Navy Profile Rail template](docs/images/readme/cv-template-navy.png)
+
+![CV Studio preview using the Orange Frame template](docs/images/readme/cv-template-orange.png)
+
 ## Explore
 
 | Route | What you’ll find |
@@ -85,13 +109,13 @@ Open [http://localhost:3000](http://localhost:3000). The portfolio and curated c
 | --- | --- | --- |
 | `DATABASE_URL` | Persistent features and admin | PostgreSQL connection string. Schema migrations are applied automatically when the server starts; you can also run them explicitly. |
 | `BETTER_AUTH_SECRET` | Admin authentication | Use a private secret of at least 32 characters. |
-| `BETTER_AUTH_URL` | Admin authentication | Public app origin, for example `http://localhost:3000` locally. |
+| `BETTER_AUTH_URL` | Admin authentication | Public app origin with no path, for example `http://localhost:3000` locally or `https://honger-cv.vercel.app` in production. |
 | `GOOGLE_CLIENT_ID` | Google customer sign-in | OAuth client ID. Configure the callback URI as `<BETTER_AUTH_URL>/api/auth/callback/google`. |
 | `GOOGLE_CLIENT_SECRET` | Google customer sign-in | OAuth client secret; keep it server-side. |
 | `GITHUB_CLIENT_ID` | GitHub customer sign-in | OAuth app client ID. Grant the `user:email` scope and configure `<BETTER_AUTH_URL>/api/auth/callback/github`. |
 | `GITHUB_CLIENT_SECRET` | GitHub customer sign-in | OAuth app client secret; keep it server-side. |
 | `PERSONA_SIGNING_SECRET` | Signed persona access and preview tokens | Use a private secret of at least 32 characters. |
-| `NEXT_PUBLIC_SITE_URL` | Canonical metadata and sitemap | Public HTTPS origin in production. Defaults to localhost for local development. |
+| `NEXT_PUBLIC_SITE_URL` | Canonical metadata and sitemap | Public HTTPS origin in production, normally the same origin as `BETTER_AUTH_URL`. Defaults to localhost for local development. |
 | `GEMINI_API_KEY` | Optional generated answers | Without it, curated answers remain available. |
 | `MAIL_PROVIDER` | Email delivery for sign-in codes | `resend`, `log`, or `none`. Production email needs `RESEND_API_KEY` and `MAIL_FROM`. |
 | `RESEND_API_KEY` | Resend email delivery | Needed when `MAIL_PROVIDER=resend`. |
@@ -107,6 +131,8 @@ openssl rand -base64 32
 
 Set the generated value for each secret independently. Do not reuse a production secret in development or commit it to the repository.
 
+For Vercel, set `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` in the project's Production environment to the exact deployed origin, such as `https://honger-cv.vercel.app` (no trailing text or path), then redeploy. Keep the localhost values in your local `.env.local`; Vercel does not use that file for its project environment variables.
+
 ### Create the admin account
 
 With `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` configured, create the single admin account:
@@ -121,11 +147,11 @@ Admin links are hidden from non-admin visitors, but authorization is also enforc
 
 ### Customer accounts and profiles
 
-Customers can register at `/register/`, sign in at `/login/`, and manage their CVs from `/account/`. Each customer can create Job CVs by entering a professional role; the role names the CV (for example, “Product Engineer CV” or “Product Engineer CV 2”), and the signed-in user's name seeds the CV identity. The customer Studio uses all nine Persona Studio tabs, including JSON, with owner-scoped APIs for drafts, AI helpers, checks, access management, and publishing. Their sidebar includes the public Portfolio navigation plus links to their own dashboard, AI, training, and CV form/design. The CV form saves to that customer's draft and is used by their own CV page and AI knowledge; it does not use the demo portfolio's data. Admins keep the same Portfolio sidebar and receive the administration links; the admin navigation label is **User**.
+Customers can register at `/register/`, sign in at `/login/`, and manage their CVs from `/account/`. Each customer can create Job CVs by entering a professional role; the role names the CV (for example, “Product Engineer CV” or “Product Engineer CV 2”). New CVs start from Mekin's public demo profile as editable sample information, not from an empty document. **Edit CV** opens the 25-template picker first, then the complete CV form; the customer can also edit all profile data in the Studio's JSON tab. The customer Studio uses all nine Persona Studio tabs, including JSON, with owner-scoped APIs for drafts, AI helpers, checks, access management, and publishing. Their sidebar includes the public Portfolio navigation plus links to their own dashboard, AI, training, and CV form/design. The CV form saves to that customer's draft and is used by their own CV page and AI knowledge. Admins keep the same Portfolio sidebar and receive the administration links; the admin navigation label is **User**.
 
 Customer login and registration support Google and GitHub when the matching client ID and secret are configured. Register each callback URI with the provider, including `/api/auth/callback/google` or `/api/auth/callback/github` after the app origin (and any configured base path). For GitHub OAuth Apps, Better Auth requests `user:email`; for GitHub Apps, grant **Account permissions → Email addresses → Read-only** as well. OAuth may link to an existing customer account only when the provider verifies the matching email. Admin accounts cannot be linked to social providers; administrators continue to use email/password plus the existing email verification code. OAuth state and session cookies use `SameSite=Lax` to support the cross-site callback and its immediate redirect; all other auth cookies remain `SameSite=Strict`.
 
-The private assistant uses the selected customer's saved draft. If its Job CV has no personal training information yet, opening Ask AI redirects to the Knowledge training tab. Customers can publish explicitly; published profiles are available at `/u/<profile-slug>/`, where their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
+The private assistant is available after the customer first publishes and trains the CV. Before then, Ask AI explains that the user must add or edit information with the forms or JSON editor, then choose **Publish & train**. Published profiles are available at `/u/<profile-slug>/`, where their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
 
 Persona ownership is checked on customer APIs, publishing jobs, and profile pages. Platform event totals are visible only to administrators in the `/admin/` dashboard. Apply the pending migrations before enabling customer registration in an existing deployment.
 
@@ -155,20 +181,56 @@ bun run db:migrate -- --check
 
 To generate the PDF, build the app first and then run `bun run cv:pdf`. The script uses Chrome or Edge when available, or Firefox with geckodriver. Set `CHROME_PATH` or `GECKODRIVER_PATH` if the browser executable is not on the standard path.
 
-## Project map
+## Repository structure
 
 ```text
-app/            Next.js routes, API handlers, and public pages
-components/     Chat, dashboard, admin, site, and UI components
-content/        Typed portfolio, project, experience, and skills content
-lib/            Shared browser utilities, chat state, and persona types
-server/         Authentication, database, AI, analytics, and persona services
-migrations/     PostgreSQL schema migrations
-public/         Static assets, images, and downloadable CV
-scripts/        Admin, database, and PDF utilities
+.
+├── app/                              Next.js App Router: pages, layouts, and API routes
+│   ├── (site)/                       Public portfolio pages
+│   │   ├── about/
+│   │   ├── contact/
+│   │   ├── experience/
+│   │   ├── projects/
+│   │   └── skills/
+│   ├── account/                      Signed-in customer workspace
+│   │   ├── ai/[slug]/                Customer AI chat
+│   │   └── training/[slug]/          CV editor, JSON studio, and training
+│   ├── admin/                        Admin dashboard and persona studio
+│   ├── api/                          Authentication, account, admin, and chat endpoints
+│   ├── ask/                          Conversational portfolio
+│   ├── cv/                           Public CV studio and PDF preview
+│   ├── dashboard/                    Career overview
+│   ├── login/  register/             Customer authentication pages
+│   ├── u/[slug]/                     Published customer profiles
+│   ├── layout.tsx                   Root layout and metadata
+│   └── page.tsx                     Landing page
+├── components/
+│   ├── account/                      Customer CV, training, and account UI
+│   ├── admin/studio/                 Persona editing, checks, JSON, and publishing
+│   ├── chat/                         Chat messages, composer, and suggestions
+│   ├── document/                     CV sheet and print styles
+│   ├── landing/                      Landing page sections and template showcase
+│   ├── site/                          Public persona and site shells
+│   └── ui/                            Shared interface primitives
+├── content/                           Typed portfolio, CV, project, and experience data
+├── hooks/                             Shared React hooks
+├── lib/
+│   └── persona/                       Persona schemas, CV mapping, and shared logic
+├── migrations/                        PostgreSQL schema migrations
+├── public/
+│   ├── images/                        Portfolio and CV images
+│   └── ...                            Logos, icons, and downloadable CV
+├── scripts/                           Admin, database, and PDF utilities
+├── server/
+│   ├── access/                        Access codes and gated content
+│   ├── brain/                         AI answers, retrieval, and safety checks
+│   └── persona/                       Persona data, publishing, and CV services
+├── *.config.*                          Build, lint, test, and TypeScript configuration
+├── package.json                        Scripts and dependencies
+└── README.md                           Setup, configuration, commands, and this map
 ```
 
-Portfolio content is maintained in the typed modules under `content/`. Persona-based pages and admin editing are implemented in `server/persona/` and `components/admin/studio/`.
+The tree highlights the main source areas rather than every file. Public portfolio facts live in the typed modules under `content/`; customer and admin CV workflows are built from `app/account/`, `components/account/`, and `components/admin/studio/`. Shared persona validation and CV transformations are in `lib/persona/`, while persistence, AI training, and publishing are handled in `server/`.
 
 ## Tech stack
 

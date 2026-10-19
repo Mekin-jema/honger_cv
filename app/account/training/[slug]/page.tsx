@@ -7,8 +7,9 @@ import { PersonaDocShape } from "@/lib/persona/schema";
 import { roleCvName } from "@/lib/persona/training";
 import { enText } from "@/lib/persona/edit";
 import { requireCustomer } from "@/server/admin-session";
-import { personaOwnedBy } from "@/server/persona/repo";
+import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
 import { editableDraft, studioOverview } from "@/server/persona/studio";
+import { ensureCustomerStarterDraft } from "@/server/persona/templates";
 
 export const metadata: Metadata = { title: "Job Persona Studio", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -24,8 +25,16 @@ export default async function TrainingPage({
   const query = await searchParams;
   const customer = await requireCustomer(`/account/training/${slug}/`);
   if (!/^[a-z][a-z0-9-]{1,31}$/.test(slug) || !(await personaOwnedBy(slug, customer.userId))) notFound();
-  const [draft, overview] = await Promise.all([editableDraft(slug), studioOverview(slug)]);
+  const [initialDraft, overview] = await Promise.all([editableDraft(slug), studioOverview(slug)]);
+  let draft = initialDraft;
   if (!draft) notFound();
+  if (draft.source === "draft") {
+    const savedDraft = await loadDraft(slug);
+    if (savedDraft) {
+      const preparedDraft = await ensureCustomerStarterDraft(slug, savedDraft);
+      if (preparedDraft.rev !== savedDraft.rev) draft = (await editableDraft(slug)) ?? draft;
+    }
+  }
   const parsed = PersonaDocShape.safeParse(draft.doc);
   if (!parsed.success) {
     return (

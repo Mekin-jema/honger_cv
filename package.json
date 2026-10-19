@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "bun run typecheck && bun run lint && bun run test && bun run build",
-    "admin:create": "node --env-file=.env.local scripts/admin-create.mjs",
-    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mjs",
+    "admin:create": "node --env-file=.env scripts/admin-create.mjs",
+    "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
     "cv:pdf": "node scripts/cv-pdf.mjs"
   },
   "dependencies": {

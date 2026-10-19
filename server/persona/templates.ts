@@ -1,11 +1,11 @@
 import "server-only";
-import type { PersonaDocInput } from "@/lib/persona/schema";
+import { PersonaDocSchema, type BlockRef, type PersonaDoc, type PersonaDocInput } from "@/lib/persona/schema";
+import type { DraftRow } from "./repo";
+import { loadDraft, saveDraft } from "./repo";
+import { jobPersonaDoc } from "./import-job";
+import { roleCvName } from "@/lib/persona/training";
 
-/**
- * Starting points for a new persona in the admin. The marriage template follows a Bangladeshi
- * biodata's usual sections, with the visibility each item usually gets; every value is left empty for
- * the owner to fill in (empty items are ignored by the chat and the AI until they have a value).
- */
+/** Empty starting point for admin-created personas; customer CVs start from customerStarterPersona. */
 
 export function blankPersona(name: string, displayName = "Your Name"): PersonaDocInput {
   return {
@@ -20,6 +20,82 @@ export function blankPersona(name: string, displayName = "Your Name"): PersonaDo
     sidebar: [{ title: "Ask about", questionIds: ["about"], icons: true }],
     fallback: { answers: ["That's outside what this chat covers. Try one of these:"] },
   };
+}
+
+const legacySectionKeys: Partial<Record<string, string>> = {
+  stats: "stats",
+  focus: "focus",
+  beliefs: "beliefs",
+  experience: "experience",
+  projects: "projects",
+  project: "projects",
+  skills: "skills",
+  cloud: "cloud",
+  education: "education",
+  languages: "languages",
+  contact: "contact",
+  hire: "hire",
+  quotes: "recommendations",
+  stack: "this-site",
+};
+
+/** A customer's editable starting CV, copied from the public Mekin demo rather than left empty. */
+export function customerStarterPersona(headline = "Software Engineer"): PersonaDoc {
+  const doc = structuredClone(jobPersonaDoc());
+  const sectionKeys = new Set(doc.sections.map((section) => section.key));
+  const customerBlocks = (blocks: BlockRef[]): BlockRef[] => {
+    const result: BlockRef[] = [];
+    for (const block of blocks) {
+      if (block.kind === "section") {
+        result.push(block);
+        continue;
+      }
+      const key = legacySectionKeys[block.kind];
+      if (key) {
+        if (sectionKeys.has(key)) result.push({ kind: "section", key });
+        continue;
+      }
+      result.push(block);
+    }
+    return result;
+  };
+
+  doc.name = roleCvName(headline);
+  doc.legacy = false;
+  doc.site.indexable = false;
+  doc.identity.role = headline;
+  doc.identity.headline = headline;
+  doc.document.title = `${headline} CV`;
+  doc.document.fileName = "document.pdf";
+  doc.document.data = { ...doc.document.data, title: headline };
+  doc.questions = doc.questions.map((question) => ({ ...question, blocks: customerBlocks(question.blocks) }));
+  doc.fallback.blocks = customerBlocks(doc.fallback.blocks);
+
+  const parsed = PersonaDocSchema.safeParse(doc);
+  if (!parsed.success) throw new Error(`The demo CV starter is invalid: ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+  return parsed.data;
+}
+
+/** Recognizes only the untouched blank customer starter, never a partially edited profile. */
+export function isBlankCustomerPersona(doc: PersonaDoc): boolean {
+  const blank = PersonaDocSchema.parse(blankPersona(doc.name, doc.identity.name));
+  blank.identity.role = doc.identity.role;
+  blank.identity.headline = doc.identity.headline;
+  const headline = doc.identity.role ?? doc.identity.headline;
+  const role = typeof headline === "string" ? headline : headline?.en;
+  if (role) blank.hero.staticIntro = `Hi, I'm ${doc.identity.name}, ${role}.`;
+  return JSON.stringify(doc) === JSON.stringify(blank);
+}
+
+/** Upgrades the old empty customer starter once, using the draft revision to avoid overwriting edits. */
+export async function ensureCustomerStarterDraft(slug: string, draft: DraftRow): Promise<DraftRow> {
+  const parsed = PersonaDocSchema.safeParse(draft.doc);
+  if (!parsed.success || !isBlankCustomerPersona(parsed.data)) return draft;
+  const headlineValue = parsed.data.identity.role ?? parsed.data.identity.headline;
+  const headline = typeof headlineValue === "string" ? headlineValue : headlineValue?.en;
+  const starter = customerStarterPersona(headline?.trim() || "Software Engineer");
+  const rev = await saveDraft(slug, starter, draft.rev);
+  return rev === null ? (await loadDraft(slug)) ?? draft : { ...draft, doc: starter, rev };
 }
 
 const fact = (id: string, label: string, bn: string, visibility?: "unlocked" | "private") => ({ id, label: { en: label, bn }, value: "", ...(visibility ? { visibility } : {}) });

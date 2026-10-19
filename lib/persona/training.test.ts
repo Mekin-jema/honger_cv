@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blankPersona } from "@/server/persona/templates";
+import { blankPersona, customerStarterPersona, isBlankCustomerPersona } from "@/server/persona/templates";
 import { personaToCvData } from "./cv";
 import { PersonaDocSchema } from "./schema";
 import { hasTrainingContent, roleCvName } from "./training";
@@ -13,6 +13,32 @@ describe("roleCvName", () => {
 });
 
 describe("hasTrainingContent", () => {
+  it("starts customer CVs from the validated public demo with editable CV content", () => {
+    const doc = customerStarterPersona("Product Engineer");
+    const cv = personaToCvData(doc, "en");
+
+    expect(doc.legacy).toBe(false);
+    expect(doc.site.indexable).toBe(false);
+    expect(doc.identity.name).toBe("Mekin Jemal");
+    expect(cv.title).toBe("Product Engineer");
+    expect(cv.profile.length).toBeGreaterThan(0);
+    expect(cv.experience.length).toBeGreaterThan(0);
+    expect(cv.projects.length).toBeGreaterThan(0);
+    expect(hasTrainingContent(doc)).toBe(true);
+    expect(PersonaDocSchema.safeParse(doc).success).toBe(true);
+  });
+
+  it("only upgrades an untouched blank customer profile", () => {
+    const doc = PersonaDocSchema.parse(blankPersona("Product Engineer CV", "Alex Example"));
+    doc.identity.role = "Product Engineer";
+    doc.identity.headline = "Product Engineer";
+    doc.hero.staticIntro = "Hi, I'm Alex Example, Product Engineer.";
+
+    expect(isBlankCustomerPersona(doc)).toBe(true);
+    doc.hero.staticIntro = "I build thoughtful products.";
+    expect(isBlankCustomerPersona(doc)).toBe(false);
+  });
+
   it("does not treat the generated Job CV starter as trained", () => {
     const doc = PersonaDocSchema.parse(blankPersona("John's Job profile", "John"));
     doc.identity.role = "Software Engineer";

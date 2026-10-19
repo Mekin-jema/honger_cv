@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { ArrowRight } from "lucide-react";
 import { CvSheet, cvSheetLayoutForTemplate, cvTemplateStyle } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -32,6 +33,8 @@ export function CvStudio({
   initialAccentColor = palettes[1].color,
   onDesignChange,
   onPrint,
+  onNextStep,
+  nextStepLabel = "Continue to edit CV",
   showSidebarToggle = true,
 }: {
   cv: CvData;
@@ -39,6 +42,8 @@ export function CvStudio({
   initialAccentColor?: string;
   onDesignChange?: (design: CvDesign) => void;
   onPrint?: () => void;
+  onNextStep?: () => void;
+  nextStepLabel?: string;
   showSidebarToggle?: boolean;
 }) {
   const [template, setTemplate] = useState<CvTemplateId>(initialTemplate);
@@ -68,11 +73,21 @@ export function CvStudio({
           <div className="cv-studio-heading-copy">
             <p className="cv-studio-eyebrow">CV STUDIO</p>
             <h1>Choose your CV design</h1>
-            <p>Select a template to preview your CV, then save that design as a PDF.</p>
+            <p>
+              {onNextStep
+                ? "Choose a template to preview your CV, then continue to edit your information."
+                : "Select a template to preview your CV, then save that design as a PDF."}
+            </p>
           </div>
         </div>
         <div className="cv-studio-heading-side">
-          <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+          {onNextStep ? (
+            <button type="button" className="cv-tool-primary" onClick={onNextStep}>
+              {nextStepLabel} <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          ) : (
+            <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+          )}
           <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>
             <div className="cv-color-options">

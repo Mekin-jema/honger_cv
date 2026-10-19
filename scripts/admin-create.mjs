@@ -16,11 +16,20 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import net from "node:net";
+import dns from "node:dns";
 import pg from "pg";
 import { betterAuth } from "better-auth";
 import { hashPassword } from "better-auth/crypto";
 import { authOptions } from "../server/auth-options.mjs";
 import { runMigrations } from "../server/migrate.mjs";
+
+if (typeof net.setDefaultAutoSelectFamily === "function") {
+  net.setDefaultAutoSelectFamily(false);
+}
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 if ((!process.env.DATABASE_URL || !process.env.BETTER_AUTH_SECRET) && existsSync(path.join(root, ".env")) && typeof process.loadEnvFile === "function") {
@@ -180,7 +189,13 @@ try {
     printBackupCodes(codes);
   }
 } catch (err) {
-  console.error(`Failed: ${err instanceof Error ? err.message : err}`);
+  const msg =
+    err instanceof AggregateError && err.errors?.length
+      ? err.errors.map((e) => e.message || String(e)).join("; ")
+      : err instanceof Error
+        ? err.message || err.name
+        : String(err);
+  console.error(`Failed: ${msg || err}`);
   process.exitCode = 1;
 } finally {
   await pool.end();
