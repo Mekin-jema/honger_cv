@@ -50,7 +50,6 @@ function ShareLinks({ slug, pdfPath }: { slug: string; pdfPath?: string }) {
           </li>
         ))}
       </ul>
-      {!pdfPath && <p className="mt-3 text-xs text-muted">The PDF link will appear here once a PDF has been generated for this published design.</p>}
       {error && <p role="alert" className="mt-2 text-xs text-accent">{error}</p>}
       {copied && <p role="status" className="sr-only">{copied} link copied.</p>}
     </section>

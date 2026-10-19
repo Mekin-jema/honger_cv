@@ -17,7 +17,7 @@ export default async function PublicPersonaIntent({
   return (
     <PublicPersonaFrame persona={persona}>
       <PersonaShell p={persona}>
-        <ChatApp initialIntent={intent} aiEnabled={aiEnabled()} />
+        <ChatApp initialIntent={intent} aiEnabled={aiEnabled()} showSidebarToggle={false} />
       </PersonaShell>
     </PublicPersonaFrame>
   );

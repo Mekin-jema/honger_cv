@@ -12,7 +12,7 @@ import { publicPersona } from "@/server/persona/public";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ download?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : {};
 }
 
-export default async function PublicCvPage({ params }: Props) {
-  const { slug } = await params;
+export default async function PublicCvPage({ params, searchParams }: Props) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const persona = await publicPersona(slug);
   if (!persona || persona.compiled.doc.document.gated) notFound();
   const { doc } = persona.compiled;
@@ -36,15 +36,20 @@ export default async function PublicCvPage({ params }: Props) {
   const accentColor = typeof data.cvAccent === "string" && /^#[0-9a-f]{6}$/i.test(data.cvAccent) ? data.cvAccent : "#b5400f";
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona} wide showHeader={false}>
+      <PersonaShell p={persona} wide>
         <CvStudio
           cv={personaToCvData(doc, persona.lang)}
           initialTemplate={template}
           initialAccentColor={accentColor}
           downloadUrl={persona.compiled.pdfPath ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          autoPrint={query.download === "1"}
           onDownload={() => {
             void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
               .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF download:", err));
+          }}
+          onPrint={() => {
+            void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
+              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));
           }}
           showSidebarToggle={false}
         />

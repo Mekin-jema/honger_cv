@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { ChevronUp, CircleUserRound, LogOut, LoaderCircle } from "lucide-react";
 import { useSidebar, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import {
@@ -75,7 +74,7 @@ export function NavUser({
               </span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href={withBase("/account/")} />}>
+            <DropdownMenuItem onClick={() => window.location.assign(withBase("/account/"))}>
               <CircleUserRound aria-hidden="true" />
               Account
             </DropdownMenuItem>

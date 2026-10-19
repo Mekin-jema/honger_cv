@@ -14,9 +14,10 @@ type Props = {
   onNew: () => void;
   onAsk: (intentId: string) => void;
   privateMode?: boolean;
+  showSidebarToggle?: boolean;
 };
 
-export function TopBar({ onNew, onAsk, privateMode = false }: Props) {
+export function TopBar({ onNew, onAsk, privateMode = false, showSidebarToggle = true }: Props) {
   const persona = usePersona();
   const { document: doc, availability } = persona;
   const [copied, setCopied] = useState(false);
@@ -33,7 +34,7 @@ export function TopBar({ onNew, onAsk, privateMode = false }: Props) {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-1 px-2 md:px-3">
-      {!privateMode && <SidebarTrigger className="mr-1" />}
+      {!privateMode && showSidebarToggle && <SidebarTrigger className="mr-1" />}
       {!privateMode && availability.show && <Availability onClick={availability.action ? () => onAsk(availability.action!) : undefined} className="ml-1" />}
       {!privateMode && <UnlockedPill />}
 

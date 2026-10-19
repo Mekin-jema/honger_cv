@@ -64,6 +64,7 @@ export function ChatApp({
   trackEvents = true,
   syncUrlPaths = true,
   privateMode = false,
+  showSidebarToggle = true,
 }: {
   initialIntent?: string;
   initialQuestion?: string;
@@ -72,6 +73,7 @@ export function ChatApp({
   trackEvents?: boolean;
   syncUrlPaths?: boolean;
   privateMode?: boolean;
+  showSidebarToggle?: boolean;
 }) {
   const persona = usePersona();
   // The landing screen shows a short, curated set; "More" opens the full list.
@@ -244,6 +246,7 @@ export function ChatApp({
               onNew={reset}
               onAsk={ask}
               privateMode={privateMode}
+              showSidebarToggle={showSidebarToggle}
             />
 
             <LayoutGroup>

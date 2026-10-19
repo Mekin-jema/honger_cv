@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowRight, Download } from "lucide-react";
 import { CvSheet, cvSheetLayoutForTemplate, cvTemplateStyle } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
@@ -35,6 +35,7 @@ export function CvStudio({
   onPrint,
   onDownload,
   downloadUrl,
+  autoPrint = false,
   onNextStep,
   nextStepLabel = "Continue to edit CV",
   showSidebarToggle = true,
@@ -46,6 +47,7 @@ export function CvStudio({
   onPrint?: () => void;
   onDownload?: () => void;
   downloadUrl?: string | null;
+  autoPrint?: boolean;
   onNextStep?: () => void;
   nextStepLabel?: string;
   showSidebarToggle?: boolean;
@@ -62,6 +64,12 @@ export function CvStudio({
   };
   const selectedTemplate = CV_TEMPLATES.find((item) => item.id === template) ?? CV_TEMPLATES[0];
   const selectedPalette = palettes.find((item) => item.color === accentColor);
+
+  useEffect(() => {
+    if (!autoPrint) return;
+    const timer = window.setTimeout(() => window.print(), 500);
+    return () => window.clearTimeout(timer);
+  }, [autoPrint]);
 
   return (
     <div
@@ -97,9 +105,7 @@ export function CvStudio({
                 <Download className="size-4" aria-hidden="true" /> Download selected PDF
               </a>
             ) : (
-              <span className="cv-tool cv-tool-primary" aria-disabled="true" title="The PDF is created during Publish & train.">
-                <Download className="size-4" aria-hidden="true" /> PDF ready after publishing
-              </span>
+              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
             )
           )}
           <fieldset className="cv-color-picker cv-heading-color-picker">

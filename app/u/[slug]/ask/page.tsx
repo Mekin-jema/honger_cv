@@ -16,7 +16,7 @@ export default async function PublicPersonaChat({
   return (
     <PublicPersonaFrame persona={persona}>
       <PersonaShell p={persona}>
-        <ChatApp aiEnabled={aiEnabled()} />
+        <ChatApp aiEnabled={aiEnabled()} showSidebarToggle={false} />
       </PersonaShell>
     </PublicPersonaFrame>
   );

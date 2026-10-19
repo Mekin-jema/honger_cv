@@ -14,7 +14,7 @@ export default async function PublicPersonaPage({
   if (!persona || page === "ask" || page === "api") notFound();
   return (
     <PublicPersonaFrame persona={persona}>
-      <PersonaShell p={persona} showHeader={false}>
+      <PersonaShell p={persona}>
         <PersonaPage p={persona} pageKey={page} />
       </PersonaShell>
     </PublicPersonaFrame>

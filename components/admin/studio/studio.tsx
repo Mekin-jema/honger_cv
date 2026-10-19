@@ -141,8 +141,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
   const props: TabProps = { slug, draft, doc, bangla, ai: overview.ai, go, focus, mode, notify };
   const issues = draft.status.issues.length;
   const busy = publish.running;
-  const pdfStep = publish.job?.progress.steps.find((step) => step.id === "pdf");
-  const publicPdfPath = mode === "customer" && pdfStep?.state === "done" && !doc.document?.gated && typeof doc.document?.fileName === "string"
+  const publicPdfPath = mode === "customer" && !doc.document?.gated && typeof doc.document?.fileName === "string"
     ? `/u/${slug}/d/${encodeURIComponent(doc.document.fileName)}`
     : undefined;
 
@@ -231,7 +230,7 @@ export function Studio({ slug, name, initial, overview: initialOverview, tab: in
             <Link href={`/u/${slug}/ask/`} target="_blank" className="rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold">Public AI chat</Link>
             <Link href={`/account/#cv-${slug}`} className="rounded-lg bg-emerald-900 px-3 py-2 text-sm font-semibold text-white dark:bg-emerald-200 dark:text-emerald-950">Copy/share links</Link>
           </div>
-          {!publicPdfPath && <p className="text-xs sm:col-span-2">The PDF could not be generated during publishing. Check the PDF step in the publish report.</p>}
+          {publicPdfPath && <p className="text-xs sm:col-span-2">If a direct PDF file is unavailable, this link opens your selected CV design so you can save it as a PDF.</p>}
         </section>
       )}
 
