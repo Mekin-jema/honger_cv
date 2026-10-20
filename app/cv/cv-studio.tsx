@@ -37,6 +37,8 @@ export function CvStudio({
   analyticsUrl,
   downloadUrl,
   autoPrint = false,
+  showDesignPicker = true,
+  allowPrintFallback = true,
   onNextStep,
   nextStepLabel = "Continue to edit CV",
   showSidebarToggle = true,
@@ -50,6 +52,8 @@ export function CvStudio({
   analyticsUrl?: string;
   downloadUrl?: string | null;
   autoPrint?: boolean;
+  showDesignPicker?: boolean;
+  allowPrintFallback?: boolean;
   onNextStep?: () => void;
   nextStepLabel?: string;
   showSidebarToggle?: boolean;
@@ -99,12 +103,14 @@ export function CvStudio({
           {showSidebarToggle && <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />}
           <ThemeToggle className="cv-tool cv-theme-toggle" />
           <div className="cv-studio-heading-copy">
-            <p className="cv-studio-eyebrow">CV STUDIO</p>
-            <h1>Choose your CV design</h1>
+            <p className="cv-studio-eyebrow">{showDesignPicker ? "CV STUDIO" : "SELECTED CV DESIGN"}</p>
+            <h1>{showDesignPicker ? "Choose your CV design" : cv.identity?.name ?? "Curriculum vitae"}</h1>
             <p>
-              {onNextStep
-                ? "Choose a template to preview your CV, then continue to edit your information."
-                : "Select a template to preview your CV, then save that design as a PDF."}
+              {!showDesignPicker
+                ? "This CV is shown in the design selected by its owner."
+                : onNextStep
+                  ? "Choose a template to preview your CV, then continue to edit your information."
+                  : "Select a template to preview your CV, then save that design as a PDF."}
             </p>
           </div>
         </div>
@@ -114,17 +120,17 @@ export function CvStudio({
               {nextStepLabel} <ArrowRight className="size-4" aria-hidden="true" />
             </button>
           ) : (
-            downloadUrl === undefined ? (
+            downloadUrl === undefined && allowPrintFallback ? (
               <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={trackPrint} />
             ) : downloadUrl ? (
               <a href={downloadUrl} download onClick={trackDownload} className="cv-tool cv-tool-primary" aria-label={`Download the selected ${selectedTemplate.name} CV as PDF`}>
                 <Download className="size-4" aria-hidden="true" /> Download selected PDF
               </a>
-            ) : (
+            ) : allowPrintFallback ? (
               <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={trackPrint} />
-            )
+            ) : <span className="cv-tool cv-tool-primary" aria-disabled="true">PDF download is not ready</span>
           )}
-          <fieldset className="cv-color-picker cv-heading-color-picker">
+          {showDesignPicker && <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>
             <div className="cv-color-options">
               {palettes.map((item) => (
@@ -150,12 +156,12 @@ export function CvStudio({
                 <span>Custom</span>
               </label>
             </div>
-          </fieldset>
+          </fieldset>}
         </div>
       </section>
 
-      <div className="cv-studio-layout">
-        <aside className="cv-template-section no-print" aria-labelledby="cv-template-heading">
+      <div className="cv-studio-layout" data-shared-view={!showDesignPicker || undefined}>
+        {showDesignPicker && <aside className="cv-template-section no-print" aria-labelledby="cv-template-heading">
           <div className="cv-template-heading">
             <div>
               <h2 id="cv-template-heading">Choose a layout</h2>
@@ -194,18 +200,20 @@ export function CvStudio({
               </button>
             ))}
           </div>
-        </aside>
+        </aside>}
 
         <section className="cv-preview-panel" aria-label="Live CV preview">
-          <div className="cv-preview-heading no-print">
-            <div>
-              <h2>Live preview</h2>
-              <p>
-                {selectedTemplate.name} design · {selectedPalette?.name ?? accentColor.toUpperCase()} accent · Updates as you choose
-              </p>
+          {showDesignPicker && (
+            <div className="cv-preview-heading no-print">
+              <div>
+                <h2>Live preview</h2>
+                <p>
+                  {selectedTemplate.name} design · {selectedPalette?.name ?? accentColor.toUpperCase()} accent · Updates as you choose
+                </p>
+              </div>
+              <span className="cv-preview-status"><span aria-hidden="true" /> Ready to save</span>
             </div>
-            <span className="cv-preview-status"><span aria-hidden="true" /> Ready to save</span>
-          </div>
+          )}
 
           <main aria-label={`${selectedTemplate.name} CV preview`}>
             <CvSheet

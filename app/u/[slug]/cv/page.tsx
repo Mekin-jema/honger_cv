@@ -12,7 +12,7 @@ import { publicPersona } from "@/server/persona/public";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ download?: string }> };
+type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : {};
 }
 
-export default async function PublicCvPage({ params, searchParams }: Props) {
-  const [{ slug }, query] = await Promise.all([params, searchParams]);
+export default async function PublicCvPage({ params }: Props) {
+  const { slug } = await params;
   const persona = await publicPersona(slug);
   if (!persona || persona.compiled.doc.document.gated) notFound();
   const { doc } = persona.compiled;
@@ -41,9 +41,10 @@ export default async function PublicCvPage({ params, searchParams }: Props) {
           cv={personaToCvData(doc, persona.lang)}
           initialTemplate={template}
           initialAccentColor={accentColor}
-          downloadUrl={persona.compiled.pdfPath && query.download !== "1" ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          downloadUrl={persona.compiled.pdfPath ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
           analyticsUrl={withBase(`/u/${slug}/api/pdf/`)}
-          autoPrint={query.download === "1"}
+          showDesignPicker={false}
+          allowPrintFallback={false}
           showSidebarToggle={false}
         />
       </PersonaShell>

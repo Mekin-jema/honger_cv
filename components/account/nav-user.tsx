@@ -96,7 +96,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/account/" />}>
+              <DropdownMenuItem >
                 <CircleUserRound aria-hidden="true" />
                 My CVs
               </DropdownMenuItem>

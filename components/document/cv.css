@@ -203,6 +203,9 @@
   align-items: start;
   gap: 24px;
 }
+.cv-studio-layout[data-shared-view] {
+  grid-template-columns: minmax(0, 1fr);
+}
 .cv-preview-panel {
   min-width: 0;
 }

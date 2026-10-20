@@ -19,7 +19,8 @@ function ShareLinks({ slug, pdfPath }: { slug: string; pdfPath?: string }) {
   const [error, setError] = useState<string>();
   const links = [
     { label: "Portfolio", path: `/u/${slug}/` },
-    ...(pdfPath ? [{ label: "CV PDF", path: pdfPath }] : []),
+    { label: "Selected CV design", path: `/u/${slug}/cv/` },
+    ...(pdfPath ? [{ label: "Download CV PDF", path: pdfPath }] : []),
     { label: "Public AI chat", path: `/u/${slug}/ask/` },
   ];
 
@@ -40,7 +41,7 @@ function ShareLinks({ slug, pdfPath }: { slug: string; pdfPath?: string }) {
       <ul className="mt-3 space-y-2">
         {links.map(({ label, path }) => (
           <li key={label} className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="w-36 shrink-0 font-medium">{label === "CV PDF" ? "CV PDF / Save as PDF" : label}</span>
+            <span className="w-36 shrink-0 font-medium">{label}</span>
             <a href={withBase(path)} target="_blank" rel="noreferrer" className="min-w-0 flex-1 break-all text-accent underline underline-offset-2">{path}</a>
             <button type="button" onClick={() => void copy(label, path)} className="min-h-9 rounded-lg border border-line-strong px-3 text-xs font-semibold hover:bg-surface">
               {copied === label ? "Copied" : "Copy"}
@@ -48,7 +49,9 @@ function ShareLinks({ slug, pdfPath }: { slug: string; pdfPath?: string }) {
           </li>
         ))}
       </ul>
-      {pdfPath && <p className="mt-3 text-xs leading-5 text-muted">If the ready-made PDF file is unavailable, this link opens your selected CV design so you can save it as a PDF.</p>}
+      <p className="mt-3 text-xs leading-5 text-muted">
+        The selected-design link opens your CV in the template you chose. The PDF link, when available, downloads the file directly.
+      </p>
       {error && <p role="alert" className="mt-2 text-xs text-accent">{error}</p>}
       {copied && <p role="status" className="sr-only">{copied} link copied.</p>}
     </section>

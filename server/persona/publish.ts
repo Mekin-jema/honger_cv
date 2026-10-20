@@ -10,7 +10,7 @@ import { query, withTransaction } from "../db";
 import { createJob, runJob, type Job, type JobContext } from "../jobs";
 import { invalidatePersona } from "./cache";
 import { compilePersona, docHash, type CompiledPersona } from "./compile";
-import { renderDocumentPdf } from "./pdf";
+import { renderDocumentPdf, storePersonaPdf } from "./pdf";
 import { loadDraft, nextVersionNumber } from "./repo";
 import { recordPlatformEventSafely } from "../platform-events";
 
@@ -148,8 +148,12 @@ export async function runPublish(jobId: string, slug: string, doc: PersonaDoc, h
           ctx.warn(res.skipped);
           return "skipped";
         }
-        await query("UPDATE persona_versions SET pdf_path = $2 WHERE id = $1", [versionId, res.path]);
+        const storedPath = await storePersonaPdf(res.path, slug, compiled.number);
+        await query("UPDATE persona_versions SET pdf_path = $2 WHERE id = $1", [versionId, storedPath]);
         invalidatePersona(slug);
+        if (!storedPath.startsWith("https://")) {
+          ctx.warn("PDF saved only to local storage. Configure Cloudinary to keep customer downloads available across serverless deployments.");
+        }
         if (doc.legacy && res.pages > 2) ctx.warn(`The CV PDF is ${res.pages} pages long: shorten it back to 2 (recruiters skim, and the layout is made for 2).`);
         return `${res.pages} ${res.pages === 1 ? "page" : "pages"}, ${Math.round(res.bytes / 1024)} KB`;
       } catch (err) {

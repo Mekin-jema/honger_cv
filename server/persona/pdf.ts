@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync } fr
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { v2 as cloudinary } from "cloudinary";
 import { signToken, verifyToken } from "../access/cookie";
 import type { Tier } from "@/lib/persona/types";
 import { documentOpen } from "./compile";
@@ -57,34 +58,82 @@ export async function servePersonaPdf(file: string, compiled: CompiledPersona, t
   });
   if (file !== doc.document.fileName || !documentOpen(doc, tier)) return missing();
 
-  let full: string;
-  if (pdfPath) {
-    const root = docsDir();
-    full = path.resolve(root, pdfPath);
-    if (!full.startsWith(root + path.sep)) return missing();
-  } else if (doc.legacy) {
-    full = path.join(/*turbopackIgnore: true*/ process.cwd(), "public", doc.document.fileName);
-  } else return missing();
-
   let body: Buffer;
-  try {
-    body = await readFile(full);
-  } catch {
-    if (!doc.legacy || !pdfPath) return missing();
+  if (pdfPath) {
+    if (pdfPath.startsWith("https://")) {
+      let remote: URL;
+      try {
+        remote = new URL(pdfPath);
+      } catch {
+        return missing();
+      }
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
+      if (
+        !cloudName ||
+        remote.hostname !== "res.cloudinary.com" ||
+        !remote.pathname.startsWith(`/${cloudName}/raw/upload/`)
+      ) return missing();
+      try {
+        const response = await fetch(remote, { cache: "force-cache" });
+        body = Buffer.from(await response.arrayBuffer());
+        if (!response.ok || body.length > 20_000_000 || body.subarray(0, 5).toString("ascii") !== "%PDF-") return missing();
+      } catch (error) {
+        console.error(`[persona-pdf] Could not fetch stored PDF for ${compiled.slug}:`, error instanceof Error ? error.message : error);
+        return new Response("PDF download is temporarily unavailable. Please try again.", {
+          status: 502,
+          headers: { "cache-control": "no-store", "x-robots-tag": "noindex" },
+        });
+      }
+    } else {
+      const root = docsDir();
+      const full = path.resolve(root, pdfPath);
+      if (!full.startsWith(root + path.sep)) return missing();
+      try {
+        body = await readFile(full);
+      } catch {
+        return missing();
+      }
+    }
+  } else if (doc.legacy) {
     try {
       body = await readFile(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", doc.document.fileName));
     } catch {
       return missing();
     }
-  }
+  } else return missing();
+
+  const filename = doc.document.fileName.replace(/["\\\r\n]/g, "_");
   return new Response(new Uint8Array(body), {
     headers: {
       "content-type": "application/pdf",
-      "content-disposition": `${doc.legacy ? "inline" : "attachment"}; filename="${doc.document.fileName}"`,
-      ...(doc.legacy ? {} : { "x-robots-tag": "noindex" }),
+      "content-disposition": `attachment; filename="${filename}"`,
+      "x-robots-tag": "noindex",
       "cache-control": doc.document.gated ? "private, no-store" : "public, max-age=3600",
     },
   });
+}
+
+/** Persists generated PDFs outside the ephemeral filesystem when Cloudinary is configured. */
+export async function storePersonaPdf(
+  localPath: string,
+  slug: string,
+  version: number,
+): Promise<string> {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
+  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
+  if (!cloudName || !apiKey || !apiSecret) return localPath;
+
+  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
+  const uploaded = await cloudinary.uploader.upload(localPath, {
+    resource_type: "raw",
+    public_id: `honger-cv/customers/${slug}/cv/v${version}.pdf`,
+    overwrite: true,
+    invalidate: true,
+    tags: ["customer-cv-pdf"],
+  });
+  if (!uploaded.secure_url) throw new Error("Cloudinary returned no secure PDF URL.");
+  return uploaded.secure_url;
 }
 
 /** Prints the live version's document page to DOCS_DIR/<slug>/v<number>.pdf. */
