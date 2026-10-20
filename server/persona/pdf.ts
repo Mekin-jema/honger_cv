@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
+import chromium from "@sparticuz/chromium";
 import { signToken, verifyToken } from "../access/cookie";
 import type { Tier } from "@/lib/persona/types";
 import { documentOpen } from "./compile";
@@ -70,11 +71,17 @@ export async function servePersonaPdf(file: string, compiled: CompiledPersona, t
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
       if (
         !cloudName ||
+        remote.protocol !== "https:" ||
         remote.hostname !== "res.cloudinary.com" ||
+        remote.port ||
+        remote.username ||
+        remote.password ||
         !remote.pathname.startsWith(`/${cloudName}/raw/upload/`)
       ) return missing();
       try {
         const response = await fetch(remote, { cache: "force-cache" });
+        const contentLength = Number(response.headers.get("content-length") ?? 0);
+        if (contentLength > 20_000_000) return missing();
         body = Buffer.from(await response.arrayBuffer());
         if (!response.ok || body.length > 20_000_000 || body.subarray(0, 5).toString("ascii") !== "%PDF-") return missing();
       } catch (error) {
@@ -141,8 +148,8 @@ export async function renderDocumentPdf(c: CompiledPersona, selfOrigin: string):
   if (!c.versionId) return { skipped: "Not a published version." };
   // The job persona prints its CV (/cv/); others print the sections chosen for their document.
   if (!c.doc.legacy && c.doc.document.kind !== "cv" && !c.doc.document.sections.length) return { skipped: "The document has no sections to print." };
-  const chrome = chromePath();
-  if (!chrome) return { skipped: "No Chrome or Edge on this server (set CHROME_PATH): the PDF was not made. The document page still works." };
+  const localChrome = chromePath();
+  const chrome = localChrome ?? await chromium.executablePath();
   const token = printToken(c.slug, c.versionId);
   if (!token) return { skipped: "PERSONA_SIGNING_SECRET is not set: the PDF was not made." };
 
@@ -157,6 +164,7 @@ export async function renderDocumentPdf(c: CompiledPersona, selfOrigin: string):
       const child = spawn(
         /*turbopackIgnore: true*/ chrome,
         [
+          ...(!localChrome ? chromium.args : []),
           "--headless=new",
           "--disable-gpu",
           "--no-first-run",

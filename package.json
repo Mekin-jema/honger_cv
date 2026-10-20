@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.9"
+    "node": ">=20.11"
   },
   "scripts": {
     "dev": "next dev",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.99",
     "@base-ui/react": "^1.9.0",
-    "@sparticuz/chromium": "^153.0.0",
+    "@sparticuz/chromium": "140.0.0",
     "ai": "^7.0.143",
     "better-auth": "^1.7.10",
     "class-variance-authority": "^0.7.1",

@@ -41,7 +41,7 @@ export default async function PublicCvPage({ params }: Props) {
           cv={personaToCvData(doc, persona.lang)}
           initialTemplate={template}
           initialAccentColor={accentColor}
-          downloadUrl={persona.compiled.pdfPath ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          downloadUrl={doc.document.kind === "cv" && !doc.document.gated ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
           analyticsUrl={withBase(`/u/${slug}/api/pdf/`)}
           showDesignPicker={false}
           allowPrintFallback={false}

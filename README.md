@@ -64,6 +64,7 @@ Preview the same CV across a collection of layouts and accent colors before savi
 | `/skills/` | Technologies and capabilities |
 | `/contact/` | Contact details and message form |
 | `/cv/` | Printable CV and PDF download |
+| `/u/<profile-slug>/cv/` | Published CV in the owner's selected design, with a direct PDF download |
 | `/admin/` | Private inbox, analytics, and visitor activity |
 | `/admin/personas/` | Persona management and content studio |
 
@@ -86,7 +87,7 @@ The CV Studio landing page is the public home page. The **Open CV Studio** actio
 ### Requirements
 
 - [Bun](https://bun.sh/) 1.4.3 (the project’s package manager)
-- Node.js 20.9 or later
+- Node.js 20.11 or later
 - PostgreSQL for persistent data and admin features
 
 ### Install and run
@@ -117,9 +118,9 @@ Open [http://localhost:3000](http://localhost:3000). The portfolio and curated c
 | `PERSONA_SIGNING_SECRET` | Signed persona access and preview tokens | Use a private secret of at least 32 characters. |
 | `NEXT_PUBLIC_SITE_URL` | Canonical metadata and sitemap | Public HTTPS origin in production, normally the same origin as `BETTER_AUTH_URL`. Defaults to localhost for local development. |
 | `GEMINI_API_KEY` | Optional generated answers | Without it, curated answers remain available. |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Customer CV photo uploads | Public cloud name from the Cloudinary dashboard. |
-| `CLOUDINARY_API_KEY` | Customer CV photo uploads | Cloudinary API key; used only by the server. |
-| `CLOUDINARY_API_SECRET` | Customer CV photo uploads | Cloudinary API secret; keep private and never prefix it with `NEXT_PUBLIC_`. |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Customer CV photos and published PDFs | Public cloud name from the Cloudinary dashboard. |
+| `CLOUDINARY_API_KEY` | Customer CV photos and published PDFs | Cloudinary API key; used only by the server. |
+| `CLOUDINARY_API_SECRET` | Customer CV photos and published PDFs | Cloudinary API secret; keep private and never prefix it with `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Optional unsigned image uploads | Not used by the current signed server upload route; leave blank unless a restricted unsigned upload is deliberately added. |
 | `MAIL_PROVIDER` | Email delivery for sign-in codes | `resend`, `log`, or `none`. Production email needs `RESEND_API_KEY` and `MAIL_FROM`. |
 | `RESEND_API_KEY` | Resend email delivery | Needed when `MAIL_PROVIDER=resend`. |
@@ -138,6 +139,8 @@ Set the generated value for each secret independently. Do not reuse a production
 ### Customer CV photos
 
 Create a Cloudinary account and add its cloud name, API key, and API secret to `.env.local` for local development and to the Vercel project's Production environment for deployment. Customer uploads are accepted only for authenticated CV owners and are limited to JPG, PNG, and WebP images up to 3 MB. The server verifies the file signature, stores the image in that customer's Cloudinary folder, and serves a resized, automatically optimized secure URL. The server signs uploads; `CLOUDINARY_API_SECRET` is never included in browser code. `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` is included in the template for configuration compatibility but is not required by this signed upload flow.
+
+Published customer PDFs are generated with the selected CV design and stored as Cloudinary raw assets. The share endpoint serves them with an attachment disposition so clicking **Download PDF** downloads a file rather than opening a print page. Serverless Chromium is bundled for publish jobs; allocate at least 512 MB of memory to the function.
 
 ### Source CV uploads
 
@@ -167,7 +170,7 @@ Customers can register at `/register/`, sign in at `/login/`, and manage their C
 
 Customer login and registration support Google and GitHub when the matching client ID and secret are configured. Register each callback URI with the provider, including `/api/auth/callback/google` or `/api/auth/callback/github` after the app origin (and any configured base path). For GitHub OAuth Apps, Better Auth requests `user:email`; for GitHub Apps, grant **Account permissions → Email addresses → Read-only** as well. OAuth may link to an existing customer account only when the provider verifies the matching email. Admin accounts cannot be linked to social providers; administrators continue to use email/password plus the existing email verification code. OAuth state and session cookies use `SameSite=Lax` to support the cross-site callback and its immediate redirect; all other auth cookies remain `SameSite=Strict`.
 
-The private assistant is available after the customer first publishes and trains the CV. Before then, Ask AI explains that the user must add or edit information with the forms or JSON editor, then choose **Publish & train**. Published profiles are available at `/u/<profile-slug>/`, where their CV and public AI assistant use the saved profile and design. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
+The private assistant is available after the customer first publishes and trains the CV. Before then, Ask AI explains that the user must add or edit information with the forms or JSON editor, then choose **Publish & train**. Published profiles are available at `/u/<profile-slug>/`; the direct `/u/<profile-slug>/cv/` share link uses the owner's saved template and does not let recipients switch designs. PDF links download the generated file directly rather than opening a print page. Published customer PDFs are stored in Cloudinary so they remain available across serverless instances; configure the Cloudinary server credentials above. Chromium is bundled for serverless PDF generation, and publishing uses a locally installed Chrome/Edge when available. The existing Mekin portfolio remains the public demo. Customer requests cannot access the shared `/admin/personas/job/` editor or another owner's persona.
 
 Persona ownership is checked on customer APIs, publishing jobs, and profile pages. Platform event totals are visible only to administrators in the `/admin/` dashboard. Apply the pending migrations before enabling customer registration in an existing deployment.
 

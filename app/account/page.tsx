@@ -25,7 +25,7 @@ export default async function AccountPage() {
       role: parsed.success ? enText(parsed.data.identity.role ?? parsed.data.identity.headline) : "",
       identityName,
       publishedVersionId: persona.publishedVersionId,
-      pdfPath: persona.publishedVersionId && published?.pdfPath && live.success && live.data.document.kind === "cv" && !live.data.document.gated
+      pdfPath: persona.publishedVersionId && live.success && live.data.document.kind === "cv" && !live.data.document.gated
         ? `/u/${persona.slug}/d/${encodeURIComponent(live.data.document.fileName)}`
         : undefined,
     };
