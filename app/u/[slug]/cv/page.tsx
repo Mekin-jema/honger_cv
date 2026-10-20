@@ -42,15 +42,8 @@ export default async function PublicCvPage({ params, searchParams }: Props) {
           initialTemplate={template}
           initialAccentColor={accentColor}
           downloadUrl={persona.compiled.pdfPath && query.download !== "1" ? withBase(`${persona.base}${documentPdfPath(doc)}`) : null}
+          analyticsUrl={withBase(`/u/${slug}/api/pdf/`)}
           autoPrint={query.download === "1"}
-          onDownload={() => {
-            void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
-              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF download:", err));
-          }}
-          onPrint={() => {
-            void fetch(withBase(`/u/${slug}/api/pdf/`), { method: "POST" })
-              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));
-          }}
           showSidebarToggle={false}
         />
       </PersonaShell>

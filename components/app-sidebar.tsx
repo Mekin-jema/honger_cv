@@ -49,9 +49,17 @@ export function AppSidebar({
   accountName,
   accountEmail,
   accountAvatar,
+  sidebarUser,
   accountPersonas = [],
   ...props
-}: ComponentProps<typeof Sidebar> & { isAdmin: boolean; accountName?: string; accountEmail?: string; accountAvatar?: string | null; accountPersonas?: AccountSidebarPersona[] }) {
+}: ComponentProps<typeof Sidebar> & {
+  isAdmin: boolean;
+  accountName?: string;
+  accountEmail?: string;
+  accountAvatar?: string | null;
+  sidebarUser?: { name: string; email: string; avatar?: string | null };
+  accountPersonas?: AccountSidebarPersona[];
+}) {
   const persona = usePersona()
   const pathname = usePathname().replace(/\/+$/, "") || "/"
   const routeSlug = pathname.match(/^\/account\/(?:ai|training)\/([^/]+)/)?.[1]
@@ -170,9 +178,15 @@ export function AppSidebar({
           </SidebarGroup>
         )}
       </SidebarContent>
-      {accountName && (
+      {(accountName || sidebarUser) && (
         <SidebarFooter className="border-t border-sidebar-border">
-          <NavUser user={{ name: accountName, email: accountEmail ?? "", avatar: accountAvatar ?? "" }} />
+          <NavUser
+            user={sidebarUser ?? {
+              name: accountName ?? "",
+              email: accountEmail ?? "",
+              avatar: accountAvatar,
+            }}
+          />
         </SidebarFooter>
       )}
       <SidebarRail />

@@ -11,9 +11,11 @@ import {
 export function AppShell({
   children,
   isAdmin,
+  sidebarUser,
 }: {
   children: ReactNode
   isAdmin: boolean
+  sidebarUser?: { name: string; email: string; avatar?: string | null }
 }) {
   const pathname = usePathname()
   const routePath = pathname.replace(/\/+$/, "") || "/"
@@ -34,7 +36,7 @@ export function AppShell({
 
   return (
     <SidebarProvider>
-      <AppSidebar isAdmin={isAdmin} />
+      <AppSidebar isAdmin={isAdmin} sidebarUser={sidebarUser} />
       <div className="relative flex min-w-0 flex-1 flex-col bg-background">
         {!isChatPage && !isAdminInbox && !isDashboardPage && !isCvPage && !isPersonaAdmin && !isAdminSettings && (
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b bg-background/95 px-3 backdrop-blur">

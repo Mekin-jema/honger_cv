@@ -34,6 +34,7 @@ export function CvStudio({
   onDesignChange,
   onPrint,
   onDownload,
+  analyticsUrl,
   downloadUrl,
   autoPrint = false,
   onNextStep,
@@ -46,6 +47,7 @@ export function CvStudio({
   onDesignChange?: (design: CvDesign) => void;
   onPrint?: () => void;
   onDownload?: () => void;
+  analyticsUrl?: string;
   downloadUrl?: string | null;
   autoPrint?: boolean;
   onNextStep?: () => void;
@@ -64,6 +66,20 @@ export function CvStudio({
   };
   const selectedTemplate = CV_TEMPLATES.find((item) => item.id === template) ?? CV_TEMPLATES[0];
   const selectedPalette = palettes.find((item) => item.color === accentColor);
+  const recordPdfEvent = () => {
+    if (!analyticsUrl) return;
+    void fetch(analyticsUrl, { method: "POST" }).catch((error: unknown) => {
+      console.error("[platform-analytics] Could not record PDF export:", error);
+    });
+  };
+  const trackPrint = () => {
+    onPrint?.();
+    recordPdfEvent();
+  };
+  const trackDownload = () => {
+    onDownload?.();
+    recordPdfEvent();
+  };
 
   useEffect(() => {
     if (!autoPrint) return;
@@ -99,13 +115,13 @@ export function CvStudio({
             </button>
           ) : (
             downloadUrl === undefined ? (
-              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={trackPrint} />
             ) : downloadUrl ? (
-              <a href={downloadUrl} download onClick={onDownload} className="cv-tool cv-tool-primary" aria-label={`Download the selected ${selectedTemplate.name} CV as PDF`}>
+              <a href={downloadUrl} download onClick={trackDownload} className="cv-tool cv-tool-primary" aria-label={`Download the selected ${selectedTemplate.name} CV as PDF`}>
                 <Download className="size-4" aria-hidden="true" /> Download selected PDF
               </a>
             ) : (
-              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={onPrint} />
+              <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={trackPrint} />
             )
           )}
           <fieldset className="cv-color-picker cv-heading-color-picker">

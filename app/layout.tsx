@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { currentPersona } from "@/server/persona/resolve";
 import { personaOrigin } from "@/server/persona/urls";
-import { getAdminSession } from "@/server/admin-session";
+import { getAdminSession, getCustomerSession } from "@/server/admin-session";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/toast";
 
@@ -87,7 +87,8 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const persona = await currentPersona();
   const view = clientView(persona.compiled, persona.tier, persona.lang);
-  const admin = await getAdminSession();
+  const [admin, customer] = await Promise.all([getAdminSession(), getCustomerSession()]);
+  const signedInUser = admin ?? customer;
   return (
     <html
       lang={persona.lang}
@@ -99,7 +100,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {persona.compiled.doc.site.indexable && persona.compiled.doc.legacy && <JsonLd data={graph(personLd(), websiteLd())} />}
         <ThemeProvider>
           <PersonaProvider value={view} base={persona.base}>
-            <AppShell isAdmin={!!admin}>{children}</AppShell>
+            <AppShell
+              isAdmin={!!admin}
+              sidebarUser={signedInUser ? {
+                name: signedInUser.name,
+                email: signedInUser.email,
+                avatar: signedInUser.image,
+              } : undefined}
+            >
+              {children}
+            </AppShell>
           </PersonaProvider>
           {persona.preview && <PreviewBar name={persona.compiled.doc.name} tier={persona.tier} invalid={!!persona.preview.invalid} />}
           <Toaster />
