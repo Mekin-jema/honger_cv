@@ -14,6 +14,7 @@ import { currentPersona } from "@/server/persona/resolve";
 import { personaOrigin } from "@/server/persona/urls";
 import { getAdminSession } from "@/server/admin-session";
 import { AppShell } from "@/components/app-shell";
+import { Toaster } from "@/components/ui/toast";
 
 /** The job persona keeps NEXT_PUBLIC_SITE_URL (as before); others use their own address (see urls.ts). */
 const legacyOrigin = (doc: PersonaDoc) => (doc.legacy ? (doc.site.url ?? siteUrl) : undefined);
@@ -101,6 +102,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <AppShell isAdmin={!!admin}>{children}</AppShell>
           </PersonaProvider>
           {persona.preview && <PreviewBar name={persona.compiled.doc.name} tier={persona.tier} invalid={!!persona.preview.invalid} />}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

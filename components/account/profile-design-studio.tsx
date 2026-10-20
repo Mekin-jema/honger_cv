@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, FileUp, LoaderCircle, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
+import { toast } from "@/components/ui/toast";
 import type { CvData, CvIdentity } from "@/lib/persona/cv";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
@@ -219,8 +220,6 @@ export function ProfileDesignStudio({
   const [importing, setImporting] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [importedCv, setImportedCv] = useState(false);
-  const [status, setStatus] = useState<string>();
-  const [error, setError] = useState<string>();
 
   const updateIdentity = (update: (identity: CvIdentity) => void) => {
     setCvData((current) => {
@@ -235,8 +234,6 @@ export function ProfileDesignStudio({
   const save = async () => {
     if (busy || importing || photoUploading) return false;
     setBusy(true);
-    setStatus(undefined);
-    setError(undefined);
     try {
       const clearDemoContent = importedCv ||
         doc.document.data?.customerStarter === true ||
@@ -276,15 +273,25 @@ export function ProfileDesignStudio({
       });
       const result = (await response.json()) as { rev?: number; error?: string };
       if (!response.ok || typeof result.rev !== "number") {
-        setError(result.error || "Couldn't save your CV design.");
+        toast.add({
+          title: "Couldn't save your CV",
+          description: result.error || "Couldn't save your CV design.",
+          type: "error",
+          priority: "high",
+        });
         return false;
       }
       setRev(result.rev);
       setDoc(nextDoc);
-      setStatus("Your CV form and design are saved to your private draft.");
+      toast.add({ title: "CV saved", description: "Your CV form and design are saved to your private draft.", type: "success" });
       return true;
     } catch {
-      setError("Couldn't reach the server. Check your connection and try again.");
+      toast.add({
+        title: "Couldn't save your CV",
+        description: "Couldn't reach the server. Check your connection and try again.",
+        type: "error",
+        priority: "high",
+      });
       return false;
     } finally {
       setBusy(false);
@@ -294,13 +301,10 @@ export function ProfileDesignStudio({
   const uploadImage = async (file: File, assetType: "profile" | "project") => {
     if (photoUploading || busy || importing) return;
     if (file.size > 3_000_000) {
-      setError("Choose an image smaller than 3 MB.");
-      setStatus(undefined);
+      toast.add({ title: "Image is too large", description: "Choose an image smaller than 3 MB.", type: "error" });
       return null;
     }
     setPhotoUploading(true);
-    setError(undefined);
-    setStatus(assetType === "profile" ? "Uploading and optimizing your photo…" : "Uploading and optimizing your project image…");
     try {
       const body = new FormData();
       body.set("file", file);
@@ -316,15 +320,27 @@ export function ProfileDesignStudio({
         error?: string;
       };
       if (!response.ok || !result.url || !result.publicId) {
-        setError(result.error || "We couldn't upload this image. Try another file.");
-        setStatus(undefined);
+        toast.add({
+          title: "Image upload failed",
+          description: result.error || "We couldn't upload this image. Try another file.",
+          type: "error",
+          priority: "high",
+        });
         return null;
       }
-      setStatus("Your image is uploaded and optimized.");
+      toast.add({
+        title: assetType === "profile" ? "Photo uploaded" : "Project image uploaded",
+        description: "Your image is uploaded and optimized.",
+        type: "success",
+      });
       return { url: result.url, publicId: result.publicId };
     } catch {
-      setError("Couldn't reach the image service. Check your connection and try again.");
-      setStatus(undefined);
+      toast.add({
+        title: "Image upload failed",
+        description: "Couldn't reach the image service. Check your connection and try again.",
+        type: "error",
+        priority: "high",
+      });
       return null;
     } finally {
       setPhotoUploading(false);
@@ -359,8 +375,6 @@ export function ProfileDesignStudio({
   const importCv = async (file: File) => {
     if (importing || busy) return;
     setImporting(true);
-    setError(undefined);
-    setStatus("Reading your PDF securely with AI…");
     try {
       const body = new FormData();
       body.set("file", file);
@@ -385,8 +399,12 @@ export function ProfileDesignStudio({
         error?: string;
       };
       if (!response.ok || !result.cv) {
-        setError(result.error || "We couldn't map this CV. Try another PDF or enter your details manually.");
-        setStatus(undefined);
+        toast.add({
+          title: "CV import failed",
+          description: result.error || "We couldn't map this CV. Try another PDF or enter your details manually.",
+          type: "error",
+          priority: "high",
+        });
         return;
       }
       const mapped = result.cv;
@@ -426,10 +444,18 @@ export function ProfileDesignStudio({
       setDoc((current) => applyImportedCv(current, nextCv, true));
       setImportedCv(true);
       setView("content");
-      setStatus("CV mapped into the form. Review every field, correct anything needed, then finish and train your AI.");
+      toast.add({
+        title: "CV imported",
+        description: "Review the mapped fields, correct anything needed, then finish and train your AI.",
+        type: "success",
+      });
     } catch {
-      setStatus(undefined);
-      setError("Couldn't reach the AI import service. Check your connection and try again.");
+      toast.add({
+        title: "CV import failed",
+        description: "Couldn't reach the AI import service. Check your connection and try again.",
+        type: "error",
+        priority: "high",
+      });
     } finally {
       setImporting(false);
     }
@@ -439,17 +465,20 @@ export function ProfileDesignStudio({
     if (busy || importing || photoUploading) return;
     if (!(await save())) return;
     setBusy(true);
-    setError(undefined);
-    setStatus("Saving your CV and starting AI training…");
     try {
       const response = await fetch(withBase(`/api/account/personas/${slug}/publish/`), { method: "POST" });
       const started = (await response.json()) as { jobId?: string; unchanged?: boolean; error?: string; issues?: string[] };
       if (!response.ok) {
-        setError([started.error, ...(started.issues ?? [])].filter(Boolean).join(" "));
-        setStatus(undefined);
+        toast.add({
+          title: "Couldn't publish your CV",
+          description: [started.error, ...(started.issues ?? [])].filter(Boolean).join(" ") || "Review your CV and try again.",
+          type: "error",
+          priority: "high",
+        });
         return;
       }
       if (started.unchanged) {
+        toast.add({ title: "CV is up to date", description: "Your latest CV is already published.", type: "success" });
         router.push("/account/");
         router.refresh();
         return;
@@ -466,16 +495,24 @@ export function ProfileDesignStudio({
         if (!jobResponse.ok || !jobResult.job) throw new Error(jobResult.error || "Couldn't check the training status.");
         if (jobResult.job.status === "failed") throw new Error(jobResult.job.error || "Your CV needs changes before it can be published.");
         if (jobResult.job.status === "succeeded") {
+          toast.add({ title: "CV published", description: "Your CV is live and its AI assistant is trained.", type: "success" });
           router.push("/account/");
           router.refresh();
           return;
         }
-        setStatus("Checking your CV, training its AI, and preparing your share links…");
       }
-      setStatus("Training is still in progress. You can return to My CVs and check again shortly.");
+      toast.add({
+        title: "Training is still running",
+        description: "Return to My CVs and check again shortly.",
+        type: "info",
+      });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Couldn't finish publishing this CV.");
-      setStatus(undefined);
+      toast.add({
+        title: "Couldn't finish publishing your CV",
+        description: cause instanceof Error ? cause.message : "Couldn't finish publishing this CV.",
+        type: "error",
+        priority: "high",
+      });
     } finally {
       setBusy(false);
     }
@@ -494,8 +531,6 @@ export function ProfileDesignStudio({
           ← My CVs
         </Link>
         <div className="flex items-center gap-3">
-          {status && <span role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{status}</span>}
-          {error && <span role="alert" className="max-w-64 text-sm text-accent">{error}</span>}
           <div role="group" aria-label="CV editor steps" className="flex rounded-xl border border-line bg-card p-1">
             <button type="button" aria-pressed={view === "design"} onClick={() => setView("design")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "design" ? "bg-surface" : "text-muted"}`}>1. Choose template</button>
             <button type="button" aria-pressed={view === "content"} onClick={() => setView("content")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "content" ? "bg-surface" : "text-muted"}`}>2. Add your information</button>
@@ -535,8 +570,6 @@ export function ProfileDesignStudio({
                 />
               </label>
             </div>
-            {status && <p role="status" className="mt-3 text-sm text-muted">{status}</p>}
-            {error && <p role="alert" className="mt-3 text-sm font-medium text-accent">{error}</p>}
           </section>
           <section className="mb-5 space-y-4 rounded-2xl border border-line bg-card p-4 sm:p-6" aria-labelledby="cv-personal-details">
             <div>
@@ -616,7 +649,6 @@ export function ProfileDesignStudio({
             onPhotoUpload={uploadPhoto}
             onProjectImageUpload={uploadProjectImage}
             photoUploadBusy={photoUploading || busy || importing}
-            photoUploadError={error}
             projectImageUploadBusy={photoUploading || busy || importing}
           />
           <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-accent/20 bg-accent-soft/20 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
@@ -628,8 +660,6 @@ export function ProfileDesignStudio({
               {busy ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />}
               {busy ? "Finishing your CV…" : "Finish & train AI"}
             </button>
-            {error && <p role="alert" className="text-sm font-medium text-accent sm:basis-full">{error}</p>}
-            {busy && status && <p role="status" className="text-sm text-muted sm:basis-full">{status}</p>}
           </section>
         </div>
       ) : (

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
+import { APICallError, NoObjectGeneratedError } from "ai";
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
 import { draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
 import { compileBrain } from "@/server/brain/compile";
@@ -146,6 +147,12 @@ export async function POST(req: Request, context: Context) {
       return json({ ok: true, cv });
     } catch (error) {
       console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
+      if (APICallError.isInstance(error) && (error.statusCode === 401 || error.statusCode === 403)) {
+        return bad("CV import AI credentials were rejected. Check the server's GEMINI_API_KEY.", 503);
+      }
+      if (NoObjectGeneratedError.isInstance(error)) {
+        return bad("The AI couldn't extract editable fields from this PDF. Try a text-based PDF or enter the details manually.", 422);
+      }
       return bad("We couldn't read this CV with AI. Try another PDF or enter the details manually.", 502);
     }
   }

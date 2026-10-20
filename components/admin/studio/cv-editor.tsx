@@ -52,7 +52,6 @@ export function CvEditor({
   onPhotoUpload,
   onProjectImageUpload,
   photoUploadBusy = false,
-  photoUploadError,
   projectImageUploadBusy = false,
 }: {
   draft?: DraftApi;
@@ -63,7 +62,6 @@ export function CvEditor({
   onPhotoUpload?: (file: File) => void | Promise<void>;
   onProjectImageUpload?: (file: File, projectIndex: number) => void | Promise<void>;
   photoUploadBusy?: boolean;
-  photoUploadError?: string;
   projectImageUploadBusy?: boolean;
 }) {
   const cv = value ?? readCv(data, fallbackCv);
@@ -133,7 +131,6 @@ export function CvEditor({
                   {cv.photo && <span role="status" className="text-sm text-muted">A photo is set.</span>}
                 </div>
                 <p className="text-xs text-muted">JPG, PNG or WebP, up to 3 MB. Images are optimized for your public CV.</p>
-                {photoUploadError && <p role="alert" className="text-sm text-accent">{photoUploadError}</p>}
               </div>
             ) : (
               <TextInput label="Photo" value={cv.photo} onChange={(v) => set((c) => void (c.photo = v))} className="min-w-64 flex-1" mono />
