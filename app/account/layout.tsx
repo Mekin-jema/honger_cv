@@ -2,16 +2,16 @@ import type { ReactNode } from "react";
 import { requireCustomer } from "@/server/admin-session";
 import { enText } from "@/lib/persona/edit";
 import { PersonaDocShape } from "@/lib/persona/schema";
-import { listOwnedPersonas, loadDraft } from "@/server/persona/repo";
+import { getAccountDraft, getAccountOwnedPersonas } from "@/server/persona/account-data";
 import { AccountShell } from "@/components/account/account-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const customer = await requireCustomer();
-  const owned = await listOwnedPersonas(customer.userId);
+  const owned = await getAccountOwnedPersonas(customer.userId);
   const loaded = await Promise.all(owned.map(async (persona) => {
-    const draft = await loadDraft(persona.slug);
+    const draft = await getAccountDraft(persona.slug);
     const parsed = PersonaDocShape.safeParse(draft?.doc);
     const identityName = parsed.success ? enText(parsed.data.identity.name) || persona.name : persona.name;
     return {

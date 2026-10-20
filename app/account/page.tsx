@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AccountWorkspace } from "@/components/account/workspace";
 import { requireCustomer } from "@/server/admin-session";
-import { listOwnedPersonas, loadDraft, loadVersion } from "@/server/persona/repo";
+import { getAccountDraft, getAccountOwnedPersonas, getAccountVersion } from "@/server/persona/account-data";
 import { PersonaDocShape } from "@/lib/persona/schema";
 import { enText } from "@/lib/persona/edit";
 
@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const customer = await requireCustomer();
-  const owned = await listOwnedPersonas(customer.userId);
+  const owned = await getAccountOwnedPersonas(customer.userId);
   const loaded = await Promise.all(owned.map(async (persona) => {
     const [draft, published] = await Promise.all([
-      loadDraft(persona.slug),
-      persona.publishedVersionId ? loadVersion(persona.publishedVersionId) : Promise.resolve(null),
+      getAccountDraft(persona.slug),
+      persona.publishedVersionId ? getAccountVersion(persona.publishedVersionId) : Promise.resolve(null),
     ]);
     const parsed = PersonaDocShape.safeParse(draft?.doc);
     const live = PersonaDocShape.safeParse(published?.doc);
