@@ -56,7 +56,9 @@ export type ImportedCv = z.infer<typeof CvImportSchema>;
  * Each system prompt starts with a "TASK:" line (the e2e fake model routes on it).
  */
 
-const TIMEOUT_MS = 60_000;
+// Keep an individual AI attempt below the route's 120-second execution limit. PDF import
+// may try the fallback model after the primary fails, so a full timeout on both must fit.
+const TIMEOUT_MS = 45_000;
 
 const TEMPLATE_GUIDE = `THE TEMPLATE (Markdown):
 ## <Section title> (<display>) [<visibility>] {<key>}
