@@ -18,11 +18,15 @@ Set these in **Vercel → Project → Settings → Environment Variables** for e
 
 | Name | Suggested value | Required? |
 | --- | --- | --- |
-| `GEMINI_API_KEY` | Your valid Google AI Studio / Gemini API key | **Yes** |
-| `AI_MODEL` | `gemini-3.8-flash` | Recommended; used for general AI and as PDF import's second model |
-| `AI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | Recommended; tried first for PDF import |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key | Recommended; when set, OpenRouter is tried first for CV mapping |
+| `OPENROUTER_CV_MODEL` | `openrouter/free` | Optional model override; default is a free-tier OpenRouter model |
+| `GEMINI_API_KEY` | Your valid Google AI Studio / Gemini API key | Optional if using OpenRouter; enables Gemini fallback and other AI features |
+| `AI_MODEL` | `gemini-3.8-flash` | Used for general Gemini AI and as CV import's Gemini fallback |
+| `AI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | First Gemini model tried when OpenRouter isn't configured or Gemini fallback is needed |
 
-`AI_MODEL` and `AI_FALLBACK_MODEL` are exact strings, with no comments or quotes. If the older aliases `GEMINI_MODEL` or `GEMINI_FALLBACK_MODEL` are set, unset them or update them too: the `AI_*` values take precedence when set. After changing variables, **redeploy**; an existing deployment does not pick up changed environment variables.
+Model and key values are exact strings, with no comments or quotes. If the older aliases `GEMINI_MODEL` or `GEMINI_FALLBACK_MODEL` are set, unset them or update them too: the `AI_*` values take precedence when set. OpenRouter's free model availability, capacity, and quotas can change; check [OpenRouter models](https://openrouter.ai/models) and use `OPENROUTER_CV_MODEL` to select another model. After changing variables, **redeploy**; an existing deployment does not pick up changed environment variables.
+
+OpenRouter is currently wired into **CV PDF mapping only**. Other generated assistant/AI features and embeddings still use Gemini and require `GEMINI_API_KEY`. PDF.js extracts selectable text locally before OpenRouter sees the CV. If no text can be extracted (such as a scan), OpenRouter-only setup returns a clear text-required error; use OCR or configure Gemini as a fallback for scanned PDFs.
 
 Never paste an API key into an issue, chat, source file, or `NEXT_PUBLIC_*` variable. If a key has been exposed, rotate it in Google AI Studio and update Vercel.
 

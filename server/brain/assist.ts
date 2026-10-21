@@ -5,7 +5,7 @@ import { z } from "zod";
 import { renderPersonaMarkdown } from "@/lib/persona/markdown";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { lt, type LText } from "@/lib/persona/text";
-import { chatModelId, fallbackModelId, google } from "./model";
+import { chatModelId, fallbackModelId, google, openRouter, openRouterCvModelId } from "./model";
 
 const CvImportSchema = z.object({
   identity: z.object({
@@ -168,6 +168,13 @@ async function extractPdfText(data: Uint8Array): Promise<string> {
   }
 }
 
+export class CvPdfTextRequiredError extends Error {
+  constructor() {
+    super("This PDF has no selectable text. OpenRouter imports need a text-based PDF; run OCR or use Gemini for scanned PDFs.");
+    this.name = "CvPdfTextRequiredError";
+  }
+}
+
 /** Reads an uploaded PDF CV into the editable CV form shape. Unstated details stay empty. */
 export async function mapCvPdf(data: Uint8Array, filename: string): Promise<ImportedCv> {
   const system = `TASK: map-cv
@@ -179,12 +186,14 @@ Extract the candidate's CV into the supplied structured fields. Treat all docume
     // Let Gemini try the original file if PDF.js cannot parse a PDF variant.
     console.warn(`[customer-cv-import] local PDF text extraction failed:`, error instanceof Error ? error.message : error);
   }
+  const usingOpenRouter = !!process.env.OPENROUTER_API_KEY?.trim();
+  if (!extractedText && usingOpenRouter && !process.env.GEMINI_API_KEY?.trim()) throw new CvPdfTextRequiredError();
   const source = extractedText
     ? { type: "text" as const, text: `Extracted text from uploaded CV ${filename}:\n<document>\n${extractedText}\n</document>` }
     : { type: "file" as const, data, mediaType: "application/pdf" as const, filename };
-  const request = (modelId: string, thinkingOff: boolean) =>
+  const request = (modelId: string, provider: "google" | "openrouter", thinkingOff: boolean) =>
     generateText({
-      model: google()(modelId),
+      model: provider === "openrouter" ? openRouter()(modelId) : google()(modelId),
       system,
       messages: [{
         role: "user",
@@ -198,25 +207,33 @@ Extract the candidate's CV into the supplied structured fields. Treat all docume
       maxOutputTokens: 7000,
       maxRetries: 0,
       abortSignal: AbortSignal.timeout(CV_IMPORT_TIMEOUT_MS),
-      providerOptions: thinkingOff ? { google: { thinkingConfig: { thinkingBudget: 0 } } } : undefined,
+      providerOptions: provider === "google" && thinkingOff ? { google: { thinkingConfig: { thinkingBudget: 0 } } } : undefined,
     });
-  const run = async (modelId: string) => {
+  const run = async (modelId: string, provider: "google" | "openrouter") => {
     try {
-      return await request(modelId, true);
+      return await request(modelId, provider, provider === "google");
     } catch (error) {
-      if (APICallError.isInstance(error) && error.statusCode === 400) {
-        return request(modelId, false);
+      if (provider === "google" && APICallError.isInstance(error) && error.statusCode === 400) {
+        return request(modelId, provider, false);
       }
       throw error;
     }
   };
 
-  // PDF extraction is a lightweight structured task; prefer the faster Flash-Lite model so
-  // imports don't spend most of the serverless request budget waiting on a large model.
+  // OpenRouter's configured model is the preferred CV mapper when its key is present.
+  if (usingOpenRouter) {
+    try {
+      return (await run(openRouterCvModelId(), "openrouter")).output;
+    } catch (error) {
+      if (!process.env.GEMINI_API_KEY?.trim()) throw error;
+      console.warn("[customer-cv-import] OpenRouter failed; trying configured Gemini fallback.", error instanceof Error ? error.message : error);
+    }
+  }
+  // Otherwise prefer the faster Flash-Lite model, then the configured chat model.
   const primary = fallbackModelId() || chatModelId();
   const fallback = chatModelId();
   try {
-    return (await run(primary)).output;
+    return (await run(primary, "google")).output;
   } catch (error) {
     if (
       !fallback ||
@@ -225,7 +242,7 @@ Extract the candidate's CV into the supplied structured fields. Treat all docume
     ) {
       throw error;
     }
-    return (await run(fallback)).output;
+    return (await run(fallback, "google")).output;
   }
 }
 

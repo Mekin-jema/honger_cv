@@ -152,7 +152,9 @@ Copy `.env.example` to `.env.local`. Only configure the integrations you plan to
 | `BETTER_AUTH_URL` | Application origin used by authentication, e.g. `http://localhost:3000`. |
 | `PERSONA_SIGNING_SECRET` | Private secret for persona access and preview tokens; use at least 32 characters. |
 | `NEXT_PUBLIC_SITE_URL` | Public canonical site URL used for metadata and the sitemap. |
-| `GEMINI_API_KEY` | Enables generated assistant answers, content mapping, and embeddings. |
+| `GEMINI_API_KEY` | Enables generated assistant answers, content mapping, embeddings, and Gemini fallback for CV mapping. |
+| `OPENROUTER_API_KEY` | Optional; enables OpenRouter CV PDF mapping (preferred when configured). |
+| `OPENROUTER_CV_MODEL` | Optional OpenRouter model override; defaults to `openrouter/free`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google sign-in for customers. |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Optional GitHub sign-in for customers. |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name for customer photos and durable generated PDFs. |

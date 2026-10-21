@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
 import { APICallError, NoObjectGeneratedError } from "ai";
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
-import { draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
+import { CvPdfTextRequiredError, draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
 import { compileBrain } from "@/server/brain/compile";
-import { aiEnabled } from "@/server/brain/model";
+import { aiEnabled, cvImportEnabled } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
 import { customerSession } from "@/server/admin-session";
 import { createCode, listCodes, resetAccess, revokeCode } from "@/server/access/codes";
@@ -125,7 +125,7 @@ export async function POST(req: Request, context: Context) {
   const endpoint = parts.join("/");
 
   if (endpoint === "cv-import") {
-    if (!aiEnabled()) return bad("CV import needs the AI service to be enabled.", 503);
+    if (!cvImportEnabled()) return bad("CV import needs OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
     if (limited(`customer:cv-import:${session.userId}`, 5, 10 * 60_000)) {
       return bad("Too many CV imports. Please try again in a few minutes.", 429);
     }
@@ -152,7 +152,7 @@ export async function POST(req: Request, context: Context) {
       console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
       if (APICallError.isInstance(error)) {
         if (error.statusCode === 401 || error.statusCode === 403) {
-          return bad("CV import AI credentials were rejected. Check the server's GEMINI_API_KEY.", 503);
+          return bad("CV import AI credentials were rejected. Check the configured OpenRouter or Gemini API key.", 503);
         }
         if (error.statusCode === 429) {
           return bad("The CV import service is busy. Wait a minute and try again; your CV has not been changed.", 503);
@@ -164,6 +164,7 @@ export async function POST(req: Request, context: Context) {
           return bad("The CV import service is temporarily unavailable. Try again shortly; your CV has not been changed.", 503);
         }
       }
+      if (error instanceof CvPdfTextRequiredError) return bad(error.message, 422);
       if (NoObjectGeneratedError.isInstance(error)) {
         return bad("The AI couldn't extract editable fields from this PDF. Use a text-based, unprotected PDF or enter the details manually.", 422);
       }
