@@ -12,7 +12,7 @@ export const chatModelId = () => process.env.AI_MODEL?.trim() || process.env.GEM
 /** Tried as well when the first model is slow, busy or gone. "" turns it off. */
 // Keep the built-in fallback on a currently available multimodal Gemini model. It is also used
 // for PDF CV extraction, so it must accept document file parts as well as text prompts.
-export const fallbackModelId = () => (process.env.AI_FALLBACK_MODEL ?? process.env.GEMINI_FALLBACK_MODEL ?? "gemini-2.5-flash-lite").trim();
+export const fallbackModelId = () => (process.env.AI_FALLBACK_MODEL ?? process.env.GEMINI_FALLBACK_MODEL ?? "gemini-3.5-flash-lite").trim();
 export const embeddingModelId = () => process.env.AI_EMBEDDING_MODEL?.trim() || "gemini-embedding-2";
 export const EMBEDDING_DIMS = 768;
 

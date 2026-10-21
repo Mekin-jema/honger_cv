@@ -59,7 +59,7 @@ export type ImportedCv = z.infer<typeof CvImportSchema>;
 // Keep an individual AI attempt below the route's 120-second execution limit. PDF import
 // may try the fallback model after the primary fails, so a full timeout on both must fit.
 const TIMEOUT_MS = 45_000;
-const CV_IMPORT_TIMEOUT_MS = 25_000;
+const CV_IMPORT_TIMEOUT_MS = 55_000;
 
 const TEMPLATE_GUIDE = `THE TEMPLATE (Markdown):
 ## <Section title> (<display>) [<visibility>] {<key>}
