@@ -28,6 +28,9 @@ type Context = { params: Promise<{ slug: string; parts: string[] }> };
 const SLUG = /^[a-z][a-z0-9-]{1,31}$/;
 const positive = (value: unknown, max: number) => (typeof value === "number" && Number.isInteger(value) && value > 0 && value <= max ? value : null);
 const MAX_PROFILE_IMAGE_BYTES = 3_000_000;
+// PDF extraction uses Buffer, multipart FormData, and the Gemini document API. Keep this route
+// on the Node runtime in serverless deployments rather than allowing an Edge deployment.
+export const runtime = "nodejs";
 export const maxDuration = 120;
 
 function profileImageFormat(bytes: Buffer): { mime: string } | null {
@@ -147,13 +150,24 @@ export async function POST(req: Request, context: Context) {
       return json({ ok: true, cv });
     } catch (error) {
       console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
-      if (APICallError.isInstance(error) && (error.statusCode === 401 || error.statusCode === 403)) {
-        return bad("CV import AI credentials were rejected. Check the server's GEMINI_API_KEY.", 503);
+      if (APICallError.isInstance(error)) {
+        if (error.statusCode === 401 || error.statusCode === 403) {
+          return bad("CV import AI credentials were rejected. Check the server's GEMINI_API_KEY.", 503);
+        }
+        if (error.statusCode === 429) {
+          return bad("The CV import service is busy. Wait a minute and try again; your CV has not been changed.", 503);
+        }
+        if (error.statusCode === 400 || error.statusCode === 413 || error.statusCode === 415) {
+          return bad("The AI service could not accept this PDF. Use a text-based, unprotected PDF under 8 MB, then try again.", 422);
+        }
+        if (error.statusCode && error.statusCode >= 500) {
+          return bad("The CV import service is temporarily unavailable. Try again shortly; your CV has not been changed.", 503);
+        }
       }
       if (NoObjectGeneratedError.isInstance(error)) {
-        return bad("The AI couldn't extract editable fields from this PDF. Try a text-based PDF or enter the details manually.", 422);
+        return bad("The AI couldn't extract editable fields from this PDF. Use a text-based, unprotected PDF or enter the details manually.", 422);
       }
-      return bad("We couldn't read this CV with AI. Try another PDF or enter the details manually.", 502);
+      return bad("CV import timed out or could not reach the AI service. Try again shortly; your CV has not been changed.", 503);
     }
   }
 
