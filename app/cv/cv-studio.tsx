@@ -27,6 +27,33 @@ const palettes = [
 
 export type CvDesign = { template: CvTemplateId; accentColor: string };
 
+/** Fictional data only: template cards must never expose a customer's saved CV. */
+const gallerySample: CvData = {
+  showPhoto: false,
+  title: "Product Engineer",
+  availability: "Open to new opportunities",
+  photo: "",
+  profile: "Product-minded engineer building accessible, dependable software.",
+  highlights: ["Shipped customer-facing tools", "Improved delivery workflows"],
+  skills: [{ k: "Engineering", v: "TypeScript, React, APIs" }, { k: "Product", v: "Research, systems, delivery" }],
+  experience: [{ company: "Northstar Labs", role: "Product Engineer", period: "2022 — Present", location: "Remote", context: "Platform team", bullets: ["Built reliable workflow tools"], engagements: [] }],
+  projects: [{ name: "Atlas", meta: "Web platform", text: "A focused customer experience." }],
+  education: { degree: "BSc, Computer Science", school: "Example University", year: "2022", note: "" },
+  courses: [],
+  languages: [{ name: "English", level: "Professional" }],
+  identity: { name: "Jordan Lee", email: "jordan@example.com", location: "Remote", links: [] },
+};
+
+function TemplateThumbnail({ template }: { template: CvTemplateId }) {
+  return (
+    <span className="cv-template-thumbnail cv-root" data-template={template} style={cvTemplateStyle("#167a68")} aria-hidden="true">
+      <span className="cv-template-thumbnail-scale">
+        <CvSheet cv={gallerySample} layout={cvSheetLayoutForTemplate(template)} />
+      </span>
+    </span>
+  );
+}
+
 export function CvStudio({
   cv,
   initialTemplate = "modern",
@@ -178,24 +205,14 @@ export function CvStudio({
                 aria-pressed={template === item.id}
                 onClick={() => selectTemplate(item.id)}
               >
-                <span className="cv-template-art" data-template-art={item.id} aria-hidden="true">
-                  <span className="cv-art-rail" />
-                  <span className="cv-art-photo" />
-                  <span className="cv-art-header" />
-                  <span className="cv-art-title" />
-                  <span className="cv-art-line" />
-                  <span className="cv-art-section" />
-                  <span className="cv-art-lines" />
-                  <span className="cv-art-date" />
-                  <span className="cv-art-section cv-art-section-short" />
-                  <span className="cv-art-lines cv-art-lines-short" />
-                </span>
+                <TemplateThumbnail template={item.id} />
                 <span className="cv-template-copy">
                   <span className="cv-template-name">
                     {item.name}
                     {template === item.id && <span className="cv-selected-badge">Selected</span>}
                   </span>
                   <span className="cv-template-description">{item.description}</span>
+                  <span className={`cv-template-meta${item.atsFriendly ? " is-ats" : ""}`}>{item.atsFriendly ? "ATS-friendly structure" : "Design-forward layout"}</span>
                 </span>
               </button>
             ))}

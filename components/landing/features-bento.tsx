@@ -4,7 +4,6 @@ import {
   Lock,
   Palette,
   ScanText,
-  Sliders,
   Sparkles,
   Zap,
 } from "lucide-react";

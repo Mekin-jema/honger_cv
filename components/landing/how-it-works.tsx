@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, FileCheck, Palette, Sparkles, Wand2 } from "lucide-react";
 
 const STEPS = [

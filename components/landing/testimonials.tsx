@@ -1,4 +1,4 @@
-import { Star, Sparkles, Quote } from "lucide-react";
+import { Star, Sparkles } from "lucide-react";
 import { TESTIMONIALS } from "./landing-data";
 
 export function Testimonials() {

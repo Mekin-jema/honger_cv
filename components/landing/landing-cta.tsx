@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BrainCircuit, Check, Sparkles } from "lucide-react";
+import { ArrowRight, BrainCircuit, Sparkles } from "lucide-react";
 
 export function LandingCta() {
   return (

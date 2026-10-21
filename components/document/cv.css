@@ -1609,6 +1609,58 @@
   }
 }
 
+/* Rendered, fictional CVs in the template gallery: these are the actual sheet components,
+   scaled down instead of decorative placeholder lines. */
+.cv-template-thumbnail {
+  position: relative;
+  display: block;
+  width: 68px;
+  height: 88px;
+  min-height: 88px;
+  overflow: hidden;
+  border: 1px solid #d9dedb;
+  border-radius: 5px;
+  background: #fff;
+  color: #16171a;
+  font-size: 9.5pt;
+  line-height: 1.4;
+}
+.cv-template-thumbnail-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 210mm;
+  transform: scale(0.122);
+  transform-origin: top left;
+}
+.cv-template-thumbnail .cv-sheet {
+  width: 210mm;
+  max-width: none;
+  min-height: 297mm;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.cv-template-thumbnail .cv-sheet * {
+  pointer-events: none;
+}
+.cv-template-meta {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 2px;
+  color: #69736e;
+  font-size: 10px;
+  font-weight: 650;
+}
+.cv-template-meta.is-ats {
+  color: #167a68;
+}
+.dark .cv-template-thumbnail {
+  border-color: #4b514e;
+  background: #fff;
+}
+
 /* A portrait-led profile rail, inspired by the supplied resume reference. */
 .cv-root[data-template="navy-rail"] .cv-sheet {
   display: grid;

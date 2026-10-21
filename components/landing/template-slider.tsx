@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
-  ArrowRight,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -12,7 +10,6 @@ import {
   ExternalLink,
   Pause,
   Play,
-  RotateCcw,
   Sparkles,
 } from "lucide-react";
 import {
@@ -20,7 +17,6 @@ import {
   TEMPLATE_CATEGORIES,
   PALETTES,
   type TemplateCategory,
-  type TemplateShowcaseItem,
 } from "./landing-data";
 
 export function TemplateSlider() {
@@ -34,11 +30,6 @@ export function TemplateSlider() {
   const filteredTemplates = useMemo(() => {
     if (activeCategory === "all") return TEMPLATE_ITEMS;
     return TEMPLATE_ITEMS.filter((t) => t.category === activeCategory);
-  }, [activeCategory]);
-
-  // Ensure index remains in bounds when category changes
-  useEffect(() => {
-    setCurrentIndex(0);
   }, [activeCategory]);
 
   const currentTemplate = filteredTemplates[currentIndex] || filteredTemplates[0];
@@ -167,7 +158,10 @@ export function TemplateSlider() {
             <button
               key={cat.id}
               type="button"
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                setCurrentIndex(0);
+              }}
               className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition ${
                 isActive
                   ? "bg-fg text-bg shadow-sm"

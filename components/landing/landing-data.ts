@@ -1,4 +1,4 @@
-import { CV_TEMPLATES, type CvTemplateId } from "@/lib/persona/cv-templates";
+import type { CvTemplateId } from "@/lib/persona/cv-templates";
 
 export type TemplateCategory = "all" | "executive" | "split" | "timeline" | "creative" | "compact";
 

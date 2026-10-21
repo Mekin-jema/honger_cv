@@ -1,5 +1,4 @@
 import { Check, X, Sparkles, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 
 const COMPARISON_ROWS = [
   {
