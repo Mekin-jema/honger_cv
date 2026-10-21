@@ -8,7 +8,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 export const aiEnabled = () => !!process.env.GEMINI_API_KEY?.trim();
 
-export const chatModelId = () => process.env.AI_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+export const chatModelId = () => process.env.AI_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
 /** Tried as well when the first model is slow, busy or gone. "" turns it off. */
 // Keep the built-in fallback on a currently available multimodal Gemini model. It is also used
 // for PDF CV extraction, so it must accept document file parts as well as text prompts.
