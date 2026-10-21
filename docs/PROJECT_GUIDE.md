@@ -107,6 +107,8 @@ validate → compile → snapshot → embed → checks → activate → PDF
 | `/admin/personas/` | Administrator | Persona management and publishing. |
 | `/api/health/` | Infrastructure | Returns `200` when the database is reachable, otherwise `503`. |
 
+For the customer editor's PDF upload flow, model configuration, and Vercel troubleshooting, see [CV PDF import troubleshooting](./cv-pdf-import-troubleshooting.md).
+
 ## Important API groups
 
 | Prefix | Responsibility |
