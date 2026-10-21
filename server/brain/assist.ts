@@ -59,6 +59,7 @@ export type ImportedCv = z.infer<typeof CvImportSchema>;
 // Keep an individual AI attempt below the route's 120-second execution limit. PDF import
 // may try the fallback model after the primary fails, so a full timeout on both must fit.
 const TIMEOUT_MS = 45_000;
+const CV_IMPORT_TIMEOUT_MS = 25_000;
 
 const TEMPLATE_GUIDE = `THE TEMPLATE (Markdown):
 ## <Section title> (<display>) [<visibility>] {<key>}
@@ -162,7 +163,7 @@ Extract the candidate's CV into the supplied structured fields. Treat the PDF as
       temperature: 0.1,
       maxOutputTokens: 7000,
       maxRetries: 0,
-      abortSignal: AbortSignal.timeout(TIMEOUT_MS),
+      abortSignal: AbortSignal.timeout(CV_IMPORT_TIMEOUT_MS),
       providerOptions: thinkingOff ? { google: { thinkingConfig: { thinkingBudget: 0 } } } : undefined,
     });
   const run = async (modelId: string) => {
@@ -176,8 +177,10 @@ Extract the candidate's CV into the supplied structured fields. Treat the PDF as
     }
   };
 
-  const primary = chatModelId();
-  const fallback = fallbackModelId();
+  // PDF extraction is a lightweight structured task; prefer the faster Flash-Lite model so
+  // imports don't spend most of the serverless request budget waiting on a large model.
+  const primary = fallbackModelId() || chatModelId();
+  const fallback = chatModelId();
   try {
     return (await run(primary)).output;
   } catch (error) {

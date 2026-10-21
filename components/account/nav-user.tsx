@@ -60,7 +60,7 @@ export function NavUser({
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<SidebarMenuButton size="lg" className="h-auto min-h-12 data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground" />}
+            render={<SidebarMenuButton size="lg" className="h-auto min-h-12 rounded-xl border border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground" />}
           >
             <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
               {user.avatar && !avatarFailed
@@ -96,7 +96,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem >
+              <DropdownMenuItem render={<Link href="/account/" />}>
                 <CircleUserRound aria-hidden="true" />
                 My CVs
               </DropdownMenuItem>
