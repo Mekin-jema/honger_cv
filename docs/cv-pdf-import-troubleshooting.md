@@ -47,6 +47,10 @@ Never paste an API key into an issue, chat, source file, or `NEXT_PUBLIC_*` vari
 
 The API deliberately returns a generic timeout/network response for errors it cannot classify safely. The server log is the source of the underlying provider error. Do not repeatedly retry before checking it; retries can hit the import rate limit.
 
+### Vercel deployment packaging
+
+The CV route uses PDF.js locally. Its Node worker file must be available in the deployed function, and the app's SQL migrations must be included for startup migration. `next.config.ts` externalizes `pdfjs-dist` and includes its legacy build worker plus `migrations/**/*.sql` in server output tracing. After changing this configuration, redeploy and confirm the startup log no longer reports a missing `pdf.worker.mjs` or missing `/var/task/migrations` directory.
+
 ## Error messages at the route
 
 | Response/error | Likely cause / next check |

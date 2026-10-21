@@ -21,12 +21,13 @@ const nextConfig: NextConfig = {
   basePath,
   images: { unoptimized: true },
   poweredByHeader: false,
-  serverExternalPackages: ["pg", "@sparticuz/chromium"],
+  serverExternalPackages: ["pg", "@sparticuz/chromium", "pdfjs-dist"],
   outputFileTracingIncludes: {
-    "/**": [
+    "/*": [
       "./migrations/**/*.sql",
       "./public/Mekin-Jemal-CV.pdf",
       "./node_modules/@sparticuz/chromium/bin/**/*",
+      "./node_modules/pdfjs-dist/legacy/build/**/*",
     ],
   },
   turbopack: {
