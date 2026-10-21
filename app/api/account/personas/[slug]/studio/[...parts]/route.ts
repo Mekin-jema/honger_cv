@@ -3,8 +3,9 @@ import { v2 as cloudinary } from "cloudinary";
 import { APICallError, NoObjectGeneratedError } from "ai";
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
 import { CvPdfTextRequiredError, draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
+import { ResumeParserError } from "@/server/brain/resume-parser";
 import { compileBrain } from "@/server/brain/compile";
-import { aiEnabled, cvImportEnabled } from "@/server/brain/model";
+import { aiEnabled, cvImportEnabled, resumeParserConfigured } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
 import { customerSession } from "@/server/admin-session";
 import { createCode, listCodes, resetAccess, revokeCode } from "@/server/access/codes";
@@ -125,7 +126,9 @@ export async function POST(req: Request, context: Context) {
   const endpoint = parts.join("/");
 
   if (endpoint === "cv-import") {
-    if (!cvImportEnabled()) return bad("CV import needs OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
+    if (!cvImportEnabled() && !resumeParserConfigured()) {
+      return bad("CV import needs RESUME_PARSER_API_URL, OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
+    }
     if (limited(`customer:cv-import:${session.userId}`, 5, 10 * 60_000)) {
       return bad("Too many CV imports. Please try again in a few minutes.", 429);
     }
@@ -165,6 +168,7 @@ export async function POST(req: Request, context: Context) {
         }
       }
       if (error instanceof CvPdfTextRequiredError) return bad(error.message, 422);
+      if (error instanceof ResumeParserError) return bad(`The CV parser service couldn't read this CV: ${error.message}`, 502);
       if (NoObjectGeneratedError.isInstance(error)) {
         return bad("The AI couldn't extract editable fields from this PDF. Use a text-based, unprotected PDF or enter the details manually.", 422);
       }

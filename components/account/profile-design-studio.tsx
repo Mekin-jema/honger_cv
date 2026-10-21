@@ -566,7 +566,7 @@ export function ProfileDesignStudio({
             <div className="border-b border-line bg-surface/50 px-4 py-4 sm:px-5">
               <p className="eyebrow text-accent">Step 1 of 3</p>
               <h2 id="upload-cv-heading" className="mt-1 text-lg font-semibold">Start with your existing CV</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">Upload a text-based PDF and we will map its supported details into the editable form below. Nothing is published automatically.</p>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">Upload a PDF and we will map its supported details into the editable form below. Scanned CVs are read with OCR. Nothing is published automatically.</p>
             </div>
             <div
               className={`m-4 rounded-xl border-2 border-dashed p-5 text-center transition-colors sm:m-5 sm:p-7 ${dropActive ? "border-accent bg-accent-soft/30" : "border-line-strong bg-bg-soft/40"}`}
@@ -584,7 +584,7 @@ export function ProfileDesignStudio({
                 {importing ? <LoaderCircle className="size-5 animate-spin" /> : <FileText className="size-5" aria-hidden="true" />}
               </span>
               <h3 className="mt-3 font-semibold">{importing ? "Reading and mapping your CV…" : "Drop your CV PDF here"}</h3>
-              <p className="mt-1 text-sm text-muted">or choose a file from your device · PDF · up to 8 MB</p>
+              <p className="mt-1 text-sm text-muted">or choose a file from your device · PDF · up to 8 MB · text or scanned</p>
               <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:brightness-95 has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
                 {importing ? <LoaderCircle className="size-4 animate-spin" /> : <FileUp className="size-4" aria-hidden="true" />}
                 {importing ? "Mapping fields…" : "Choose PDF"}

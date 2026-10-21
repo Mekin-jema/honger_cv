@@ -6,6 +6,7 @@ import { renderPersonaMarkdown } from "@/lib/persona/markdown";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { lt, type LText } from "@/lib/persona/text";
 import { chatModelId, fallbackModelId, google, openRouter, openRouterCvModelId } from "./model";
+import { parseWithResumeParser } from "./resume-parser";
 
 const CvImportSchema = z.object({
   identity: z.object({
@@ -185,6 +186,12 @@ Extract the candidate's CV into the supplied structured fields. Treat all docume
   } catch (error) {
     // Let Gemini try the original file if PDF.js cannot parse a PDF variant.
     console.warn(`[customer-cv-import] local PDF text extraction failed:`, error instanceof Error ? error.message : error);
+  }
+  // A separately hosted Resume Parser (PyMuPDF extraction + validated structured parsing,
+  // including OCR for scans) is preferred when configured, before any hosted-model call.
+  if (process.env.RESUME_PARSER_API_URL?.trim()) {
+    const parsed = await parseWithResumeParser(data, filename);
+    if (parsed) return parsed;
   }
   const usingOpenRouter = !!process.env.OPENROUTER_API_KEY?.trim();
   if (!extractedText && usingOpenRouter && !process.env.GEMINI_API_KEY?.trim()) throw new CvPdfTextRequiredError();

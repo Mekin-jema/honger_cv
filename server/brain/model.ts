@@ -9,6 +9,8 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 export const aiEnabled = () => !!process.env.GEMINI_API_KEY?.trim();
 export const cvImportEnabled = () => aiEnabled() || !!process.env.OPENROUTER_API_KEY?.trim();
+/** A separately hosted Resume Parser API (PyMuPDF + validated parsing, OCR for scans). */
+export const resumeParserConfigured = () => !!process.env.RESUME_PARSER_API_URL?.trim();
 export const openRouterCvModelId = () => process.env.OPENROUTER_CV_MODEL?.trim() || "openrouter/free";
 
 export const chatModelId = () => process.env.AI_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
