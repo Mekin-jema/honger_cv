@@ -140,7 +140,7 @@ export default async function Home() {
                 href="/register/"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-bold text-on-accent transition hover:brightness-95"
               >
-                Create your portfolio <ArrowRight className="size-4" aria-hidden="true" />
+                Create your CV <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/ask/"
@@ -281,11 +281,11 @@ export default async function Home() {
             <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
               Put your work together. Let people discover it.
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Create your own CV and portfolio, or start by exploring Mekin&apos;s public demo.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Create a polished CV first, then grow it into a portfolio. Or explore Mekin&apos;s public demo.</p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <Link href="/register/" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-bold text-on-accent transition hover:brightness-95">
-              Build your portfolio <ArrowRight className="size-4" aria-hidden="true" />
+              Start building your CV <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
             <Link href="/ask/" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-line-strong bg-card px-5 text-sm font-semibold text-fg transition-colors hover:bg-surface">
               Explore the demo
