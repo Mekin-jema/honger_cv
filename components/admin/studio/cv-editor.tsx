@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, FileUp, Plus } from "lucide-react";
+import { Eye, FileUp, Plus, Sparkles } from "lucide-react";
 import { CvSheet } from "@/components/document/cv-sheet";
 import { cv as codeCv } from "@/content/cv";
 import { readCv, type CvData, type CvJob } from "@/lib/persona/cv";
 import { move } from "@/lib/persona/edit";
 import { cn } from "@/lib/utils";
+import { CvImportPipeline } from "@/components/account/cv-import-pipeline";
 import { Field, Panel, RowActions, TextInput, Toggle, inputCls, smallBtn } from "./controls";
 import type { DraftApi } from "./use-draft";
 
@@ -66,6 +67,7 @@ export function CvEditor({
 }) {
   const cv = value ?? readCv(data, fallbackCv);
   const [preview, setPreview] = useState(true);
+  const [showImport, setShowImport] = useState(false);
   const set = (fn: (c: CvData) => void) => {
     if (draft) {
       draft.update((d) => {
@@ -85,13 +87,30 @@ export function CvEditor({
   return (
     <div className={cn("grid items-start gap-5", preview && "xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]")}>
       <div className="min-w-0 space-y-5">
+        {showImport && (
+          <CvImportPipeline
+            slug=""
+            currentCv={cv}
+            onApplyCv={(next) => {
+              set((c) => {
+                Object.assign(c, next);
+              });
+              setShowImport(false);
+            }}
+          />
+        )}
         <Panel
           title="CV"
           description="The printed CV (/cv/ and the PDF). Keep it to two A4 pages: the publish step warns when the PDF grows longer."
           actions={
-            <button type="button" className={smallBtn} onClick={() => setPreview((v) => !v)} aria-pressed={preview}>
-              <Eye className="size-4" /> {preview ? "Hide preview" : "Show preview"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" className={smallBtn} onClick={() => setShowImport((v) => !v)} aria-pressed={showImport}>
+                <Sparkles className="size-4 text-accent" /> {showImport ? "Hide import" : "Import CV document"}
+              </button>
+              <button type="button" className={smallBtn} onClick={() => setPreview((v) => !v)} aria-pressed={preview}>
+                <Eye className="size-4" /> {preview ? "Hide preview" : "Show preview"}
+              </button>
+            </div>
           }
         >
           <TextInput label="Title under the name" value={cv.title} onChange={(v) => set((c) => void (c.title = v))} />

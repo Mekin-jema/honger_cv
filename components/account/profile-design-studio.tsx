@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, FileText, FileUp, LoaderCircle, Plus, Save, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { ArrowRight, LoaderCircle, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
 import { toast } from "@/components/ui/toast";
 import type { CvData, CvIdentity } from "@/lib/persona/cv";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
+import { CvImportPipeline } from "./cv-import-pipeline";
 
 function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = false): PersonaDoc {
   const doc = structuredClone(initial);
@@ -218,11 +219,9 @@ export function ProfileDesignStudio({
   // Start with the content step: uploading an existing CV is the fastest, clearest path for most people.
   const [view, setView] = useState<"content" | "design">("content");
   const [busy, setBusy] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [importedCv, setImportedCv] = useState(false);
-  const [importedFileName, setImportedFileName] = useState<string>();
-  const [dropActive, setDropActive] = useState(false);
+  const importing = false;
 
   const updateIdentity = (update: (identity: CvIdentity) => void) => {
     setCvData((current) => {
@@ -375,103 +374,16 @@ export function ProfileDesignStudio({
     }
   };
 
-  const importCv = async (file: File) => {
-    if (importing || busy) return;
-    if (file.size > 8_000_000) {
-      toast.add({ title: "PDF is too large", description: "Choose a PDF smaller than 8 MB.", type: "error" });
-      return;
-    }
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      toast.add({ title: "Choose a PDF CV", description: "This importer accepts PDF files only.", type: "error" });
-      return;
-    }
-    setImporting(true);
-    try {
-      const body = new FormData();
-      body.set("file", file);
-      const response = await fetch(withBase(`/api/account/personas/${slug}/studio/cv-import/`), {
-        method: "POST",
-        body,
-        credentials: "same-origin",
-      });
-      const result = (await response.json()) as {
-        cv?: {
-          identity?: { name?: string; email?: string; phone?: string; location?: string; links?: CvIdentity["links"] };
-          title?: string;
-          profile?: string;
-          highlights?: string[];
-          skills?: CvData["skills"];
-          experience?: CvData["experience"];
-          projects?: CvData["projects"];
-          education?: CvData["education"];
-          courses?: string[];
-          languages?: CvData["languages"];
-        };
-        error?: string;
-      };
-      if (!response.ok || !result.cv) {
-        toast.add({
-          title: "CV import failed",
-          description: result.error || "We couldn't map this CV. Try another PDF or enter your details manually.",
-          type: "error",
-          priority: "high",
-        });
-        return;
-      }
-      const mapped = result.cv;
-      const fullName = mapped.identity?.name?.trim() || "Your Name";
-      const links = (mapped.identity?.links ?? []).filter((link) => {
-        try {
-          const url = new URL(link.href);
-          return url.protocol === "https:" || url.protocol === "http:";
-        } catch {
-          return false;
-        }
-      });
-      const nextCv: CvData = {
-        ...cvData,
-        showPhoto: false,
-        photo: "",
-        availability: "",
-        title: mapped.title?.trim() || cvData.title,
-        profile: mapped.profile ?? "",
-        highlights: mapped.highlights ?? [],
-        skills: mapped.skills ?? [],
-        experience: mapped.experience ?? [],
-        projects: mapped.projects ?? [],
-        education: mapped.education ?? { degree: "", school: "", year: "", note: "" },
-        courses: mapped.courses ?? [],
-        languages: mapped.languages ?? [],
-        identity: {
-          name: fullName,
-          email: mapped.identity?.email || undefined,
-          phone: mapped.identity?.phone || undefined,
-          location: mapped.identity?.location || undefined,
-          photo: "",
-          links,
-        },
-      };
-      setCvData(nextCv);
-      // The imported source replaces the editable CV fields, while the owner stays in control of every value.
-      setDoc((current) => applyImportedCv(current, nextCv, true));
-      setImportedCv(true);
-      setImportedFileName(file.name);
-      setView("content");
-      toast.add({
-        title: "Your CV is ready to review",
-        description: "We mapped the PDF into the form. Check the fields, save your draft, then choose a design.",
-        type: "success",
-      });
-    } catch {
-      toast.add({
-        title: "CV import failed",
-        description: "Couldn't reach the AI import service. Check your connection and try again.",
-        type: "error",
-        priority: "high",
-      });
-    } finally {
-      setImporting(false);
-    }
+  const handleApplyPipelineCv = (nextCv: CvData, meta: { filename: string; markdown?: string }) => {
+    setCvData(nextCv);
+    setDoc((current) => applyImportedCv(current, nextCv, true));
+    setImportedCv(true);
+    setView("content");
+    toast.add({
+      title: "Your CV form was populated",
+      description: `Mapped details from ${meta.filename}. Review every field before saving.`,
+      type: "success",
+    });
   };
 
   const finish = async () => {
@@ -562,59 +474,12 @@ export function ProfileDesignStudio({
       </div>
       {view === "content" ? (
         <div className="mx-auto max-w-7xl px-5 pb-8 sm:px-8">
-          <section className="mb-5 overflow-hidden rounded-2xl border border-line bg-card" aria-labelledby="upload-cv-heading">
-            <div className="border-b border-line bg-surface/50 px-4 py-4 sm:px-5">
-              <p className="eyebrow text-accent">Step 1 of 3</p>
-              <h2 id="upload-cv-heading" className="mt-1 text-lg font-semibold">Start with your existing CV</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">Upload a PDF and we will map its supported details into the editable form below. Scanned CVs are read with OCR. Nothing is published automatically.</p>
-            </div>
-            <div
-              className={`m-4 rounded-xl border-2 border-dashed p-5 text-center transition-colors sm:m-5 sm:p-7 ${dropActive ? "border-accent bg-accent-soft/30" : "border-line-strong bg-bg-soft/40"}`}
-              onDragEnter={(event) => { event.preventDefault(); setDropActive(true); }}
-              onDragOver={(event) => event.preventDefault()}
-              onDragLeave={(event) => { event.preventDefault(); setDropActive(false); }}
-              onDrop={(event) => {
-                event.preventDefault();
-                setDropActive(false);
-                const file = event.dataTransfer.files?.[0];
-                if (file) void importCv(file);
-              }}
-            >
-              <span className="mx-auto grid size-11 place-items-center rounded-xl bg-accent-soft text-accent">
-                {importing ? <LoaderCircle className="size-5 animate-spin" /> : <FileText className="size-5" aria-hidden="true" />}
-              </span>
-              <h3 className="mt-3 font-semibold">{importing ? "Reading and mapping your CV…" : "Drop your CV PDF here"}</h3>
-              <p className="mt-1 text-sm text-muted">or choose a file from your device · PDF · up to 8 MB · text or scanned</p>
-              <label className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent hover:brightness-95 has-[:disabled]:cursor-wait has-[:disabled]:opacity-60">
-                {importing ? <LoaderCircle className="size-4 animate-spin" /> : <FileUp className="size-4" aria-hidden="true" />}
-                {importing ? "Mapping fields…" : "Choose PDF"}
-                <input
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className="sr-only"
-                  disabled={importing || busy || photoUploading}
-                  onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    event.currentTarget.value = "";
-                    if (file) void importCv(file);
-                  }}
-                />
-              </label>
-              <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted">
-                <span className="inline-flex items-center gap-1"><ShieldCheck className="size-3.5 text-emerald-600" aria-hidden="true" /> Processed for mapping, not stored</span>
-                <span>Review every field before saving</span>
-              </div>
-            </div>
-          </section>
-          {importedCv && (
-            <section className="mb-5 flex gap-3 rounded-2xl border border-emerald-600/20 bg-emerald-500/5 p-4 text-sm leading-6" role="status">
-              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" aria-hidden="true" />
-              <div>
-                <h2 className="font-semibold text-fg">{importedFileName ? `${importedFileName} was mapped into your form` : "Your CV was mapped into your form"}</h2>
-                <p className="mt-1 text-muted">Review the highlighted form sections below, correct any missing or inaccurate details, then save. When you publish, the approved fields become the knowledge source for your portfolio AI.</p>
-              </div>
-            </section>
-          )}
+          <CvImportPipeline
+            slug={slug}
+            currentCv={cvData}
+            onApplyCv={handleApplyPipelineCv}
+            disabled={busy || photoUploading}
+          />
           <section className="mb-5 space-y-4 rounded-2xl border border-line bg-card p-4 sm:p-6" aria-labelledby="cv-personal-details">
             <div>
               <h2 id="cv-personal-details" className="text-lg font-semibold">Personal details</h2>

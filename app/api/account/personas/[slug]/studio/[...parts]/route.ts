@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
 import { APICallError, NoObjectGeneratedError } from "ai";
 import { PersonaDocShape, formatIssues } from "@/lib/persona/schema";
-import { CvPdfTextRequiredError, draftAnswer, mapCvPdf, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
+import { CvPdfTextRequiredError, draftAnswer, missingBangla, structureText, suggestQuestions, translateToBangla } from "@/server/brain/assist";
 import { ResumeParserError } from "@/server/brain/resume-parser";
+import { doclingParser } from "@/server/services/document-parser";
+import { cvExtractor } from "@/server/services/cv-extractor";
 import { compileBrain } from "@/server/brain/compile";
 import { aiEnabled, cvImportEnabled, resumeParserConfigured } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
@@ -127,30 +129,62 @@ export async function POST(req: Request, context: Context) {
 
   if (endpoint === "cv-import") {
     if (!cvImportEnabled() && !resumeParserConfigured()) {
-      return bad("CV import needs RESUME_PARSER_API_URL, OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
+      return bad("CV import needs DOCLING_API_URL, OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
     }
-    if (limited(`customer:cv-import:${session.userId}`, 5, 10 * 60_000)) {
+    if (limited(`customer:cv-import:${session.userId}`, 10, 10 * 60_000)) {
       return bad("Too many CV imports. Please try again in a few minutes.", 429);
     }
     const size = Number(req.headers.get("content-length") ?? 0);
-    if (size > 8_500_000) return bad("This PDF is too large. Choose a PDF under 8 MB.", 413);
+    if (size > 15_500_000) return bad("This document is too large. Choose a file under 15 MB.", 413);
     let form: FormData;
     try {
       form = await req.formData();
     } catch {
-      return bad("We couldn't read this upload. Choose a PDF and try again.", 400);
+      return bad("We couldn't read this upload. Choose a document and try again.", 400);
     }
     const file = form.get("file");
-    if (!(file instanceof File) || !file.size) return bad("Choose a PDF CV to upload.");
-    if (file.size > 8_000_000) return bad("This PDF is too large. Choose a PDF under 8 MB.", 413);
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      return bad("Upload a PDF file. You can also paste your CV details into the form.");
+    if (!(file instanceof File) || !file.size) return bad("Choose a CV document to upload.");
+    if (file.size > 15_000_000) return bad("This document is too large. Choose a file under 15 MB.", 413);
+
+    const safeName = file.name.replace(/^.*[/\\]/, "").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
+    const ext = safeName.split(".").pop()?.toLowerCase() ?? "";
+    const allowed = new Set(["pdf", "docx", "pptx", "txt", "md", "markdown"]);
+    if (!allowed.has(ext)) {
+      return bad("Upload a PDF, DOCX, PPTX, TXT, or Markdown CV file. You can also edit your CV details directly in the form.", 415);
     }
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") return bad("This file doesn't look like a readable PDF.");
+    if (ext === "pdf" && new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") {
+      return bad("This file doesn't look like a readable PDF.");
+    }
+    if ((ext === "docx" || ext === "pptx") && (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b)) {
+      return bad(`This file doesn't look like a readable ${ext.toUpperCase()} document.`);
+    }
+
     try {
-      const cv = await mapCvPdf(bytes, file.name.slice(0, 120));
-      return json({ ok: true, cv });
+      const mime =
+        ext === "pdf"
+          ? "application/pdf"
+          : ext === "docx"
+          ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          : ext === "pptx"
+          ? "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          : ext === "md" || ext === "markdown"
+          ? "text/markdown"
+          : "text/plain";
+
+      // 1. Docling document parsing & markdown normalization
+      const parsed = await doclingParser.parse(bytes, safeName, mime);
+
+      // 2. AI CV extraction into strongly-typed schema
+      const extraction = await cvExtractor.extract(parsed.markdown);
+
+      return json({
+        ok: true,
+        cv: extraction.data,
+        markdown: parsed.markdown,
+        metadata: parsed.metadata,
+        warnings: extraction.warnings,
+      });
     } catch (error) {
       console.error(`[customer-cv-import] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
       if (APICallError.isInstance(error)) {
@@ -161,7 +195,7 @@ export async function POST(req: Request, context: Context) {
           return bad("The CV import service is busy. Wait a minute and try again; your CV has not been changed.", 503);
         }
         if (error.statusCode === 400 || error.statusCode === 413 || error.statusCode === 415) {
-          return bad("The AI service could not accept this PDF. Use a text-based, unprotected PDF under 8 MB, then try again.", 422);
+          return bad("The AI service could not accept this document. Use a standard document under 15 MB, then try again.", 422);
         }
         if (error.statusCode && error.statusCode >= 500) {
           return bad("The CV import service is temporarily unavailable. Try again shortly; your CV has not been changed.", 503);
@@ -170,9 +204,12 @@ export async function POST(req: Request, context: Context) {
       if (error instanceof CvPdfTextRequiredError) return bad(error.message, 422);
       if (error instanceof ResumeParserError) return bad(`The CV parser service couldn't read this CV: ${error.message}`, 502);
       if (NoObjectGeneratedError.isInstance(error)) {
-        return bad("The AI couldn't extract editable fields from this PDF. Use a text-based, unprotected PDF or enter the details manually.", 422);
+        return bad("The AI couldn't extract editable fields from this CV document. Please check the content or enter details manually.", 422);
       }
-      return bad("CV import timed out or could not reach the AI service. Try again shortly; your CV has not been changed.", 503);
+      return bad(
+        error instanceof Error && error.message ? error.message : "CV import timed out or could not reach the parser service. Try again shortly; your CV has not been changed.",
+        422,
+      );
     }
   }
 

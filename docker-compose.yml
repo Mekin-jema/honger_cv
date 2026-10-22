@@ -20,11 +20,10 @@
 # volumes:
 #   postgres_data:
 
-
 services:
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: local-postgres
+    container_name: postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: myapp
@@ -39,6 +38,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  docling:
+    image: ghcr.io/ds4sd/docling-serve:latest
+    container_name: local-docling
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
 
 volumes:
   postgres_data:

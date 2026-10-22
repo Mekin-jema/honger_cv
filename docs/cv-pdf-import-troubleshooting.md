@@ -9,8 +9,11 @@ This guide covers the **customer CV editor's PDF import** (the Upload CV action 
    POST /api/account/personas/<slug>/studio/cv-import/
    ```
 2. `app/api/account/personas/[slug]/studio/[...parts]/route.ts` checks the signed-in owner, same-origin request, AI configuration, per-user rate limit (5 attempts per 10 minutes), upload size, and `%PDF-` signature.
-3. `mapCvPdf` in `server/brain/assist.ts` first extracts selectable text locally with `pdfjs-dist`, then sends that text to Gemini for structured mapping into contact details, experience, skills, education, and other CV fields. This avoids provider-side PDF parsing failures for ordinary text PDFs. If local text extraction yields no text (for example, a scanned PDF), the original PDF is sent as a Gemini file part instead. The result is previewed/applied in the editor; the import route itself does not save or publish the CV.
-4. The model selection order for PDF import is `AI_FALLBACK_MODEL` (or `GEMINI_FALLBACK_MODEL`, default `gemini-3.5-flash-lite`) first, followed by `AI_MODEL` (or `GEMINI_MODEL`, default `gemini-3.8-flash`) if the first model fails. Each attempt has a 55-second timeout. The route declares Node.js runtime and `maxDuration = 120` seconds.
+3. `mapCvPdf` in `server/brain/assist.ts` picks a parser in this order:
+   1. **Resume Parser API** — when `RESUME_PARSER_API_URL` is set, the PDF is sent to a separately hosted parser service ([resume-parser-api](https://github.com/theresumeparser/resume-parser-api.git): PyMuPDF text extraction, OCR via a vision model for scans, and Pydantic-validated structured output). Its result is mapped to the CV form shape in `server/brain/resume-parser.ts`.
+   2. **Hosted model** — otherwise the PDF is parsed locally with `pdfjs-dist`, and the extracted text is sent to OpenRouter, then Gemini, for structured mapping.
+   The result is previewed/applied in the editor; the import route itself does not save or publish the CV.
+4. The model selection order for the hosted-model path is `AI_FALLBACK_MODEL` (or `GEMINI_FALLBACK_MODEL`, default `gemini-3.5-flash-lite`) first, followed by `AI_MODEL` (or `GEMINI_MODEL`, default `gemini-3.8-flash`) if the first model fails. Each attempt has a 55-second timeout. The route declares Node.js runtime and `maxDuration = 120` seconds.
 
 ## Required Vercel variables
 
@@ -20,6 +23,8 @@ Set these in **Vercel → Project → Settings → Environment Variables** for e
 | --- | --- | --- |
 | `OPENROUTER_API_KEY` | Your OpenRouter API key | Recommended; when set, OpenRouter is tried first for CV mapping |
 | `OPENROUTER_CV_MODEL` | `openrouter/free` | Optional model override; default is a free-tier OpenRouter model |
+| `RESUME_PARSER_API_URL` | Base URL of your hosted Resume Parser API (e.g. `https://parser.example.com`) | Optional; **preferred** for PDF import when set |
+| `RESUME_PARSER_API_KEY` | The `X-API-Key` value that parser service expects | Required when `RESUME_PARSER_API_URL` is set |
 | `GEMINI_API_KEY` | Your valid Google AI Studio / Gemini API key | Optional if using OpenRouter; enables Gemini fallback and other AI features |
 | `AI_MODEL` | `gemini-3.8-flash` | Used for general Gemini AI and as CV import's Gemini fallback |
 | `AI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | First Gemini model tried when OpenRouter isn't configured or Gemini fallback is needed |
@@ -55,12 +60,33 @@ The CV route uses PDF.js locally. Its Node worker file must be available in the 
 
 | Response/error | Likely cause / next check |
 | --- | --- |
-| `CV import needs the AI service to be enabled.` | `GEMINI_API_KEY` is missing in the deployed environment. |
+| `CV import needs RESUME_PARSER_API_URL, OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.` | No parser is configured in the deployed environment. |
+| `The CV parser service couldn't read this CV: ...` | The hosted Resume Parser returned an error, an invalid response, or no usable fields. Check that service's logs and `RESUME_PARSER_API_URL` / `RESUME_PARSER_API_KEY`. |
 | `CV import AI credentials were rejected...` | Gemini rejected the key; verify/rotate `GEMINI_API_KEY`. |
 | `The CV import service is busy...` | Gemini rate limit/quota; inspect Google AI Studio usage/quota and wait before retrying. |
 | `The AI service could not accept this PDF...` | Unsupported, protected, or too-large PDF; try a text-based PDF below 8 MB. |
 | `The AI couldn't extract editable fields...` | Gemini returned no valid structured CV; try a simpler/text-based PDF. |
 | `CV import timed out or could not reach the AI service...` | Inspect `[customer-cv-import]` in Vercel function logs. It may be an unavailable model, network issue, timeout, or other provider failure. |
+
+## Running the Resume Parser API locally
+
+The parser is a separate service and is not started by this app. Clone it and run it with Docker:
+
+```bash
+git clone https://github.com/theresumeparser/resume-parser-api.git
+cd resume-parser-api
+cp .env.example .env      # add OPENROUTER_API_KEY and API_KEYS
+docker run --rm -p 8000:8000 --env-file .env ghcr.io/theresumeparser/resume-parser-api:latest
+```
+
+Then point this app at it and use the same key in both places:
+
+```env
+RESUME_PARSER_API_URL=http://localhost:8000
+RESUME_PARSER_API_KEY=sk-parse-abc123
+```
+
+The parser service needs its own `OPENROUTER_API_KEY`, and `API_KEYS` must contain the value you put in `RESUME_PARSER_API_KEY`. Its own rate limit and timeout settings apply. In production, host it on a stable HTTPS URL.
 
 ## Local verification
 
