@@ -1,0 +1,39 @@
+# Version control and CI
+.git
+.github
+
+# Secrets and env (keep .env.example for reference)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.venv
+venv
+*.egg-info
+*.egg
+
+# Build artifacts
+dist
+build
+node_modules
+
+# Project metadata and docs (reduce context; keep README if needed in image)
+.prd
+tests
+docs
+*.md
+!README.md
+
+# Editor and tooling
+.cursor
+*.log
+
+# Docker (keep Dockerfile in context; ignore compose and this file)
+.dockerignore
+docker-compose.yml
