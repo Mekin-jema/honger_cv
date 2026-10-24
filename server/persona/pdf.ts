@@ -7,6 +7,7 @@ import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
 import chromium from "@sparticuz/chromium";
 import { signToken, verifyToken } from "../access/cookie";
+import { cloudinaryCredentials } from "../cloudinary-config";
 import type { Tier } from "@/lib/persona/types";
 import { documentOpen } from "./compile";
 import type { CompiledPersona } from "./compile";
@@ -126,12 +127,10 @@ export async function storePersonaPdf(
   slug: string,
   version: number,
 ): Promise<string> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
-  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
-  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
-  if (!cloudName || !apiKey || !apiSecret) return localPath;
+  const credentials = cloudinaryCredentials();
+  if (!credentials) return localPath;
 
-  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
+  cloudinary.config({ ...credentials, secure: true });
   const uploaded = await cloudinary.uploader.upload(localPath, {
     resource_type: "raw",
     public_id: `honger-cv/customers/${slug}/cv/v${version}.pdf`,

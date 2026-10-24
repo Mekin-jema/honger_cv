@@ -10,6 +10,7 @@ import { compileBrain } from "@/server/brain/compile";
 import { aiEnabled, cvImportEnabled, resumeParserConfigured } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
 import { customerSession } from "@/server/admin-session";
+import { cloudinaryCredentials } from "@/server/cloudinary-config";
 import { createCode, listCodes, resetAccess, revokeCode } from "@/server/access/codes";
 import { query } from "@/server/db";
 import { compilePersona } from "@/server/persona/compile";
@@ -238,14 +239,12 @@ export async function POST(req: Request, context: Context) {
       return bad("Upload a valid JPG, PNG or WebP image. SVG and other file types aren't supported.");
     }
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-    if (!cloudName || !apiKey || !apiSecret) {
+    const credentials = cloudinaryCredentials();
+    if (!credentials) {
       return bad("Photo uploads aren't configured. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.", 503);
     }
 
-    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
+    cloudinary.config({ ...credentials, secure: true });
     const folder = `honger-cv/customers/${slug}/${assetType === "profile" ? "profile" : "projects"}`;
     let uploaded: { public_id: string };
     try {

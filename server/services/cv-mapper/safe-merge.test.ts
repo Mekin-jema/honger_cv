@@ -205,6 +205,26 @@ describe("Safe Merge & Conflict Resolution", () => {
     expect(result.mergedCv.languages).toEqual([]);
   });
 
+  it("adds HTTPS to bare imported profile links", () => {
+    const extracted: StructuredCvData = {
+      ...sampleExtracted,
+      identity: {
+        ...sampleExtracted.identity,
+        links: [
+          { label: "LinkedIn", href: "linkedin.com/in/alexmercer" },
+          { label: "GitHub", href: "github.com/alexmercer" },
+        ],
+      },
+    };
+
+    const result = mergeCvData(emptyCv, extracted);
+
+    expect(result.mergedCv.identity?.links).toEqual([
+      { label: "LinkedIn", href: "https://linkedin.com/in/alexmercer" },
+      { label: "GitHub", href: "https://github.com/alexmercer" },
+    ]);
+  });
+
   it("handles missing contact information gracefully without breaking", () => {
     const extractedWithoutContact: StructuredCvData = {
       ...sampleExtracted,

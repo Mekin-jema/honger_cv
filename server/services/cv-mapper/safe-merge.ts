@@ -34,6 +34,15 @@ const isNonEmpty = (val: unknown): boolean => {
   return true;
 };
 
+function normalizeImportedHref(href: string): string {
+  const value = href.trim();
+  if (/^https?:\/\//i.test(value)) return value;
+  if (/^(?:www\.)?[a-z\d](?:[a-z\d.-]*[a-z\d])?\.[a-z]{2,}(?::\d+)?(?:[/?#].*)?$/i.test(value)) {
+    return `https://${value}`;
+  }
+  return value;
+}
+
 /**
  * Checks if the existing CV is just demo or starter data that should be replaced without conflict warnings.
  */
@@ -138,7 +147,10 @@ export function mergeCvData(
 
   // Identity Links: merge unique links
   const existingLinks = existingIdentity.links ?? [];
-  const importedLinks = extracted.identity.links ?? [];
+  const importedLinks = (extracted.identity.links ?? []).map((link) => ({
+    ...link,
+    href: normalizeImportedHref(link.href),
+  }));
   if (forceOverwrite && JSON.stringify(existingLinks) !== JSON.stringify(importedLinks)) {
     mergedIdentity.links = importedLinks;
     diffs.push({
