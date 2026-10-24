@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { StructuredCvOutputSchema, StructuredCvSchema } from "./schema";
 import { CvExtractor, CvExtractorError } from "./cv-extractor";
-import type { LLMProvider, LLMProviderOptions } from "./llm-provider";
+import { affordableOutputTokenLimit, isOpenRouterInFlightCreditError, type LLMProvider, type LLMProviderOptions } from "./llm-provider";
 
 describe("StructuredCvSchema Validation", () => {
   it("requires all nested properties in the provider JSON schema", () => {
@@ -85,6 +85,21 @@ describe("StructuredCvSchema Validation", () => {
 });
 
 describe("CvExtractor & Security Boundaries", () => {
+  it("reduces OpenRouter output reservations from its affordable-token error", () => {
+    expect(
+      affordableOutputTokenLimit(
+        new Error("You requested up to 1800 tokens, but can only afford 1713."),
+        1800,
+      ),
+    ).toBe(1541);
+    expect(affordableOutputTokenLimit(new Error("Rate limited upstream."), 1800)).toBeUndefined();
+  });
+
+  it("recognizes only OpenRouter in-flight credit conflicts for backoff", () => {
+    expect(isOpenRouterInFlightCreditError(new Error("This request would exceed your available credits given your current in-flight requests."))).toBe(true);
+    expect(isOpenRouterInFlightCreditError(new Error("Rate limited upstream."))).toBe(false);
+  });
+
   it("throws CvExtractorError when given empty markdown", async () => {
     const extractor = new CvExtractor();
     await expect(extractor.extract("")).rejects.toThrow(CvExtractorError);

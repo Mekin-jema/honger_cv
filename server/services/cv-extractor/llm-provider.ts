@@ -1,5 +1,5 @@
 import "server-only";
-import { APICallError, generateText, Output } from "ai";
+import { APICallError, generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 import {
   aiEnabled,
@@ -23,6 +23,22 @@ export interface LLMProvider {
   name: string;
   isAvailable(): boolean;
   generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }>;
+}
+
+export function affordableOutputTokenLimit(error: unknown, requested: number): number | undefined {
+  if (!(error instanceof Error)) return undefined;
+  const match = error.message.match(/can only afford\s+([\d,]+)/i);
+  if (!match) return undefined;
+  const affordable = Number(match[1].replaceAll(",", ""));
+  if (!Number.isFinite(affordable) || affordable >= requested) return undefined;
+  const reduced = Math.min(requested - 1, Math.floor(affordable * 0.9));
+  return reduced >= 512 ? reduced : undefined;
+}
+
+export function isOpenRouterInFlightCreditError(error: unknown): boolean {
+  return error instanceof Error &&
+    /available credits/i.test(error.message) &&
+    /in[- ]flight requests/i.test(error.message);
 }
 
 export class GoogleGeminiProvider implements LLMProvider {
@@ -82,19 +98,52 @@ export class OpenRouterProvider implements LLMProvider {
   public async generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }> {
     const modelId = openRouterCvModelId();
     const timeoutMs = options.timeoutMs ?? 55_000;
+    let maxOutputTokens = options.maxTokens ?? 7000;
+    let prompt = options.prompt;
+    let temperature = options.temperature ?? 0.1;
 
-    const res = await generateText({
-      model: openRouter()(modelId),
-      system: options.system,
-      prompt: options.prompt,
-      output: Output.object({ schema: options.schema }),
-      temperature: options.temperature ?? 0.1,
-      maxOutputTokens: options.maxTokens ?? 7000,
-      maxRetries: 0,
-      abortSignal: AbortSignal.timeout(timeoutMs),
-    });
+    for (let attempt = 0; attempt <= 2; attempt++) {
+      try {
+        const res = await generateText({
+          model: openRouter()(modelId),
+          system: options.system,
+          prompt,
+          output: Output.object({ schema: options.schema }),
+          temperature,
+          maxOutputTokens,
+          maxRetries: 0,
+          abortSignal: AbortSignal.timeout(timeoutMs),
+        });
 
-    return { output: res.output as T, providerUsed: `openrouter:${modelId}` };
+        return { output: res.output as T, providerUsed: `openrouter:${modelId}` };
+      } catch (error) {
+        if (attempt >= 2) throw error;
+        const reducedLimit = affordableOutputTokenLimit(error, maxOutputTokens);
+        if (reducedLimit !== undefined) {
+          maxOutputTokens = reducedLimit;
+          continue;
+        }
+        if (isOpenRouterInFlightCreditError(error)) {
+          await new Promise((resolve) => setTimeout(resolve, 2_000 * (attempt + 1)));
+          continue;
+        }
+        if (NoObjectGeneratedError.isInstance(error)) {
+          if (attempt === 0) {
+            prompt = `${options.prompt}\n\nFormatting retry: return the same schema as compact JSON. Group related skills under their CV headings, limit each role to three representative bullets, keep project descriptions to one concise sentence, and omit references and duplicate URLs. Preserve every role, project, education item, certification, and language.`;
+            temperature = 0;
+            continue;
+          }
+          console.warn("[OpenRouter] CV structured output could not be parsed", {
+            finishReason: error.finishReason,
+            outputLength: error.text?.length,
+            causeName: error.cause instanceof Error ? error.cause.name : undefined,
+          });
+        }
+        throw error;
+      }
+    }
+
+    throw new Error("OpenRouter could not reserve enough output tokens for CV extraction.");
   }
 }
 
