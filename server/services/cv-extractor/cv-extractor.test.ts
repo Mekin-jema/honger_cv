@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { StructuredCvSchema } from "./schema";
+import { z } from "zod";
+import { StructuredCvOutputSchema, StructuredCvSchema } from "./schema";
 import { CvExtractor, CvExtractorError } from "./cv-extractor";
 import type { LLMProvider, LLMProviderOptions } from "./llm-provider";
 
 describe("StructuredCvSchema Validation", () => {
+  it("requires all nested properties in the provider JSON schema", () => {
+    const jsonSchema = z.toJSONSchema(StructuredCvOutputSchema) as unknown as {
+      properties: { identity: { properties: { links: { items: { required: string[] } } } } };
+    };
+
+    expect(jsonSchema.properties.identity.properties.links.items.required).toEqual(["label", "href"]);
+  });
+
   it("validates a complete CV object matching the form schema", () => {
     const validData = {
       identity: {

@@ -73,6 +73,23 @@ export const StructuredCvSchema = z.object({
   languages: z.array(ExtractedLanguageSchema).max(20).default([]),
 });
 
+function requiredOutputSchema(schema: z.ZodType): z.ZodType {
+  const required = schema instanceof z.ZodDefault ? schema.removeDefault() : schema;
+  if (required instanceof z.ZodObject) {
+    const shape = Object.fromEntries(
+      Object.entries(required.shape).map(([key, field]) => [key, requiredOutputSchema(field)]),
+    );
+    return z.object(shape).strict();
+  }
+  if (required instanceof z.ZodArray) {
+    return z.array(requiredOutputSchema(required.element as unknown as z.ZodType));
+  }
+  return required as z.ZodType;
+}
+
+/** Provider schema: all JSON object properties are required for OpenAI-compatible structured outputs. */
+export const StructuredCvOutputSchema = requiredOutputSchema(StructuredCvSchema);
+
 export type StructuredCvData = z.infer<typeof StructuredCvSchema>;
 
 export type FieldStatus = "imported" | "existing" | "missing" | "needs_review" | "conflict";

@@ -1,5 +1,5 @@
 import "server-only";
-import { StructuredCvSchema, type StructuredCvData } from "./schema";
+import { StructuredCvOutputSchema, StructuredCvSchema, type StructuredCvData } from "./schema";
 import { defaultLLMProvider, type LLMProvider } from "./llm-provider";
 
 export interface ExtractionResult {
@@ -89,9 +89,9 @@ Extract all explicitly mentioned details into the strongly-typed schema now. Rem
       const { output, providerUsed } = await this.provider.generateStructured<StructuredCvData>({
         system: SYSTEM_PROMPT,
         prompt: userPrompt,
-        schema: StructuredCvSchema,
+        schema: StructuredCvOutputSchema,
         temperature: 0.1,
-        maxTokens: 7500,
+        maxTokens: 3000,
         timeoutMs: 60_000,
       });
 
