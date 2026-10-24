@@ -91,7 +91,7 @@ Extract all explicitly mentioned details into the strongly-typed schema now. Rem
         prompt: userPrompt,
         schema: StructuredCvOutputSchema,
         temperature: 0.1,
-        maxTokens: 3000,
+        maxTokens: 1800,
         timeoutMs: 60_000,
       });
 
@@ -99,7 +99,7 @@ Extract all explicitly mentioned details into the strongly-typed schema now. Rem
       const parsed = StructuredCvSchema.safeParse(output);
       if (!parsed.success) {
         throw new CvExtractorError(
-          `AI output failed schema validation: ${parsed.error.issues.map((i) => i.message).join(", ")}`,
+          `AI output failed schema validation: ${parsed.error.issues.map((i) => `${i.path.join(".") || "output"}: ${i.message}`).join(", ")}`,
           "SCHEMA_VALIDATION_ERROR",
           422,
         );

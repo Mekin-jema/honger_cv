@@ -44,7 +44,7 @@ const STAGES: { id: PipelineStage; label: string; desc: string }[] = [
 export interface CvImportPipelineProps {
   slug?: string;
   currentCv: CvData;
-  onApplyCv: (nextCv: CvData, meta: { filename: string; markdown?: string }) => void;
+  onApplyCv: (nextCv: CvData, meta: { filename: string; markdown?: string }) => void | Promise<void>;
   disabled?: boolean;
 }
 
@@ -83,6 +83,12 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
       return;
     }
 
+    if (!file.size) {
+      setErrorMessage("The selected file is empty. Choose a non-empty copy of the CV document.");
+      setStage("error");
+      return;
+    }
+
     if (file.size > 15_000_000) {
       setErrorMessage("This file is too large. Please upload a CV document under 15 MB.");
       setStage("error");
@@ -100,7 +106,7 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
       setStage("parsing_docling");
 
       const parseForm = new FormData();
-      parseForm.set("file", file);
+      parseForm.set("file", file, file.name);
 
       const parseRes = await fetch(withBase("/api/cv/parse"), {
         method: "POST",
@@ -167,7 +173,7 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
       if (merge.hasConflicts) {
         setStage("conflict_review");
       } else {
-        onApplyCv(merge.mergedCv, { filename: file.name, markdown: generatedMarkdown });
+        await onApplyCv(merge.mergedCv, { filename: file.name, markdown: generatedMarkdown });
         setStage("success");
       }
     } catch (err: unknown) {
@@ -177,22 +183,22 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
     }
   };
 
-  const applyCustomResolutions = () => {
+  const applyCustomResolutions = async () => {
     if (!extractedData) return;
     const resolved = mergeCvData(currentCv, extractedData, {
       strategy: "selective",
       resolutions,
     });
-    onApplyCv(resolved.mergedCv, { filename, markdown });
+    await onApplyCv(resolved.mergedCv, { filename, markdown });
     setStage("success");
   };
 
-  const acceptAllImported = () => {
+  const acceptAllImported = async () => {
     if (!extractedData) return;
     const resolved = mergeCvData(currentCv, extractedData, {
       strategy: "overwrite-all",
     });
-    onApplyCv(resolved.mergedCv, { filename, markdown });
+    await onApplyCv(resolved.mergedCv, { filename, markdown });
     setStage("success");
   };
 

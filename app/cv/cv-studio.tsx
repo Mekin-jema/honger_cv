@@ -59,12 +59,14 @@ export function CvStudio({
   initialTemplate = "modern",
   initialAccentColor = palettes[1].color,
   onDesignChange,
+  onTemplateChange,
   onPrint,
   onDownload,
   analyticsUrl,
   downloadUrl,
   autoPrint = false,
   showDesignPicker = true,
+  showStudioHeading = true,
   allowPrintFallback = true,
   onNextStep,
   nextStepLabel = "Continue to edit CV",
@@ -74,12 +76,14 @@ export function CvStudio({
   initialTemplate?: CvTemplateId;
   initialAccentColor?: string;
   onDesignChange?: (design: CvDesign) => void;
+  onTemplateChange?: (template: CvTemplateId) => void;
   onPrint?: () => void;
   onDownload?: () => void;
   analyticsUrl?: string;
   downloadUrl?: string | null;
   autoPrint?: boolean;
   showDesignPicker?: boolean;
+  showStudioHeading?: boolean;
   allowPrintFallback?: boolean;
   onNextStep?: () => void;
   nextStepLabel?: string;
@@ -89,6 +93,7 @@ export function CvStudio({
   const [accentColor, setAccentColor] = useState<string>(initialAccentColor);
   const selectTemplate = (next: CvTemplateId) => {
     setTemplate(next);
+    onTemplateChange?.(next);
     onDesignChange?.({ template: next, accentColor });
   };
   const selectAccent = (next: string) => {
@@ -125,24 +130,25 @@ export function CvStudio({
       data-color={selectedPalette?.id ?? "custom"}
       style={cvTemplateStyle(accentColor)}
     >
-      <section className="cv-studio-heading no-print">
-        <div className="cv-studio-heading-main">
-          {showSidebarToggle && <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />}
-          <ThemeToggle className="cv-tool cv-theme-toggle" />
-          <div className="cv-studio-heading-copy">
-            <p className="cv-studio-eyebrow">{showDesignPicker ? "CV STUDIO" : "SELECTED CV DESIGN"}</p>
-            <h1>{showDesignPicker ? "Choose your CV design" : cv.identity?.name ?? "Curriculum vitae"}</h1>
-            <p>
-              {!showDesignPicker
-                ? "This CV is shown in the design selected by its owner."
-                : onNextStep
-                  ? "Choose a template to preview your CV, then continue to edit your information."
-                  : "Select a template to preview your CV, then save that design as a PDF."}
-            </p>
+      <section className={`cv-studio-heading no-print${showStudioHeading ? "" : " cv-studio-heading-embedded"}`}>
+        {showStudioHeading && <div className="cv-studio-heading-main">
+            {showSidebarToggle && <SidebarTrigger className="cv-tool cv-sidebar-toggle" aria-label="Toggle sidebar" />}
+            <ThemeToggle className="cv-tool cv-theme-toggle" />
+            <div className="cv-studio-heading-copy">
+              <p className="cv-studio-eyebrow">{showDesignPicker ? "CV STUDIO" : "SELECTED CV DESIGN"}</p>
+              <h1>{showDesignPicker ? "Choose your CV design" : cv.identity?.name ?? "Curriculum vitae"}</h1>
+              <p>
+                {!showDesignPicker
+                  ? "This CV is shown in the design selected by its owner."
+                  : onNextStep
+                    ? "Choose a template to preview your CV, then continue to edit your information."
+                    : "Select a template to preview your CV, then save that design as a PDF."}
+              </p>
+            </div>
           </div>
-        </div>
+        }
         <div className="cv-studio-heading-side">
-          {onNextStep ? (
+          {showStudioHeading && (onNextStep ? (
             <button type="button" className="cv-tool-primary" onClick={onNextStep}>
               {nextStepLabel} <ArrowRight className="size-4" aria-hidden="true" />
             </button>
@@ -156,7 +162,7 @@ export function CvStudio({
             ) : allowPrintFallback ? (
               <PrintButton label="Save selected PDF" className="cv-tool-primary" onPrint={trackPrint} />
             ) : <span className="cv-tool cv-tool-primary" aria-disabled="true">PDF download is not ready</span>
-          )}
+          ))}
           {showDesignPicker && <fieldset className="cv-color-picker cv-heading-color-picker">
             <legend>Accent color</legend>
             <div className="cv-color-options">

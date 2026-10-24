@@ -132,9 +132,8 @@ export async function POST(req: Request) {
   }
 
   const file = form.get("file");
-  if (!(file instanceof File) || !file.size) {
-    return bad("Choose a CV document (PDF, DOCX, TXT, or Markdown) to upload.", 400);
-  }
+  if (!(file instanceof File)) return bad("No CV file was attached. Select a PDF, DOCX, TXT, or Markdown file and try again.", 400);
+  if (!file.size) return bad("The selected CV file is empty (0 bytes). Choose a non-empty copy and try again.", 400);
 
   if (file.size > MAX_FILE_BYTES) {
     return bad("This document is too large. Choose a file under 15 MB.", 413);

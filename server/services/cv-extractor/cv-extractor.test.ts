@@ -72,6 +72,16 @@ describe("StructuredCvSchema Validation", () => {
       expect(parsed.data.education.degree).toBe("");
     }
   });
+
+  it("accepts detailed skill inventories from long CVs", () => {
+    const parsed = StructuredCvSchema.safeParse({
+      identity: { name: "Alex Example" },
+      skills: Array.from({ length: 80 }, (_, index) => ({ k: `Category ${index + 1}`, v: "TypeScript, React" })),
+    });
+
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.skills).toHaveLength(80);
+  });
 });
 
 describe("CvExtractor & Security Boundaries", () => {

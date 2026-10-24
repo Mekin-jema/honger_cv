@@ -135,6 +135,28 @@
   background: color-mix(in srgb, var(--bg-soft) 94%, transparent);
   backdrop-filter: blur(12px);
 }
+.cv-studio-heading-embedded {
+  position: static;
+  width: 100%;
+  margin: 0 auto 12px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+.cv-studio-heading-embedded .cv-studio-heading-side {
+  align-items: flex-end;
+}
+.studio-step-panel {
+  animation: studio-step-enter 220ms ease-out both;
+}
+@keyframes studio-step-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-step-panel { animation: none; }
+}
 .cv-studio-heading-main {
   display: flex;
   min-width: 0;

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, LoaderCircle, Plus, Save, Sparkles, Trash2 } from "lucide-react";
+import { ArrowRight, Check, Circle, LoaderCircle, MinusCircle, Plus, Trash2, X } from "lucide-react";
 import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
 import { toast } from "@/components/ui/toast";
@@ -11,6 +11,7 @@ import type { CvData, CvIdentity } from "@/lib/persona/cv";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
 import { CvImportPipeline } from "./cv-import-pipeline";
+import { isStarterCv } from "@/server/services/cv-mapper/safe-merge";
 
 function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = false): PersonaDoc {
   const doc = structuredClone(initial);
@@ -45,7 +46,7 @@ function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = fal
         ? "github"
         : "other",
     label: link.label,
-    href: link.href,
+      href: link.href,
   }));
   if (cv.photo.trim()) {
     doc.identity.avatar = { src: cv.photo.trim(), alt: doc.identity.avatar?.alt ?? doc.identity.name };
@@ -198,6 +199,33 @@ function applyImportedCv(initial: PersonaDoc, cv: CvData, clearDemoContent = fal
   return doc;
 }
 
+type SaveState = "saved" | "dirty" | "saving" | "error";
+
+type SaveOptions = {
+  silent?: boolean;
+  cvData?: CvData;
+  doc?: PersonaDoc;
+  importedCv?: boolean;
+};
+
+type TrainingStep = {
+  id: string;
+  label: string;
+  state: "pending" | "running" | "done" | "failed" | "skipped";
+  detail?: string;
+  ms?: number;
+};
+
+const INITIAL_TRAINING_STEPS: TrainingStep[] = [
+  { id: "validate", label: "Check the draft", state: "pending" },
+  { id: "compile", label: "Build the AI's knowledge", state: "pending" },
+  { id: "snapshot", label: "Save a new version", state: "pending" },
+  { id: "embed", label: "Index for search", state: "pending" },
+  { id: "checks", label: "Test questions and privacy", state: "pending" },
+  { id: "activate", label: "Make it live", state: "pending" },
+  { id: "pdf", label: "Make the PDF", state: "pending" },
+];
+
 export function ProfileDesignStudio({
   slug,
   doc: initialDoc,
@@ -216,14 +244,30 @@ export function ProfileDesignStudio({
   const [rev, setRev] = useState(initialRev);
   const [design, setDesign] = useState(initialDesign);
   const [cvData, setCvData] = useState(cv);
-  // Start with the content step: uploading an existing CV is the fastest, clearest path for most people.
-  const [view, setView] = useState<"content" | "design">("content");
+  const [view, setView] = useState<"content" | "design" | "training">("content");
   const [busy, setBusy] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [importedCv, setImportedCv] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("saved");
+  const [designSelected, setDesignSelected] = useState(false);
+  const [trainingError, setTrainingError] = useState("");
+  const [trainingPhase, setTrainingPhase] = useState<"saving" | "training">("saving");
+  const [trainingSteps, setTrainingSteps] = useState<TrainingStep[]>(INITIAL_TRAINING_STEPS);
+  const editVersion = useRef(0);
   const importing = false;
 
+  const markDirty = () => {
+    editVersion.current++;
+    setSaveState("dirty");
+  };
+
+  const changeCvData = (next: CvData) => {
+    setCvData(next);
+    markDirty();
+  };
+
   const updateIdentity = (update: (identity: CvIdentity) => void) => {
+    markDirty();
     setCvData((current) => {
       const next = structuredClone(current);
       const identity = next.identity ?? { name: "", links: [] };
@@ -233,19 +277,24 @@ export function ProfileDesignStudio({
     });
   };
 
-  const save = async () => {
-    if (busy || importing || photoUploading) return false;
+  const save = useCallback(async (options: SaveOptions = {}) => {
+    if (busy || importing || photoUploading || saveState === "saving") return false;
+    const versionAtStart = editVersion.current;
+    const currentCv = options.cvData ?? cvData;
+    const currentDoc = options.doc ?? doc;
+    const isImportedCv = options.importedCv ?? importedCv;
+    setSaveState("saving");
     setBusy(true);
     try {
-      const clearDemoContent = importedCv ||
-        doc.document.data?.customerStarter === true ||
-        doc.identity.name === "Mekin Jemal";
-      const nextDoc = applyImportedCv(doc, cvData, clearDemoContent);
-      const identity = cvData.identity;
+      const clearDemoContent = isImportedCv ||
+        currentDoc.document.data?.customerStarter === true ||
+        currentDoc.identity.name === "Mekin Jemal";
+      const nextDoc = applyImportedCv(currentDoc, currentCv, clearDemoContent);
+      const identity = currentCv.identity;
       if (identity) {
         nextDoc.identity.name = identity.name.trim() || nextDoc.identity.name;
-        nextDoc.identity.role = cvData.title;
-        nextDoc.identity.headline = cvData.title;
+        nextDoc.identity.role = currentCv.title;
+        nextDoc.identity.headline = currentCv.title;
         nextDoc.identity.email = identity.email?.trim() || undefined;
         nextDoc.identity.phone = identity.phone?.trim() || undefined;
         nextDoc.identity.location = identity.location?.trim() || undefined;
@@ -255,8 +304,8 @@ export function ProfileDesignStudio({
           const kind = existing?.kind ?? (label.includes("github") ? "github" : label.includes("linkedin") ? "linkedin" : "other");
           return { kind, label: link.label, href: link.href };
         });
-        if (cvData.photo.trim()) {
-          nextDoc.identity.avatar = { src: cvData.photo.trim(), alt: nextDoc.identity.avatar?.alt ?? "" };
+        if (currentCv.photo.trim()) {
+          nextDoc.identity.avatar = { src: currentCv.photo.trim(), alt: nextDoc.identity.avatar?.alt ?? "" };
         } else {
           delete nextDoc.identity.avatar;
           nextDoc.identity.photos = [];
@@ -264,7 +313,7 @@ export function ProfileDesignStudio({
       }
       nextDoc.document.data = {
         ...(nextDoc.document.data ?? {}),
-        ...cvData,
+        ...currentCv,
         cvTemplate: design.template,
         cvAccent: design.accentColor,
       };
@@ -275,7 +324,8 @@ export function ProfileDesignStudio({
       });
       const result = (await response.json()) as { rev?: number; error?: string };
       if (!response.ok || typeof result.rev !== "number") {
-        toast.add({
+        setSaveState("error");
+        if (!options.silent) toast.add({
           title: "Couldn't save your CV",
           description: result.error || "Couldn't save your CV design.",
           type: "error",
@@ -285,10 +335,12 @@ export function ProfileDesignStudio({
       }
       setRev(result.rev);
       setDoc(nextDoc);
-      toast.add({ title: "CV saved", description: "Your CV form and design are saved to your private draft.", type: "success" });
+      setSaveState(editVersion.current === versionAtStart ? "saved" : "dirty");
+      if (!options.silent) toast.add({ title: "CV saved", description: "Your CV form and design are saved to your private draft.", type: "success" });
       return true;
     } catch {
-      toast.add({
+      setSaveState("error");
+      if (!options.silent) toast.add({
         title: "Couldn't save your CV",
         description: "Couldn't reach the server. Check your connection and try again.",
         type: "error",
@@ -298,6 +350,27 @@ export function ProfileDesignStudio({
     } finally {
       setBusy(false);
     }
+  }, [busy, importing, photoUploading, saveState, cvData, doc, importedCv, design, rev, slug]);
+
+  useEffect(() => {
+    if (saveState !== "dirty" || busy || photoUploading || importing) return;
+    const timer = window.setTimeout(() => void save({ silent: true }), 650);
+    return () => window.clearTimeout(timer);
+  }, [saveState, cvData, doc, design, busy, photoUploading, importing, importedCv, rev, save]);
+
+  const openDetailsStep = async () => {
+    if (saveState !== "saved" && !(await save({ silent: true }))) return;
+    setView("content");
+  };
+
+  const openDesignStep = async () => {
+    if (isStarterCv(cvData)) {
+      toast.add({ title: "Complete your CV details first", description: "Import your CV or replace the starter details before choosing a design.", type: "info" });
+      setView("content");
+      return;
+    }
+    if (saveState !== "saved" && !(await save({ silent: true }))) return;
+    setView("design");
   };
 
   const uploadImage = async (file: File, assetType: "profile" | "project") => {
@@ -352,6 +425,7 @@ export function ProfileDesignStudio({
   const uploadPhoto = async (file: File) => {
     const uploaded = await uploadImage(file, "profile");
     if (uploaded) {
+      markDirty();
       setCvData((current) => ({
         ...current,
         photo: uploaded.url,
@@ -365,6 +439,7 @@ export function ProfileDesignStudio({
   const uploadProjectImage = async (file: File, projectIndex: number) => {
     const uploaded = await uploadImage(file, "project");
     if (uploaded) {
+      markDirty();
       setCvData((current) => {
         const next = structuredClone(current);
         next.projects[projectIndex].image = uploaded.url;
@@ -374,29 +449,53 @@ export function ProfileDesignStudio({
     }
   };
 
-  const handleApplyPipelineCv = (nextCv: CvData, meta: { filename: string; markdown?: string }) => {
+  const handleApplyPipelineCv = async (nextCv: CvData, meta: { filename: string; markdown?: string }) => {
+    const nextDoc = applyImportedCv(doc, nextCv, true);
+    markDirty();
     setCvData(nextCv);
-    setDoc((current) => applyImportedCv(current, nextCv, true));
+    setDoc(nextDoc);
     setImportedCv(true);
     setView("content");
+    const saved = await save({ silent: true, cvData: nextCv, doc: nextDoc, importedCv: true });
+    if (!saved) throw new Error("The imported CV could not be autosaved. Check the details and try again.");
     toast.add({
       title: "Your CV form was populated",
-      description: `Mapped details from ${meta.filename}. Review every field before saving.`,
+      description: `Mapped details from ${meta.filename}. Your changes are saved automatically.`,
       type: "success",
     });
   };
 
   const finish = async () => {
     if (busy || importing || photoUploading) return;
-    if (!(await save())) return;
+    if (!designSelected) {
+      setView("design");
+      toast.add({ title: "Choose a design first", description: "Select a CV template before training and publishing.", type: "info" });
+      return;
+    }
+    if (!cvData.identity?.name.trim()) {
+      setView("content");
+      toast.add({ title: "Add your name first", description: "Complete your CV details before training the assistant.", type: "error" });
+      return;
+    }
+    setView("training");
+    setTrainingPhase("saving");
+    setTrainingError("");
+    setTrainingSteps(INITIAL_TRAINING_STEPS);
+    if (saveState !== "saved" && !(await save({ silent: true }))) {
+      setTrainingError("Your changes could not be saved. Return to Details and try again.");
+      return;
+    }
     setBusy(true);
+    setTrainingPhase("training");
     try {
       const response = await fetch(withBase(`/api/account/personas/${slug}/publish/`), { method: "POST" });
       const started = (await response.json()) as { jobId?: string; unchanged?: boolean; error?: string; issues?: string[] };
       if (!response.ok) {
+        const message = [started.error, ...(started.issues ?? [])].filter(Boolean).join(" ") || "Review your CV and try again.";
+        setTrainingError(message);
         toast.add({
           title: "Couldn't publish your CV",
-          description: [started.error, ...(started.issues ?? [])].filter(Boolean).join(" ") || "Review your CV and try again.",
+          description: message,
           type: "error",
           priority: "high",
         });
@@ -404,7 +503,7 @@ export function ProfileDesignStudio({
       }
       if (started.unchanged) {
         toast.add({ title: "CV is up to date", description: "Your latest CV is already published.", type: "success" });
-        router.push("/account/");
+        router.push(withBase(`/u/${slug}/`));
         router.refresh();
         return;
       }
@@ -414,14 +513,19 @@ export function ProfileDesignStudio({
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const jobResponse = await fetch(withBase(`/api/account/jobs/${started.jobId}/`), { cache: "no-store" });
         const jobResult = (await jobResponse.json()) as {
-          job?: { status: "queued" | "running" | "succeeded" | "failed"; error?: string | null };
+          job?: {
+            status: "queued" | "running" | "succeeded" | "failed";
+            error?: string | null;
+            progress?: { steps?: TrainingStep[] };
+          };
           error?: string;
         };
         if (!jobResponse.ok || !jobResult.job) throw new Error(jobResult.error || "Couldn't check the training status.");
+        if (jobResult.job.progress?.steps) setTrainingSteps(jobResult.job.progress.steps);
         if (jobResult.job.status === "failed") throw new Error(jobResult.job.error || "Your CV needs changes before it can be published.");
         if (jobResult.job.status === "succeeded") {
           toast.add({ title: "CV published", description: "Your CV is live and its AI assistant is trained.", type: "success" });
-          router.push("/account/");
+          router.push(withBase(`/u/${slug}/`));
           router.refresh();
           return;
         }
@@ -432,6 +536,7 @@ export function ProfileDesignStudio({
         type: "info",
       });
     } catch (cause) {
+      setTrainingError(cause instanceof Error ? cause.message : "Couldn't finish publishing this CV.");
       toast.add({
         title: "Couldn't finish publishing your CV",
         description: cause instanceof Error ? cause.message : "Couldn't finish publishing this CV.",
@@ -445,35 +550,24 @@ export function ProfileDesignStudio({
 
   return (
     <div className="space-y-4">
-      <div className="mx-auto flex max-w-7xl items-center gap-2 px-5 pt-4 sm:px-8">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent-soft/40 px-3 py-1 text-xs font-medium text-muted">
-          <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
-          Mekin&apos;s demo CV is included as editable starter content
-        </span>
-      </div>
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-5 pt-5 sm:px-8">
         <Link href="/account/" className="text-sm font-semibold text-muted hover:text-fg">
           ← My CVs
         </Link>
-        <div className="flex items-center gap-3">
-          <div role="group" aria-label="CV editor steps" className="flex rounded-xl border border-line bg-card p-1">
-            <button type="button" aria-pressed={view === "content"} onClick={() => setView("content")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "content" ? "bg-surface text-fg shadow-sm" : "text-muted hover:text-fg"}`}>1. Import & details</button>
-            <button type="button" aria-pressed={view === "design"} onClick={() => setView("design")} className={`rounded-lg px-3 py-2 text-sm font-semibold ${view === "design" ? "bg-surface text-fg shadow-sm" : "text-muted hover:text-fg"}`}>2. Choose design</button>
-            <span className="hidden items-center px-2 text-xs font-medium text-muted xl:inline">3. Publish & train</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => void save()}
-            disabled={busy || importing || photoUploading}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent disabled:opacity-60"
-          >
-            {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Save CV
+        <div role="group" aria-label="CV creation steps" className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1">
+          <button type="button" aria-pressed={view === "content"} onClick={() => void openDetailsStep()} disabled={busy || photoUploading} className={`min-h-11 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "content" ? "bg-surface text-fg shadow-sm" : "text-muted hover:bg-surface/70 hover:text-fg"}`}>1. Import & details</button>
+          <button type="button" aria-pressed={view === "design"} onClick={() => void openDesignStep()} disabled={busy || photoUploading} className={`min-h-11 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "design" ? "bg-surface text-fg shadow-sm" : "text-muted hover:bg-surface/70 hover:text-fg"}`}>2. Choose design</button>
+          <button type="button" aria-pressed={view === "training"} onClick={() => void finish()} disabled={busy || photoUploading || saveState === "saving"} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "training" ? "bg-accent text-on-accent shadow-sm" : "bg-accent text-on-accent hover:brightness-95"}`}>
+            {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <ArrowRight className="size-3.5" aria-hidden="true" />}
+            3. Train & publish
           </button>
         </div>
+        <p role="status" className="col-span-full text-right text-xs text-muted" aria-live="polite">
+          {saveState === "saving" ? "Saving changes…" : saveState === "dirty" ? "Changes will save automatically" : saveState === "error" ? "Autosave failed. Edit a field to retry." : "All changes saved"}
+        </p>
       </div>
       {view === "content" ? (
-        <div className="mx-auto max-w-7xl px-5 pb-8 sm:px-8">
+        <div key={view} className="studio-step-panel mx-auto max-w-7xl px-5 pb-8 sm:px-8">
           <CvImportPipeline
             slug={slug}
             currentCv={cvData}
@@ -553,44 +647,68 @@ export function ProfileDesignStudio({
           </section>
           <CvEditor
             value={cvData}
-            onChange={setCvData}
+            onChange={changeCvData}
             fallbackCv={cv}
             onPhotoUpload={uploadPhoto}
             onProjectImageUpload={uploadProjectImage}
             photoUploadBusy={photoUploading || busy || importing}
             projectImageUploadBusy={photoUploading || busy || importing}
           />
-          <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-accent/20 bg-accent-soft/20 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-            <div>
-              <p className="eyebrow text-accent">Step 3 of 3</p>
-              <h2 className="mt-1 font-semibold">Choose a design, then publish when you are ready</h2>
-              <p className="mt-1 text-sm leading-6 text-muted">We save your approved fields, check the profile, train its AI from that content, and publish the shareable portfolio.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setView("design")} disabled={busy || importing || photoUploading} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-line-strong bg-card px-4 font-semibold disabled:opacity-60">
-                2. Choose design
-              </button>
-              <button type="button" onClick={() => void finish()} disabled={busy || importing || photoUploading} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-5 font-semibold text-on-accent disabled:opacity-60">
-                {busy ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />}
-                {busy ? "Publishing your CV…" : "3. Publish & train AI"}
-              </button>
-            </div>
-          </section>
+        </div>
+      ) : view === "design" ? (
+        <div key={view} className="studio-step-panel">
+          <CvStudio
+            cv={cvData}
+            initialTemplate={design.template}
+            initialAccentColor={design.accentColor}
+            onTemplateChange={() => setDesignSelected(true)}
+            onDesignChange={(next) => {
+              setDesign(next);
+              markDirty();
+            }}
+            showStudioHeading={false}
+            onPrint={() => {
+              void fetch(withBase(`/api/account/personas/${slug}/pdf/`), { method: "POST" })
+                .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));
+            }}
+            showSidebarToggle={false}
+          />
         </div>
       ) : (
-        <CvStudio
-          cv={cvData}
-          initialTemplate={design.template}
-          initialAccentColor={design.accentColor}
-          onDesignChange={setDesign}
-          onNextStep={() => setView("content")}
-          nextStepLabel="Next: review your CV details"
-          onPrint={() => {
-            void fetch(withBase(`/api/account/personas/${slug}/pdf/`), { method: "POST" })
-              .catch((err: unknown) => console.error("[platform-analytics] Could not record PDF print request:", err));
-          }}
-          showSidebarToggle={false}
-        />
+        <section key={view} className="studio-step-panel mx-auto max-w-7xl px-5 pb-12 pt-8 sm:px-8" aria-live="polite">
+          <div className="mx-auto max-w-2xl space-y-5 rounded-2xl border border-line bg-card p-6 shadow-sm sm:p-8">
+            <div className="flex items-center gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
+                <LoaderCircle className={`size-5 ${busy ? "animate-spin" : ""}`} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">{busy ? "Training your assistant" : trainingPhase === "saving" ? "Saving your CV" : "Ready to train"}</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {trainingError || (busy ? "Your saved CV is being checked, indexed, and published." : "Your details and design will be saved before training starts.")}
+                </p>
+              </div>
+            </div>
+            <ol className="space-y-2" aria-label="AI training progress">
+              {trainingSteps.map((step) => (
+                <li key={step.id} className="flex items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center" aria-label={step.state}>
+                    {step.state === "done" ? <Check className="size-4 text-emerald-600" />
+                      : step.state === "running" ? <LoaderCircle className="size-4 animate-spin text-accent" />
+                        : step.state === "failed" ? <X className="size-4 text-red-600" />
+                          : step.state === "skipped" ? <MinusCircle className="size-4 text-muted" />
+                            : <Circle className="size-3.5 text-faint" />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`font-medium ${step.state === "pending" ? "text-muted" : "text-fg"}`}>{step.label}</span>
+                    {step.detail && <span className={`mt-0.5 block text-xs ${step.state === "failed" ? "text-red-600" : "text-muted"}`}>{step.detail}</span>}
+                  </span>
+                  {step.ms !== undefined && <span className="shrink-0 text-xs tabular-nums text-muted">{step.ms < 1000 ? `${step.ms} ms` : `${(step.ms / 1000).toFixed(1)} s`}</span>}
+                </li>
+              ))}
+            </ol>
+            {trainingError && <button type="button" onClick={() => setView("content")} className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-surface">Back to details</button>}
+          </div>
+        </section>
       )}
     </div>
   );

@@ -65,7 +65,7 @@ export const StructuredCvSchema = z.object({
   title: z.string().max(160).default(""),
   profile: z.string().max(3000).default(""),
   highlights: z.array(z.string().max(500)).max(20).default([]),
-  skills: z.array(ExtractedSkillGroupSchema).max(30).default([]),
+  skills: z.array(ExtractedSkillGroupSchema).max(100).default([]),
   experience: z.array(ExtractedExperienceSchema).max(25).default([]),
   projects: z.array(ExtractedProjectSchema).max(30).default([]),
   education: ExtractedEducationSchema.default({ degree: "", school: "", year: "", note: "" }),
