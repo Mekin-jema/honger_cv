@@ -1,6 +1,9 @@
+import type { ImportedCv } from "@/server/brain/assist";
+import { parseWithResumeParser } from "@/server/brain/resume-parser";
 import { bad, json, limited, sameOrigin } from "@/server/http";
 import { doclingParser } from "@/server/services/document-parser";
 import { DocumentParserError } from "@/server/services/document-parser/types";
+import type { StructuredCvData } from "@/server/services/cv-extractor/schema";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -41,6 +44,70 @@ function validateMagicBytes(bytes: Uint8Array, extension: string): boolean {
     return nullCount === 0;
   }
   return true;
+}
+
+function importedCvToMarkdown(cv: ImportedCv): string {
+  const identity = cv.identity ?? { name: "", links: [] };
+  const sections: string[] = [];
+
+  if (identity.name) sections.push(`# ${identity.name}`);
+  const contact: string[] = [];
+  if (identity.email) contact.push(identity.email);
+  if (identity.phone) contact.push(identity.phone);
+  if (identity.location) contact.push(identity.location);
+  if (identity.links.length > 0) {
+    contact.push(...identity.links.map((link) => `${link.label || "Link"}: ${link.href}`));
+  }
+  if (contact.length) sections.push(contact.join(" • "));
+
+  if (cv.title) sections.push(`## Title\n${cv.title}`);
+  if (cv.profile) sections.push(`## Profile\n${cv.profile}`);
+
+  if (cv.highlights.length) {
+    sections.push(`## Highlights\n- ${cv.highlights.map((item) => item.trim()).filter(Boolean).join("\n- ")}`);
+  }
+
+  if (cv.skills.length) {
+    sections.push(
+      `## Skills\n${cv.skills
+        .map((skill) => `${skill.k}${skill.v ? `: ${skill.v}` : ""}`)
+        .filter(Boolean)
+        .join("\n")}`,
+    );
+  }
+
+  if (cv.experience.length) {
+    sections.push(
+      `## Experience\n${cv.experience
+        .map(
+          (job) =>
+            `- ${job.role || job.company || "Role"}${job.company ? ` @ ${job.company}` : ""}${job.period ? ` (${job.period})` : ""}\n${job.context || ""}${job.bullets.length ? `\n${job.bullets.map((bullet) => `  - ${bullet}`).join("\n")}` : ""}`,
+        )
+        .join("\n")}`,
+    );
+  }
+
+  if (cv.projects.length) {
+    sections.push(
+      `## Projects\n${cv.projects
+        .map((project) => `- ${project.name}${project.meta ? ` (${project.meta})` : ""}\n${project.text}`)
+        .join("\n")}`,
+    );
+  }
+
+  if (cv.education.degree || cv.education.school || cv.education.year || cv.education.note) {
+    sections.push(
+      `## Education\n${[cv.education.degree, cv.education.school, cv.education.year].filter(Boolean).join(" · ")}\n${cv.education.note || ""}`,
+    );
+  }
+
+  if (cv.courses.length) sections.push(`## Courses\n- ${cv.courses.join("\n- ")}`);
+
+  if (cv.languages.length) {
+    sections.push(`## Languages\n${cv.languages.map((lang) => `- ${lang.name}${lang.level ? `: ${lang.level}` : ""}`).join("\n")}`);
+  }
+
+  return sections.join("\n\n").trim() || "CV content";
 }
 
 export async function POST(req: Request) {
@@ -87,6 +154,30 @@ export async function POST(req: Request) {
   }
 
   try {
+    let resumeApiParsed: ImportedCv | null = null;
+    try {
+      resumeApiParsed = await parseWithResumeParser(bytes, safeName);
+    } catch (err: unknown) {
+      console.warn(`[api/cv/parse] Resume parser unavailable for ${safeName}:`, err instanceof Error ? `${err.name}: ${err.message}` : err);
+    }
+
+    if (resumeApiParsed) {
+      const normalizedData = resumeApiParsed as unknown as StructuredCvData;
+      return json({
+        success: true,
+        filename: safeName,
+        mimeType,
+        markdown: importedCvToMarkdown(resumeApiParsed),
+        data: normalizedData,
+        metadata: {
+          extraction_method: "resume_parser_api",
+          ocr_used: false,
+          pages: 1,
+        },
+        warnings: [],
+      });
+    }
+
     const result = await doclingParser.parse(bytes, safeName, mimeType);
     return json({
       success: true,

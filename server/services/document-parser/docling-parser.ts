@@ -37,12 +37,17 @@ export class DoclingParser implements DocumentParser {
    */
   private resolveConvertUrl(): string {
     const base = this.apiUrl.replace(/\/+$/, "");
-    // If the user supplied the full path already (e.g. http://localhost:5001/v1alpha/convert/source)
-    if (base.endsWith("/convert") || base.endsWith("/convert/source") || base.endsWith("/convert/file")) {
+    // The adapter sends multipart files, which Docling Serve accepts at /convert/file.
+    if (base.endsWith("/convert/source")) {
+      return base.replace(/\/source$/, "/file");
+    }
+    if (base.endsWith("/convert/file")) {
       return base;
     }
-    // Standard Docling Serve endpoint
-    return `${base}/v1alpha/convert/source`;
+    if (base.endsWith("/convert")) {
+      return `${base}/file`;
+    }
+    return `${base}/v1alpha/convert/file`;
   }
 
   /**
@@ -56,7 +61,8 @@ export class DoclingParser implements DocumentParser {
     const url = this.resolveConvertUrl();
     const formData = new FormData();
     const blob = new Blob([fileBytes.slice().buffer as ArrayBuffer], { type: mimeType });
-    formData.set("file", blob, filename);
+    formData.set("files", blob, filename);
+    formData.set("include_images", "false");
 
     const headers: Record<string, string> = {};
     if (this.apiKey) {
@@ -91,12 +97,13 @@ export class DoclingParser implements DocumentParser {
       }
 
       // Handle common response formats from Docling / docling-serve:
-      // Format 1: { document: { markdown: "...", num_pages: 2 }, status: "success" }
+      // Format 1: { document: { md_content: "..." }, status: "success" }
       // Format 2: { markdown: "...", metadata: { page_count: 2 } }
       // Format 3: { result: { markdown: "..." } }
       const doc = (json as Record<string, unknown>).document as Record<string, unknown> | undefined;
       const rawMarkdown =
         (typeof doc?.markdown === "string" ? doc.markdown : null) ??
+        (typeof doc?.md_content === "string" ? doc.md_content : null) ??
         (typeof (json as Record<string, unknown>).markdown === "string" ? ((json as Record<string, unknown>).markdown as string) : null) ??
         (typeof (json as Record<string, unknown>).text === "string" ? ((json as Record<string, unknown>).text as string) : null);
 

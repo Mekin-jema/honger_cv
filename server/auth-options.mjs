@@ -32,6 +32,16 @@ export function authBaseUrl() {
   return (process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "") || undefined;
 }
 
+function developmentTrustedOrigins() {
+  if (process.env.NODE_ENV === "production") return [];
+  return [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+  ];
+}
+
 /** @returns {{ google?: { clientId: string, clientSecret: string }, github?: { clientId: string, clientSecret: string, scope: string[] } }} */
 export function socialProviderOptions() {
   const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
@@ -105,7 +115,7 @@ export function authOptions({ pool, sendOTP, allowSignUp = false, allowCustomerS
     basePath: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/auth`,
     secret: authSecret(),
     database: pool,
-    trustedOrigins: [authBaseUrl(), ...trustedOrigins].filter((o) => !!o),
+    trustedOrigins: [...new Set([authBaseUrl(), ...developmentTrustedOrigins(), ...trustedOrigins].filter((o) => !!o))],
     emailAndPassword: { enabled: true, disableSignUp: !allowSignUp && !allowCustomerSignUp, minPasswordLength: 12, maxPasswordLength: 128, autoSignIn: false },
     user: {
       modelName: "admin_users",
