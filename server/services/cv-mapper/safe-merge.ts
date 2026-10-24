@@ -82,6 +82,11 @@ export function mergeCvData(
       return;
     }
     if (e && !i) {
+      if (forceOverwrite) {
+        apply("");
+        diffs.push({ field: fieldKey, label, status: "empty", existingValue: e, importedValue: "" });
+        return;
+      }
       diffs.push({ field: fieldKey, label, status: "unchanged", existingValue: e, importedValue: "" });
       return;
     }
@@ -110,6 +115,13 @@ export function mergeCvData(
   // 1. Identity Fields
   const existingIdentity: CvIdentity = existingCv.identity ?? { name: "", links: [] };
   const mergedIdentity: CvIdentity = { ...existingIdentity, links: [...existingIdentity.links] };
+  if (forceOverwrite) {
+    mergedIdentity.photo = undefined;
+    merged.photo = "";
+    merged.photoPublicId = "";
+    merged.showPhoto = false;
+    merged.availability = "";
+  }
 
   resolveField("identity.name", "Full Name", existingIdentity.name ?? "", extracted.identity.name ?? "", (v) => {
     mergedIdentity.name = v;
@@ -127,7 +139,17 @@ export function mergeCvData(
   // Identity Links: merge unique links
   const existingLinks = existingIdentity.links ?? [];
   const importedLinks = extracted.identity.links ?? [];
-  if (existingLinks.length === 0 && importedLinks.length > 0) {
+  if (forceOverwrite && JSON.stringify(existingLinks) !== JSON.stringify(importedLinks)) {
+    mergedIdentity.links = importedLinks;
+    diffs.push({
+      field: "identity.links",
+      label: "Contact Links",
+      status: importedLinks.length ? "populated" : "empty",
+      existingValue: existingLinks,
+      importedValue: importedLinks,
+      resolution: "use-imported",
+    });
+  } else if (existingLinks.length === 0 && importedLinks.length > 0) {
     mergedIdentity.links = importedLinks;
     diffs.push({
       field: "identity.links",
@@ -163,7 +185,10 @@ export function mergeCvData(
   // 3. Highlights
   const eHighlights = existingCv.highlights ?? [];
   const iHighlights = extracted.highlights ?? [];
-  if (eHighlights.length === 0 && iHighlights.length > 0) {
+  if (forceOverwrite && JSON.stringify(eHighlights) !== JSON.stringify(iHighlights)) {
+    merged.highlights = iHighlights;
+    diffs.push({ field: "highlights", label: "Key Achievements", status: iHighlights.length ? "populated" : "empty", existingValue: eHighlights, importedValue: iHighlights, resolution: "use-imported" });
+  } else if (eHighlights.length === 0 && iHighlights.length > 0) {
     merged.highlights = iHighlights;
     diffs.push({ field: "highlights", label: "Key Achievements", status: "populated", existingValue: [], importedValue: iHighlights });
   } else if (eHighlights.length > 0 && iHighlights.length > 0) {
@@ -185,7 +210,10 @@ export function mergeCvData(
   // 4. Skills
   const eSkills = existingCv.skills ?? [];
   const iSkills = extracted.skills ?? [];
-  if (eSkills.length === 0 && iSkills.length > 0) {
+  if (forceOverwrite && JSON.stringify(eSkills) !== JSON.stringify(iSkills)) {
+    merged.skills = iSkills;
+    diffs.push({ field: "skills", label: "Core Skills", status: iSkills.length ? "populated" : "empty", existingValue: eSkills, importedValue: iSkills, resolution: "use-imported" });
+  } else if (eSkills.length === 0 && iSkills.length > 0) {
     merged.skills = iSkills;
     diffs.push({ field: "skills", label: "Core Skills", status: "populated", existingValue: [], importedValue: iSkills });
   } else if (eSkills.length > 0 && iSkills.length > 0) {
@@ -207,7 +235,10 @@ export function mergeCvData(
   // 5. Experience
   const eExp = existingCv.experience ?? [];
   const iExp = extracted.experience ?? [];
-  if (eExp.length === 0 && iExp.length > 0) {
+  if (forceOverwrite && JSON.stringify(eExp) !== JSON.stringify(iExp)) {
+    merged.experience = iExp;
+    diffs.push({ field: "experience", label: "Work Experience", status: iExp.length ? "populated" : "empty", existingValue: eExp, importedValue: iExp, resolution: "use-imported" });
+  } else if (eExp.length === 0 && iExp.length > 0) {
     merged.experience = iExp;
     diffs.push({ field: "experience", label: "Work Experience", status: "populated", existingValue: [], importedValue: iExp });
   } else if (eExp.length > 0 && iExp.length > 0) {
@@ -229,7 +260,10 @@ export function mergeCvData(
   // 6. Projects
   const eProjects = existingCv.projects ?? [];
   const iProjects = extracted.projects ?? [];
-  if (eProjects.length === 0 && iProjects.length > 0) {
+  if (forceOverwrite && JSON.stringify(eProjects) !== JSON.stringify(iProjects)) {
+    merged.projects = iProjects;
+    diffs.push({ field: "projects", label: "Projects", status: iProjects.length ? "populated" : "empty", existingValue: eProjects, importedValue: iProjects, resolution: "use-imported" });
+  } else if (eProjects.length === 0 && iProjects.length > 0) {
     merged.projects = iProjects;
     diffs.push({ field: "projects", label: "Projects", status: "populated", existingValue: [], importedValue: iProjects });
   } else if (eProjects.length > 0 && iProjects.length > 0) {
@@ -254,7 +288,10 @@ export function mergeCvData(
   const eHasEdu = isNonEmpty(eEdu);
   const iHasEdu = isNonEmpty(iEdu);
 
-  if (!eHasEdu && iHasEdu) {
+  if (forceOverwrite && JSON.stringify(eEdu) !== JSON.stringify(iEdu)) {
+    merged.education = iEdu;
+    diffs.push({ field: "education", label: "Education", status: iHasEdu ? "populated" : "empty", existingValue: eEdu, importedValue: iEdu, resolution: "use-imported" });
+  } else if (!eHasEdu && iHasEdu) {
     merged.education = iEdu;
     diffs.push({ field: "education", label: "Education", status: "populated", existingValue: eEdu, importedValue: iEdu });
   } else if (eHasEdu && iHasEdu) {
@@ -276,7 +313,10 @@ export function mergeCvData(
   // 8. Courses & Languages
   const eCourses = existingCv.courses ?? [];
   const iCourses = extracted.courses ?? [];
-  if (eCourses.length === 0 && iCourses.length > 0) {
+  if (forceOverwrite && JSON.stringify(eCourses) !== JSON.stringify(iCourses)) {
+    merged.courses = iCourses;
+    diffs.push({ field: "courses", label: "Courses & Certifications", status: iCourses.length ? "populated" : "empty", existingValue: eCourses, importedValue: iCourses, resolution: "use-imported" });
+  } else if (eCourses.length === 0 && iCourses.length > 0) {
     merged.courses = iCourses;
     diffs.push({ field: "courses", label: "Courses & Certifications", status: "populated", existingValue: [], importedValue: iCourses });
   } else if (eCourses.length > 0 && iCourses.length > 0) {
@@ -290,7 +330,10 @@ export function mergeCvData(
 
   const eLang = existingCv.languages ?? [];
   const iLang = extracted.languages ?? [];
-  if (eLang.length === 0 && iLang.length > 0) {
+  if (forceOverwrite && JSON.stringify(eLang) !== JSON.stringify(iLang)) {
+    merged.languages = iLang;
+    diffs.push({ field: "languages", label: "Languages", status: iLang.length ? "populated" : "empty", existingValue: eLang, importedValue: iLang, resolution: "use-imported" });
+  } else if (eLang.length === 0 && iLang.length > 0) {
     merged.languages = iLang;
     diffs.push({ field: "languages", label: "Languages", status: "populated", existingValue: [], importedValue: iLang });
   } else if (eLang.length > 0 && iLang.length > 0) {

@@ -62,7 +62,7 @@ export class DoclingParser implements DocumentParser {
     const formData = new FormData();
     const blob = new Blob([fileBytes.slice().buffer as ArrayBuffer], { type: mimeType });
     formData.set("files", blob, filename);
-    formData.set("include_images", "false");
+    formData.set("image_export_mode", "placeholder");
 
     const headers: Record<string, string> = {};
     if (this.apiKey) {

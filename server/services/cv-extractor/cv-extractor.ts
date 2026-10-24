@@ -105,6 +105,30 @@ Extract all explicitly mentioned details into the strongly-typed schema now. Rem
         );
       }
 
+      const data = parsed.data;
+      const hasExtractedContent = Boolean(
+        data.identity.name.trim() ||
+          data.identity.email.trim() ||
+          data.identity.phone.trim() ||
+          data.title.trim() ||
+          data.profile.trim() ||
+          data.highlights.length ||
+          data.skills.length ||
+          data.experience.length ||
+          data.projects.length ||
+          data.education.degree.trim() ||
+          data.education.school.trim() ||
+          data.courses.length ||
+          data.languages.length,
+      );
+      if (!hasExtractedContent) {
+        throw new CvExtractorError(
+          "The AI model returned no CV information. Choose a model that supports structured JSON output and try again.",
+          "EMPTY_EXTRACTION",
+          422,
+        );
+      }
+
       const warnings: string[] = [];
       if (!parsed.data.identity.name) warnings.push("Candidate name could not be identified from document.");
       if (parsed.data.experience.length === 0) warnings.push("No work experience entries were detected.");

@@ -98,11 +98,7 @@ export class OpenRouterProvider implements LLMProvider {
   }
 }
 
-/**
- * Composite provider that respects configuration preferences:
- * 1. OpenRouter (if OPENROUTER_API_KEY is present)
- * 2. Google Gemini fallback
- */
+/** Uses OpenRouter whenever configured; Gemini is used only when OpenRouter is not configured. */
 export class CompositeLLMProvider implements LLMProvider {
   public readonly name = "composite";
   private readonly openRouterProvider = new OpenRouterProvider();
@@ -114,15 +110,7 @@ export class CompositeLLMProvider implements LLMProvider {
 
   public async generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }> {
     if (this.openRouterProvider.isAvailable()) {
-      try {
-        return await this.openRouterProvider.generateStructured<T>(options);
-      } catch (openRouterErr) {
-        if (!this.geminiProvider.isAvailable()) throw openRouterErr;
-        console.warn(
-          "[CompositeLLMProvider] OpenRouter failed, attempting Gemini fallback:",
-          openRouterErr instanceof Error ? openRouterErr.message : openRouterErr,
-        );
-      }
+      return this.openRouterProvider.generateStructured<T>(options);
     }
 
     if (this.geminiProvider.isAvailable()) {

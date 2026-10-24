@@ -156,6 +156,55 @@ describe("Safe Merge & Conflict Resolution", () => {
     expect(result.mergedCv.title).toBe("Principal Systems Engineer");
   });
 
+  it("replaces starter CV arrays and clears old values absent from the import", () => {
+    const starterCv: CvData = {
+      ...emptyCv,
+      identity: { name: "Mekin Jemal", photo: "/images/mekin.jpg", links: [{ label: "Old", href: "https://old.example" }] },
+      showPhoto: true,
+      photo: "/images/mekin.jpg",
+      photoPublicId: "old-photo",
+      availability: "Available for work",
+      title: "Demo Title",
+      highlights: ["Demo highlight"],
+      skills: [{ k: "Demo", v: "Old skill" }],
+      experience: [{ company: "Demo Co", role: "Demo role", period: "2020", location: "", context: "", bullets: [], engagements: [] }],
+      projects: [{ name: "Demo project", meta: "", text: "" }],
+      education: { degree: "Demo degree", school: "Demo school", year: "2000", note: "" },
+      courses: ["Demo course"],
+      languages: [{ name: "Demo language", level: "" }],
+    };
+    const importWithoutOptionalSections: StructuredCvData = {
+      ...sampleExtracted,
+      identity: { ...sampleExtracted.identity, links: [] },
+      highlights: [],
+      skills: [],
+      experience: [],
+      projects: [],
+      education: { degree: "", school: "", year: "", note: "" },
+      courses: [],
+      languages: [],
+    };
+
+    const result = mergeCvData(starterCv, importWithoutOptionalSections, { isStarterDraft: true });
+
+    expect(result.hasConflicts).toBe(false);
+    expect(result.mergedCv.identity?.name).toBe("Alex Mercer");
+    expect(result.mergedCv.identity?.links).toEqual([]);
+    expect(result.mergedCv.identity?.photo).toBeUndefined();
+    expect(result.mergedCv.photo).toBe("");
+    expect(result.mergedCv.photoPublicId).toBe("");
+    expect(result.mergedCv.showPhoto).toBe(false);
+    expect(result.mergedCv.availability).toBe("");
+    expect(result.mergedCv.title).toBe("Principal Systems Engineer");
+    expect(result.mergedCv.highlights).toEqual([]);
+    expect(result.mergedCv.skills).toEqual([]);
+    expect(result.mergedCv.experience).toEqual([]);
+    expect(result.mergedCv.projects).toEqual([]);
+    expect(result.mergedCv.education).toEqual({ degree: "", school: "", year: "", note: "" });
+    expect(result.mergedCv.courses).toEqual([]);
+    expect(result.mergedCv.languages).toEqual([]);
+  });
+
   it("handles missing contact information gracefully without breaking", () => {
     const extractedWithoutContact: StructuredCvData = {
       ...sampleExtracted,

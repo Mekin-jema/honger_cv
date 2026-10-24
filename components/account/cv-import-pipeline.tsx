@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import type { CvData } from "@/lib/persona/cv";
-import { mergeCvData, type MergeResult } from "@/server/services/cv-mapper/safe-merge";
+import { isStarterCv, mergeCvData, type MergeResult } from "@/server/services/cv-mapper/safe-merge";
 import type { StructuredCvData } from "@/server/services/cv-extractor/schema";
 import { cn, withBase } from "@/lib/utils";
 
@@ -143,7 +143,10 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
       setStage("validating");
       await new Promise((r) => setTimeout(r, 200));
 
-      const merge = mergeCvData(currentCv, rawExtracted, { strategy: "safe-preserve" });
+      const merge = mergeCvData(currentCv, rawExtracted, {
+        strategy: "safe-preserve",
+        isStarterDraft: isStarterCv(currentCv),
+      });
       setMergeResult(merge);
 
       const initialResolutions: Record<string, "keep-existing" | "use-imported"> = {};
