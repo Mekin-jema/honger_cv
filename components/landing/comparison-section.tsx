@@ -3,7 +3,7 @@ import { Check, X, Sparkles, ShieldCheck } from "lucide-react";
 const COMPARISON_ROWS = [
   {
     feature: "25+ Signature Layouts & Palettes",
-    honger: "Included free · 25+ templates with 12+ color palettes & custom hex",
+    honger: "All 25+ templates included free with your first CV",
     traditional: "Limited to 3 generic templates (paywall for rest)",
   },
   {

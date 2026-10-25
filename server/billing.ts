@@ -6,16 +6,15 @@ import { query, withTransaction } from "./db";
 export type BillingProvider = "chapa" | "paypal";
 export type BillingProduct = "cv_pass" | "portfolio_pro";
 
-export const CV_PASS_DAYS = 90;
 export const CV_PASS_TEMPLATE = "modern";
 
 export const billingProducts = {
   cv_pass: {
-    title: "90-day CV Design Pass",
-    description: "Unlock every CV template for 90 days.",
+    title: "Lifetime CV Design Pass",
+    description: "Unlock every CV template and create additional CVs for life.",
     prices: {
-      chapa: { currency: "ETB", amount: 799 },
-      paypal: { currency: "USD", amount: 6 },
+      chapa: { currency: "ETB", amount: 100 },
+      paypal: { currency: "USD", amount: 1 },
     },
   },
   portfolio_pro: {
@@ -29,6 +28,7 @@ export const billingProducts = {
 
 export type BillingSummary = {
   cvPassExpiresAt: string | null;
+  cvPassLifetime: boolean;
   portfolioProActive: boolean;
   portfolioProStatus: "active" | "cancelled" | "suspended" | "expired" | "pending" | null;
   portfolioProPeriodEnd: string | null;
@@ -49,13 +49,16 @@ function toIso(value: Date | string | null): string | null {
 export async function getBillingSummary(userId: string): Promise<BillingSummary> {
   const { rows } = await query<{
     cv_pass_expires_at: Date | null;
+    cv_pass_lifetime: boolean;
     portfolio_pro_subscription_id: string | null;
     portfolio_pro_status: BillingSummary["portfolioProStatus"];
     portfolio_pro_period_end: Date | null;
   }>(
     `SELECT
+       (SELECT bool_or(pass_lifetime) FROM billing_orders
+         WHERE user_id = $1 AND product = 'cv_pass' AND status = 'paid') AS cv_pass_lifetime,
        (SELECT max(pass_expires_at) FROM billing_orders
-         WHERE user_id = $1 AND product = 'cv_pass' AND status = 'paid' AND pass_expires_at > now()) AS cv_pass_expires_at,
+         WHERE user_id = $1 AND product = 'cv_pass' AND status = 'paid' AND NOT pass_lifetime AND pass_expires_at > now()) AS cv_pass_expires_at,
        (SELECT id::text FROM billing_subscriptions
          WHERE user_id = $1 AND provider = 'paypal' AND status IN ('active', 'cancelled', 'suspended', 'expired', 'pending')
          ORDER BY updated_at DESC LIMIT 1) AS portfolio_pro_subscription_id,
@@ -68,10 +71,12 @@ export async function getBillingSummary(userId: string): Promise<BillingSummary>
     [userId],
   );
   const row = rows[0];
-  const cvPassExpiresAt = toIso(row?.cv_pass_expires_at ?? null);
+  const cvPassLifetime = row?.cv_pass_lifetime === true;
+  const cvPassExpiresAt = cvPassLifetime ? null : toIso(row?.cv_pass_expires_at ?? null);
   const periodEnd = toIso(row?.portfolio_pro_period_end ?? null);
   return {
     cvPassExpiresAt,
+    cvPassLifetime,
     portfolioProActive:
       row?.portfolio_pro_status === "active" ||
       (row?.portfolio_pro_status === "cancelled" && !!periodEnd && new Date(periodEnd).getTime() > Date.now()),
@@ -85,7 +90,8 @@ export async function hasCvPass(userId: string): Promise<boolean> {
   const { rows } = await query<{ active: boolean }>(
     `SELECT EXISTS (
        SELECT 1 FROM billing_orders
-        WHERE user_id = $1 AND product = 'cv_pass' AND status = 'paid' AND pass_expires_at > now()
+        WHERE user_id = $1 AND product = 'cv_pass' AND status = 'paid'
+          AND (pass_lifetime OR pass_expires_at > now())
      ) AS active`,
     [userId],
   );
@@ -224,13 +230,9 @@ async function completeOrder(client: PoolClient, orderId: string, provider: Bill
 
   await client.query(
     `UPDATE billing_orders
-        SET status = 'paid', paid_at = now(),
-            pass_expires_at = GREATEST(
-              now(),
-              COALESCE((SELECT max(pass_expires_at) FROM billing_orders WHERE user_id = $2 AND status = 'paid'), now())
-            ) + ($3::int * interval '1 day')
+        SET status = 'paid', paid_at = now(), pass_lifetime = true, pass_expires_at = NULL
       WHERE id = $1`,
-    [orderId, order.user_id, CV_PASS_DAYS],
+    [orderId],
   );
 }
 

@@ -37,7 +37,7 @@ The repository ships with **Mekin Jemal's** portfolio as a working demo. You can
 <td width="50%" valign="top">
 
 ### ✦ CV Studio
-Choose from 25+ CV layouts, set an accent colour, preview changes live, and print or download a professional PDF. Customer accounts get one free template, with additional designs available through a 90-day pass.
+Choose from 25+ CV layouts, set an accent colour, preview changes live, and print or download a professional PDF. A customer's first CV includes every template free; a one-time ETB 100 / USD 1 lifetime pass unlocks additional CVs.
 
 </td>
 <td width="50%" valign="top">
@@ -81,7 +81,7 @@ Additional product details include dark mode, responsive layouts, accessibility-
 
 ### Payments
 
-Customer plans are available at `/account/billing/`: the free plan includes a usable CV template and PDF export; the 90-day design pass can be purchased through Chapa (ETB) or PayPal (USD); Portfolio Pro is a monthly PayPal subscription. Configure credentials in `.env.local` or deployment secrets, never in source control or `NEXT_PUBLIC_` variables. See [the project guide](docs/PROJECT_GUIDE.md#4-choose-a-billing-plan) for provider setup and required PayPal plan/webhook configuration.
+Customer plans are available at `/account/billing/`: the first CV includes all templates free; the lifetime design pass costs ETB 100 through Chapa or USD 1 through PayPal; Portfolio Pro is a monthly PayPal subscription. Configure credentials in `.env.local` or deployment secrets, never in source control or `NEXT_PUBLIC_` variables. See [the project guide](docs/PROJECT_GUIDE.md#4-choose-a-billing-plan) for provider setup and required PayPal plan/webhook configuration.
 
 ## Product flow
 

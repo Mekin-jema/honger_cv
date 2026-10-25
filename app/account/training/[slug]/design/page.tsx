@@ -8,6 +8,7 @@ import { requireCustomer } from "@/server/admin-session";
 import { hasCvPass, CV_PASS_TEMPLATE } from "@/server/billing";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
 import { ensureCustomerStarterDraft } from "@/server/persona/templates";
+import { getAccountOwnedPersonas } from "@/server/persona/account-data";
 import { CV_TEMPLATES } from "@/lib/persona/cv-templates";
 
 export const metadata: Metadata = { title: "CV design", robots: { index: false, follow: false } };
@@ -29,8 +30,12 @@ export default async function CustomerCvDesignPage({
   const data = parsed.data.document.data ?? {};
   const template = isCvTemplateId(data.cvTemplate) ? data.cvTemplate : "modern";
   const accentColor = typeof data.cvAccent === "string" && /^#[0-9a-f]{6}$/i.test(data.cvAccent) ? data.cvAccent : "#b5400f";
-  const passActive = await hasCvPass(customer.userId);
-  const availableTemplates: CvTemplateId[] = passActive
+  const [passActive, ownedPersonas] = await Promise.all([
+    hasCvPass(customer.userId),
+    getAccountOwnedPersonas(customer.userId),
+  ]);
+  const isFirstCv = ownedPersonas[0]?.slug === slug;
+  const availableTemplates: CvTemplateId[] = isFirstCv || passActive
     ? CV_TEMPLATES.map((item) => item.id)
     : [CV_PASS_TEMPLATE, ...(template !== CV_PASS_TEMPLATE ? [template] : [])];
 

@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 const links = [
   { href: "#portfolio", label: "Portfolio AI" },
   { href: "#templates", label: "25+ CV templates" },
+  { href: "#pricing", label: "Pricing" },
   { href: "#how-it-works", label: "How it works" },
 ];
 

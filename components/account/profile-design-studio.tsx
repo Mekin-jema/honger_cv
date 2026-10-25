@@ -665,7 +665,7 @@ export function ProfileDesignStudio({
             initialTemplate={design.template}
             initialAccentColor={design.accentColor}
             availableTemplates={availableTemplates}
-            onTemplateLocked={() => router.push(withBase("/account/billing/"))}
+            onTemplateLocked={() => router.push(withBase("/account/billing/?feature=additional-cv"))}
             onTemplateChange={() => setDesignSelected(true)}
             onDesignChange={(next) => {
               setDesign(next);

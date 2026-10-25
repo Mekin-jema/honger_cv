@@ -68,7 +68,13 @@ export async function POST(req: Request) {
   const { compiled, tier, lang, preview } = persona;
   if (!preview) {
     if (!(await customerPersonaHasPortfolioPro(compiled.slug))) {
-      return bad("Advanced visitor AI is part of Portfolio Pro. Curated CV topics remain available.", 402);
+      return json({
+        ok: true,
+        route: "answer",
+        text: "This portfolio's interactive AI guide is available with Portfolio Pro. Its listed topics and public CV content remain available.",
+        cards: [],
+        suggestedTopics: [],
+      });
     }
   }
   if (

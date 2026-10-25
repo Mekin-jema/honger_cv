@@ -53,6 +53,7 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
           body: JSON.stringify({ orderId: chapaOrderId }),
         });
         if (!result.paid) {
+          returnProcessed.current = false;
           setPaymentPending(true);
           setNotice("Chapa has not confirmed this payment yet. You can check again shortly.");
           return;
@@ -64,6 +65,7 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
           body: JSON.stringify({ orderId: paypalOrderId }),
         });
         if (!result.paid) {
+          returnProcessed.current = false;
           setPaymentPending(true);
           setNotice("PayPal is still processing this payment. You can check again shortly.");
           return;
@@ -75,6 +77,7 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
           body: JSON.stringify({ subscriptionId: paypalSubscriptionId }),
         });
         if (!result.active) {
+          returnProcessed.current = false;
           setPaymentPending(true);
           setNotice("PayPal is still activating your subscription. You can check again shortly.");
           return;
@@ -93,7 +96,8 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
   }, [router]);
 
   useEffect(() => {
-    void verifyReturn();
+    const timer = window.setTimeout(() => void verifyReturn(), 0);
+    return () => window.clearTimeout(timer);
   }, [verifyReturn]);
 
   const checkout = async (provider: "chapa" | "paypal") => {
@@ -154,7 +158,7 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
       <div className="mb-8">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-accent">Plans & billing</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Choose how you grow your CV</h1>
-        <p className="mt-3 max-w-2xl leading-7 text-muted">Your basic CV stays free. Pay only when you want premium designs or ongoing portfolio tools.</p>
+        <p className="mt-3 max-w-2xl leading-7 text-muted">Your first CV includes every design for free. Unlock additional CVs and every design for life with a one-time payment, or choose ongoing portfolio tools.</p>
       </div>
 
       {notice && <p role="status" className="mb-4 rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm">{notice}</p>}
@@ -171,14 +175,16 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl bg-bg p-4">
             <p className="flex items-center gap-2 font-semibold"><Check className="size-4 text-accent" /> Free CV</p>
-            <p className="mt-2 text-sm leading-6 text-muted">One clean, ATS-friendly template, editing, and PDF export.</p>
+            <p className="mt-2 text-sm leading-6 text-muted">All 25+ CV templates, editing, and PDF export for your first CV.</p>
           </div>
           <div className="rounded-xl bg-bg p-4">
-            <p className="font-semibold">{billing.cvPassExpiresAt ? "CV Design Pass active" : "CV Design Pass"}</p>
+            <p className="font-semibold">            {billing.cvPassLifetime ? "Lifetime CV Design Pass active" : billing.cvPassExpiresAt ? "CV Design Pass active" : "CV Design Pass"}</p>
             <p className="mt-2 text-sm leading-6 text-muted">
-              {billing.cvPassExpiresAt
-                ? `All CV templates unlocked through ${expiryLabel(billing.cvPassExpiresAt)}.`
-                : "Unlock all 25+ CV templates for 90 days."}
+              {billing.cvPassLifetime
+                ? "All CV templates and additional CV creation are unlocked for life."
+                : billing.cvPassExpiresAt
+                ? `All CV templates and additional CV creation unlocked through ${expiryLabel(billing.cvPassExpiresAt)}.`
+                : "Unlock all 25+ CV templates and create additional CVs for life with a one-time payment."}
             </p>
           </div>
           <div className="rounded-xl bg-bg p-4 sm:col-span-2">
@@ -221,14 +227,14 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-xl bg-accent/10 text-accent"><CreditCard className="size-5" /></span>
             <div>
-              <h2 id="pass-heading" className="font-semibold">90-day CV Design Pass</h2>
+              <h2 id="pass-heading" className="font-semibold">Lifetime CV Design Pass</h2>
               <p className="text-sm text-muted">One payment · no renewal</p>
             </div>
           </div>
-          <p className="mt-4 text-3xl font-semibold">ETB 799 <span className="text-sm font-normal text-muted">or USD 6</span></p>
+          <p className="mt-4 text-3xl font-semibold">ETB 100 <span className="text-sm font-normal text-muted">or USD 1</span></p>
           <ul className="mt-4 flex-1 space-y-2 text-sm text-muted">
-            <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />All 25+ CV templates for 90 days</li>
-            <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />Your CV and basic PDF export remain available after the pass</li>
+            <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />All 25+ CV templates and additional CV creation for life</li>
+            <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />One-time payment · no renewal</li>
           </ul>
           <div className="mt-5 flex flex-wrap gap-2">
             <button type="button" onClick={() => void checkout("chapa")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60">

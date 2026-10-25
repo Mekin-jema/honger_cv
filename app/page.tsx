@@ -9,6 +9,7 @@ import {
   ArrowRight,
   AudioLines,
   Bot,
+  Check,
   FileText,
   Globe2,
   LayoutTemplate,
@@ -19,6 +20,7 @@ import { HeroPreview } from "@/components/landing/hero-preview";
 import { CvTemplateShowcase } from "@/components/landing/cv-template-showcase";
 import { MobileMenu } from "@/components/landing/mobile-menu";
 import { ThemeToggle } from "@/components/theme-provider";
+import { billingProducts } from "@/server/billing";
 
 export const metadata: Metadata = {
   title: "Honger CV — Build a CV and portfolio that speaks for you",
@@ -62,6 +64,7 @@ const steps = [
   { number: "02", title: "Choose your look", detail: "Pick a template and tune the details." },
   { number: "03", title: "Share your work", detail: "Publish a portfolio with its own AI guide." },
 ];
+const billingUrl = "/register/?next=%2Faccount%2Fbilling%2F";
 
 export default async function Home() {
   const persona = await currentPersona();
@@ -97,6 +100,7 @@ export default async function Home() {
           <div className="hidden items-center gap-7 text-sm font-medium text-muted md:flex">
             <a href="#portfolio" className="transition-colors hover:text-fg">Portfolio AI</a>
             <a href="#templates" className="transition-colors hover:text-fg">Templates</a>
+            <a href="#pricing" className="transition-colors hover:text-fg">Pricing</a>
             <a href="#how-it-works" className="transition-colors hover:text-fg">How it works</a>
           </div>
 
@@ -274,6 +278,75 @@ export default async function Home() {
         </div>
       </section>
 
+      <section id="pricing" aria-labelledby="pricing-heading" className="scroll-mt-24 border-y border-line bg-surface/60 px-5 py-20 sm:px-8 sm:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Simple, transparent pricing</p>
+            <h2 id="pricing-heading" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Start free. Upgrade when you need more.</h2>
+            <p className="mt-4 text-sm leading-6 text-muted">Build and share your first CV for free. Choose a one-time pass for more CVs and designs, or add ongoing tools to your portfolio.</p>
+          </div>
+
+          <div className="mt-10 grid items-stretch gap-5 lg:grid-cols-3">
+            <article className="flex flex-col rounded-2xl border border-line bg-card p-6">
+              <p className="text-sm font-semibold text-muted">Free</p>
+              <h3 className="mt-2 text-2xl font-semibold">Your first CV</h3>
+              <p className="mt-3 text-3xl font-semibold">ETB 0 <span className="text-sm font-normal text-muted">forever</span></p>
+              <p className="mt-3 text-sm leading-6 text-muted">All 25+ designs and everything you need to build and share one polished CV.</p>
+              <ul className="mt-6 flex-1 space-y-3 text-sm">
+                {["One CV with all 25+ templates and palettes", "Edit and download a PDF", "Public CV and curated visitor answers"].map((feature) => (
+                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
+                ))}
+              </ul>
+              <Link href="/register/" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong px-4 text-sm font-semibold transition-colors hover:bg-surface">
+                Create your free CV
+              </Link>
+            </article>
+
+            <article className="flex flex-col rounded-2xl border-2 border-accent bg-card p-6 shadow-[var(--card-shadow)]">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-accent">One-time payment · lifetime access</p>
+                <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent">Popular</span>
+              </div>
+              <h3 className="mt-2 text-2xl font-semibold">Lifetime CV Design Pass</h3>
+              <p className="mt-3 text-3xl font-semibold">
+                ETB {billingProducts.cv_pass.prices.chapa.amount}
+                <span className="text-sm font-normal text-muted"> or USD {billingProducts.cv_pass.prices.paypal.amount}</span>
+              </p>
+              <p className="mt-3 text-sm leading-6 text-muted">Get every design and create additional CVs with one affordable payment.</p>
+              <ul className="mt-6 flex-1 space-y-3 text-sm">
+                {["All 25+ CV templates for life", "Create additional CVs whenever you need", "One-time payment · no renewal"].map((feature) => (
+                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
+                ))}
+              </ul>
+              <Link href={billingUrl} className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent transition hover:brightness-95">
+                Get the CV Design Pass <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <p className="mt-3 text-center text-xs text-muted">Pay securely with Chapa or PayPal</p>
+            </article>
+
+            <article className="flex flex-col rounded-2xl border border-line bg-card p-6">
+              <p className="text-sm font-semibold text-muted">Monthly · cancel any time</p>
+              <h3 className="mt-2 text-2xl font-semibold">Portfolio Pro</h3>
+              <p className="mt-3 text-3xl font-semibold">
+                USD {billingProducts.portfolio_pro.prices.paypal.amount.toFixed(2)}
+                <span className="text-sm font-normal text-muted"> / month</span>
+              </p>
+              <p className="mt-3 text-sm leading-6 text-muted">For people who want deeper engagement and insight from their portfolio.</p>
+              <ul className="mt-6 flex-1 space-y-3 text-sm">
+                {["Advanced visitor AI on your portfolio", "Aggregated profile views and question insights", "Your basic public CV stays available if you cancel"].map((feature) => (
+                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
+                ))}
+              </ul>
+              <Link href={billingUrl} className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong px-4 text-sm font-semibold transition-colors hover:bg-surface">
+                Explore Portfolio Pro
+              </Link>
+              <p className="mt-3 text-center text-xs text-muted">Subscription managed securely by PayPal</p>
+            </article>
+          </div>
+          <p className="mt-6 text-center text-xs leading-5 text-muted">Create an account before checking out. You can manage plans and payments from your billing settings.</p>
+        </div>
+      </section>
+
       <section className="border-y border-line bg-surface/60 px-5 py-16 sm:px-8 sm:py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-7 sm:flex-row sm:items-center">
           <div>
@@ -303,6 +376,7 @@ export default async function Home() {
           </Link>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-muted">
             <Link href="/cv/" className="hover:text-fg">CV Studio</Link>
+            <a href="#pricing" className="hover:text-fg">Pricing</a>
             <Link href="/ask/" className="hover:text-fg">Mekin&apos;s demo</Link>
             <Link href="/register/" className="hover:text-fg">Create account</Link>
           </div>

@@ -79,6 +79,7 @@ export async function PUT(req: Request) {
   if (!sameOrigin(req)) return forbidden();
   const session = await customerSession(req);
   if (!session) return bad("Sign in to verify your subscription.", 401);
+  if (limited(`billing:paypal-subscription-check:${session.userId}`, 10, 60_000)) return bad("Too many subscription checks. Try again shortly.", 429);
   const body = await readJson(req, 1_000);
   const localId = typeof body?.subscriptionId === "string" && /^[0-9a-f-]{36}$/i.test(body.subscriptionId) ? body.subscriptionId : null;
   if (!localId) return bad("The subscription reference is missing.");
@@ -110,6 +111,7 @@ export async function DELETE(req: Request) {
   if (!sameOrigin(req)) return forbidden();
   const session = await customerSession(req);
   if (!session) return bad("Sign in to cancel your subscription.", 401);
+  if (limited(`billing:paypal-subscription-cancel:${session.userId}`, 3, 60_000)) return bad("Too many cancellation requests. Try again shortly.", 429);
   const body = await readJson(req, 1_000);
   const localId = typeof body?.subscriptionId === "string" && /^[0-9a-f-]{36}$/i.test(body.subscriptionId) ? body.subscriptionId : null;
   if (!localId) return bad("The subscription reference is missing.");

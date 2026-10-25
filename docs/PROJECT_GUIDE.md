@@ -74,7 +74,9 @@ A persona can mark content as private. When a public visitor reaches it, the por
 
 ### 4. Choose a billing plan
 
-Customer billing is available at `/account/billing/`. The free plan keeps one CV design (`modern`), editing, PDF export, the public CV, and curated visitor topics available. A one-time **ETB 799 Chapa** or **USD 6 PayPal** payment unlocks the full design collection for 90 days. **Portfolio Pro** is a **USD 4.99/month PayPal subscription**; it enables advanced visitor AI and aggregated profile insights, while the basic public CV remains available.
+Customer billing is available at `/account/billing/`. The first CV includes the full design collection, editing, PDF export, the public CV, and curated visitor topics for free. A one-time **ETB 100 Chapa** or **USD 1 PayPal** payment unlocks additional CV creation and the full design collection for life. **Portfolio Pro** is a **USD 4.99/month PayPal subscription**; it enables advanced visitor AI and aggregated profile insights, while the basic public CV remains available.
+
+Each customer can create one CV for free, with all templates available. Creating additional CVs requires a lifetime CV Design Pass; deleting a CV does not remove the paid requirement if another CV already exists. Existing accounts with multiple CVs keep them, but cannot create more until they have the pass. Owners can permanently delete a CV from `/account/`; this also removes its visitor history, drafts, published profile, and stored files where cleanup succeeds. Deletion is blocked while a CV publish or processing job is active.
 
 The server chooses prices and verifies provider-side payment status before granting entitlements. Chapa uses transaction verification on its callback and the customer return page. PayPal uses order capture, subscription verification, and signed webhooks for subscription lifecycle events. The application never accepts a client-provided amount and does not store payment credentials.
 

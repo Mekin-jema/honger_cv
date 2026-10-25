@@ -106,6 +106,7 @@ export function CvStudio({
   };
   const selectedTemplate = CV_TEMPLATES.find((item) => item.id === template) ?? CV_TEMPLATES[0];
   const selectedPalette = palettes.find((item) => item.color === accentColor);
+  const hasLockedTemplates = availableTemplates !== undefined && CV_TEMPLATES.some((item) => !availableTemplates.includes(item.id));
   const recordPdfEvent = () => {
     if (!analyticsUrl) return;
     void fetch(analyticsUrl, { method: "POST" }).catch((error: unknown) => {
@@ -202,7 +203,7 @@ export function CvStudio({
           <div className="cv-template-heading">
             <div>
               <h2 id="cv-template-heading">Choose a layout</h2>
-              <p>{availableTemplates ? "Choose a free design or unlock the full collection." : "Pick a design to update the preview."}</p>
+              <p>{hasLockedTemplates ? "Upgrade to unlock every design for your additional CVs." : "Explore the full collection—every design is available."}</p>
             </div>
             <span className="cv-template-count">{CV_TEMPLATES.length}</span>
           </div>
@@ -226,7 +227,7 @@ export function CvStudio({
                     </span>
                     <span className="cv-template-description">{item.description}</span>
                     <span className={`cv-template-meta${item.atsFriendly ? " is-ats" : ""}`}>{item.atsFriendly ? "ATS-friendly structure" : "Design-forward layout"}</span>
-                    {locked && <span className="cv-template-meta inline-flex items-center gap-1 text-accent"><LockKeyhole className="size-3" aria-hidden="true" />Unlock with 90-day pass</span>}
+                    {locked && <span className="cv-template-meta inline-flex items-center gap-1 text-accent"><LockKeyhole className="size-3" aria-hidden="true" />Upgrade to unlock all designs</span>}
                   </span>
                 </button>
               );

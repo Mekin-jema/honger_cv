@@ -4,13 +4,17 @@ import { requireCustomer } from "@/server/admin-session";
 import { getAccountDraft, getAccountOwnedPersonas, getAccountVersion } from "@/server/persona/account-data";
 import { PersonaDocShape } from "@/lib/persona/schema";
 import { enText } from "@/lib/persona/edit";
+import { hasCvPass } from "@/server/billing";
 
 export const metadata: Metadata = { title: "Your CVs", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const customer = await requireCustomer();
-  const owned = await getAccountOwnedPersonas(customer.userId);
+  const [owned, cvPassActive] = await Promise.all([
+    getAccountOwnedPersonas(customer.userId),
+    hasCvPass(customer.userId),
+  ]);
   const loaded = await Promise.all(owned.map(async (persona) => {
     const [draft, published] = await Promise.all([
       getAccountDraft(persona.slug),
@@ -47,7 +51,7 @@ export default async function AccountPage() {
             Your CVs, designs, and AI assistants in one place. Create a CV to choose a design, add your information, and train its AI.
           </p>
         </div>
-        <AccountWorkspace personas={personas} />
+        <AccountWorkspace personas={personas} cvPassActive={cvPassActive} />
       </div>
     </main>
   );

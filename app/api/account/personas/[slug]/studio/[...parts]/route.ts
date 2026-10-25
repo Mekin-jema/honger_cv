@@ -15,7 +15,7 @@ import { createCode, listCodes, resetAccess, revokeCode } from "@/server/access/
 import { query } from "@/server/db";
 import { compilePersona } from "@/server/persona/compile";
 import { activateVersion, PublishError } from "@/server/persona/publish";
-import { loadDraft, personaOwnedBy, saveDraft } from "@/server/persona/repo";
+import { listOwnedPersonas, loadDraft, personaOwnedBy, saveDraft } from "@/server/persona/repo";
 import { recordPlatformEventSafely } from "@/server/platform-events";
 import { hasCvPass, CV_PASS_TEMPLATE } from "@/server/billing";
 import { isCvTemplateId } from "@/lib/persona/cv-templates";
@@ -101,13 +101,15 @@ export async function PUT(req: Request, context: Context) {
   const previousDoc = PersonaDocShape.safeParse(previousDraft?.doc);
   const previousDesign = previousDoc.success ? previousDoc.data.document?.data : undefined;
   const nextDesign = parsed.data.document?.data;
+  const isFirstCv = (await listOwnedPersonas(access.session.userId))[0]?.slug === access.slug;
   if (
     isCvTemplateId(nextDesign?.cvTemplate) &&
     nextDesign?.cvTemplate !== previousDesign?.cvTemplate &&
     nextDesign?.cvTemplate !== CV_PASS_TEMPLATE &&
+    !isFirstCv &&
     !(await hasCvPass(access.session.userId))
   ) {
-    return bad("Unlock all CV designs with a 90-day CV Design Pass.", 402);
+    return bad("Upgrade with a lifetime CV Design Pass to unlock all designs for additional CVs.", 402);
   }
   const next = await saveDraft(access.slug, parsed.data, rev);
   if (next === null) return bad("This draft changed in another tab. Reload and try again.", 409);

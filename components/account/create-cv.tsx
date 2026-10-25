@@ -12,21 +12,24 @@ export function CreateCv() {
   const [headline, setHeadline] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+  const [needsPayment, setNeedsPayment] = useState(false);
 
   const create = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
     setBusy(true);
     setError(undefined);
+    setNeedsPayment(false);
     try {
       const response = await fetch(withBase("/api/account/personas/"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ cvName: cvName.trim(), headline: headline.trim() || cvName.trim() }),
       });
-      const result = (await response.json()) as { slug?: string; error?: string };
+      const result = (await response.json()) as { slug?: string; error?: string; needsPayment?: boolean };
       if (!response.ok || !result.slug) {
         setError(result.error || "Couldn't create this CV. Please try again.");
+        setNeedsPayment(result.needsPayment === true);
         return;
       }
       router.push(`/account/training/${result.slug}/design/`);
@@ -81,6 +84,11 @@ export function CreateCv() {
               </label>
             </details>
             {error && <p role="alert" className="text-sm font-medium text-accent">{error}</p>}
+            {needsPayment && (
+              <Link href="/account/billing/?feature=additional-cv" className="inline-flex min-h-10 items-center gap-2 font-semibold text-accent underline underline-offset-4">
+                View the lifetime CV Design Pass <ArrowLeft className="size-4 rotate-180" aria-hidden="true" />
+              </Link>
+            )}
             <button
               type="submit"
               disabled={busy || cvName.trim().length < 2}

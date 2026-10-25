@@ -1,6 +1,6 @@
 import { completeCvPassOrder, orderForUser } from "@/server/billing";
 import { customerSession } from "@/server/admin-session";
-import { bad, forbidden, json, readJson, sameOrigin } from "@/server/http";
+import { bad, forbidden, json, limited, readJson, sameOrigin } from "@/server/http";
 import { paypalConfig, paypalRequest } from "@/server/payment-providers";
 
 type PaypalCapture = { status?: string; amount?: { value?: string; currency_code?: string } };
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return forbidden();
   const session = await customerSession(req);
   if (!session) return bad("Sign in to confirm your payment.", 401);
+  if (limited(`billing:paypal-capture:${session.userId}`, 10, 60_000)) return bad("Too many payment checks. Try again shortly.", 429);
   const body = await readJson(req, 1_000);
   const orderId = typeof body?.orderId === "string" && /^[0-9a-f-]{36}$/i.test(body.orderId) ? body.orderId : null;
   if (!orderId) return bad("The payment reference is missing.");
