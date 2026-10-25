@@ -50,8 +50,8 @@ Publish profile, experience, projects, skills, and contact pages from a single s
 <tr>
 <td width="50%" valign="top">
 
-### ✦ Grounded portfolio AI
-Start with curated answers, then optionally use Gemini for concise answers based only on published content.
+### ✦ Grounded portfolio AI & voice chat
+Ask by microphone, hear answers read aloud, or start a hands-free interview grounded in published content.
 
 </td>
 <td width="50%" valign="top">
@@ -155,7 +155,7 @@ Copy `.env.example` to `.env.local`. Only configure the integrations you plan to
 | `GEMINI_API_KEY` | Enables generated assistant answers, content mapping, embeddings, and Gemini fallback for CV mapping. |
 | `OPENROUTER_API_KEY` | Optional; enables OpenRouter CV PDF mapping. |
 | `OPENROUTER_CV_MODEL` | Optional OpenRouter model override; defaults to `openrouter/free`. |
-| `RESUME_PARSER_API_URL` / `RESUME_PARSER_API_KEY` | Optional hosted [Resume Parser](https://github.com/theresumeparser/resume-parser-api.git) used first for CV PDF import, including OCR for scanned CVs. |
+| `RESUME_PARSER_API_URL` / `RESUME_PARSER_API_KEY` | Optional hosted [Resume Parser](https://github.com/theresumeparser/resume-parser-api.git) used for CV PDF import and streaming, CV-grounded answers in Ask AI's live voice mode. Configure an LLM provider key and model chain in the parser API as well. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google sign-in for customers. |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Optional GitHub sign-in for customers. |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name for customer photos and durable generated PDFs. |

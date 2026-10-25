@@ -116,6 +116,25 @@ To verify the setup, run the test suite from the project root: `uv run pytest te
 
 ## Usage
 
+### Live voice interview
+
+`POST /api/v1/voice/stream` streams a candidate-profile-grounded interview answer as
+server-sent events. It uses the first available models in `DEFAULT_PARSE_MODELS` and
+requires the same `X-API-Key` authentication as resume parsing. The web application
+should call this endpoint from its server-side route so the parser API key is never
+sent to the browser.
+
+```json
+{
+  "question": "Tell me about your data analytics experience.",
+  "context": "{\"identity\":{\"name\":\"Candidate\"},\"sections\":[]}",
+  "history": []
+}
+```
+
+Each `data:` event contains a JSON object with a `type` of `token`, `done`, or `error`.
+The endpoint does not store interview questions or answers.
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/parse \
   -H "X-API-Key: sk-parse-abc123" \
@@ -190,6 +209,10 @@ src/
 │   ├── router.py            # POST /api/v1/parse
 │   ├── dependencies.py      # File validation
 │   └── schemas.py           # ParseOptions, ParseResponse, etc.
+├── voice/                   # CV-grounded streaming interview answers
+│   ├── router.py            # POST /api/v1/voice/stream
+│   ├── schemas.py           # Bounded request and history models
+│   └── service.py           # Prompt construction and model fallback
 ├── extraction/              # Algorithmic text extraction
 │   ├── base.py              # ExtractionResult, ExtractionError
 │   ├── pdf.py               # PDF via PyMuPDF
