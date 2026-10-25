@@ -24,6 +24,7 @@ REGISTERED_PROVIDERS: dict[str, list[str]] = {
     "openrouter": ["OPENROUTER_API_KEY"],
     "anthropic": ["ANTHROPIC_API_KEY"],
     "openai": ["OPENAI_API_KEY"],
+    "openai_compatible": [],
 }
 
 
@@ -73,6 +74,8 @@ class Settings(BaseSettings):
     # Provider credentials (only configure providers referenced in model chains)
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENAI_COMPATIBLE_BASE_URL: str = "http://localhost:11434/v1"
+    OPENAI_COMPATIBLE_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 
@@ -85,6 +88,7 @@ class Settings(BaseSettings):
     DEFAULT_PARSE_MODELS: str = (
         "openrouter/google/gemini-flash-1.5,openrouter/openai/gpt-4o-mini"
     )
+    VOICE_MODELS: str = ""
 
     # Limits
     MAX_FILE_SIZE_MB: int = 10
@@ -112,6 +116,10 @@ class Settings(BaseSettings):
         # Rule 2 & 5: validate parse chain entries
         parse_chain(parse_raw, "DEFAULT_PARSE_MODELS")
 
+        voice_raw = self.VOICE_MODELS.strip()
+        if voice_raw:
+            parse_chain(voice_raw, "VOICE_MODELS")
+
         # Validate OCR chain (allow "none" or empty → skip OCR)
         ocr_raw = self.DEFAULT_OCR_MODELS.strip()
         if ocr_raw and ocr_raw.lower() != "none":
@@ -134,6 +142,12 @@ class Settings(BaseSettings):
         """Parsed parse model chain. Always has at least one entry."""
         return parse_chain(self.DEFAULT_PARSE_MODELS.strip(), "DEFAULT_PARSE_MODELS")
 
+    @property
+    def voice_model_chain(self) -> list[ModelRef]:
+        """Voice-specific chain, falling back to the existing parse chain."""
+        raw = self.VOICE_MODELS.strip()
+        return parse_chain(raw, "VOICE_MODELS") if raw else self.parse_model_chain
+
     # -- Startup credential validation ------------------------------------
 
     def validate_provider_credentials(self) -> None:
@@ -142,7 +156,11 @@ class Settings(BaseSettings):
         Call this at application startup. Raises :class:`ValueError` if any
         required credential is missing or empty.
         """
-        all_refs = self.parse_model_chain + self.ocr_model_chain
+        all_refs = (
+            self.parse_model_chain
+            + self.ocr_model_chain
+            + self.voice_model_chain
+        )
         checked: set[str] = set()
         for ref in all_refs:
             if ref.provider in checked:

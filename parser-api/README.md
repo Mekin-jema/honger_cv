@@ -83,12 +83,15 @@ RATE_LIMIT=60/minute                 # Per-key rate limit
 # Provider credentials (only configure providers you reference in model chains)
 OPENROUTER_API_KEY=sk-or-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_COMPATIBLE_BASE_URL=http://localhost:11434/v1
+OPENAI_COMPATIBLE_API_KEY=
 
 # Model chains — ordered left to right, provider prefix required
 # Format: provider/model_name (comma-separated for fallback chain)
 # OCR accepts "none" to disable OCR entirely
 DEFAULT_OCR_MODELS=openrouter/google/gemini-flash-1.5,openrouter/google/gemini-pro-vision
 DEFAULT_PARSE_MODELS=openrouter/google/gemini-flash-1.5,openrouter/openai/gpt-4o-mini
+VOICE_MODELS=openai_compatible/llama3.2
 
 # Limits
 MAX_FILE_SIZE_MB=10
@@ -96,7 +99,7 @@ REQUEST_TIMEOUT_SECONDS=60
 LOG_LEVEL=info
 ```
 
-**Model chains** define the escalation order. The pipeline tries models left to right — if the first model's output fails validation, the next model in the chain is tried. Each entry includes a provider prefix (`openrouter/`, `anthropic/`, `openai/`) so different models in the same chain can use different providers.
+**Model chains** define the escalation order. The pipeline tries models left to right — if the first model's output fails validation, the next model in the chain is tried. Each entry includes a provider prefix (`openrouter/`, `anthropic/`, `openai/`, or `openai_compatible/`) so different models in the same chain can use different providers. OpenAI-compatible endpoints such as Ollama, LM Studio, and vLLM use `OPENAI_COMPATIBLE_BASE_URL` and the optional `OPENAI_COMPATIBLE_API_KEY`.
 
 Set `DEFAULT_OCR_MODELS=none` to disable OCR entirely (useful when inputs are always clean PDFs with selectable text).
 
@@ -119,10 +122,27 @@ To verify the setup, run the test suite from the project root: `uv run pytest te
 ### Live voice interview
 
 `POST /api/v1/voice/stream` streams a candidate-profile-grounded interview answer as
-server-sent events. It uses the first available models in `DEFAULT_PARSE_MODELS` and
+server-sent events. It uses the first available models in `VOICE_MODELS` and
 requires the same `X-API-Key` authentication as resume parsing. The web application
 should call this endpoint from its server-side route so the parser API key is never
 sent to the browser.
+
+For local voice answers, `VOICE_MODELS=openai_compatible/llama3.2` uses Ollama. Start
+it with Docker Compose and download the model once:
+
+```bash
+docker compose up -d ollama
+docker compose exec ollama ollama pull llama3.2
+```
+
+The parser API container is configured to reach Ollama at `http://ollama:11434/v1`.
+When running the API directly on the host, set
+`OPENAI_COMPATIBLE_BASE_URL=http://localhost:11434/v1`. To use a different model,
+change `VOICE_MODELS`; for a different OpenAI-compatible service, also change
+`OPENAI_COMPATIBLE_BASE_URL` (or, for Docker Compose, the
+`OPENAI_COMPATIBLE_DOCKER_BASE_URL` override) and set its API key if required.
+Production uses environment configuration, so no code changes are needed to switch
+models or OpenAI-compatible providers.
 
 ```json
 {

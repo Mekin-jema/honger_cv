@@ -1,5 +1,6 @@
 from src.config import ModelRef
 from src.providers.factory import get_provider, reset_providers
+from src.providers.openai_compatible import OpenAICompatibleProvider
 from src.providers.openrouter import OpenRouterProvider
 
 
@@ -16,6 +17,14 @@ def test_provider_singleton() -> None:
     first = get_provider(ref)
     second = get_provider(ref)
     assert first is second
+
+
+def test_get_provider_returns_openai_compatible_provider() -> None:
+    reset_providers()
+    ref = ModelRef(provider="openai_compatible", model="llama3.2")
+    provider = get_provider(ref)
+    assert isinstance(provider, OpenAICompatibleProvider)
+    assert "Authorization" not in provider._client.headers
 
 
 def test_unknown_provider_raises() -> None:

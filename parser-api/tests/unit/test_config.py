@@ -139,6 +139,16 @@ class TestSettingsChainValidation:
         )
         assert len(s.ocr_model_chain) == 2
 
+    def test_voice_chain_can_use_openai_compatible_provider(self) -> None:
+        s = self._make_settings(VOICE_MODELS="openai_compatible/llama3.2")
+        assert s.voice_model_chain == [
+            ModelRef(provider="openai_compatible", model="llama3.2")
+        ]
+
+    def test_voice_chain_defaults_to_parse_chain(self) -> None:
+        s = self._make_settings(VOICE_MODELS="")
+        assert s.voice_model_chain == s.parse_model_chain
+
     def test_ocr_none_returns_empty_chain(self) -> None:
         s = self._make_settings(DEFAULT_OCR_MODELS="none")
         assert s.ocr_model_chain == []
@@ -167,6 +177,10 @@ class TestSettingsChainValidation:
         with pytest.raises(ValueError, match="unknown provider"):
             self._make_settings(DEFAULT_OCR_MODELS="badprovider/model")
 
+    def test_invalid_provider_in_voice_chain_raises(self) -> None:
+        with pytest.raises(ValueError, match="unknown provider"):
+            self._make_settings(VOICE_MODELS="badprovider/model")
+
     def test_trailing_comma_in_parse_chain_raises(self) -> None:
         with pytest.raises(ValueError, match="empty entry"):
             self._make_settings(
@@ -191,6 +205,13 @@ class TestProviderCredentialValidation:
 
     def test_valid_credentials_pass(self) -> None:
         s = self._make_settings(OPENROUTER_API_KEY="sk-valid")
+        s.validate_provider_credentials()
+
+    def test_openai_compatible_provider_does_not_require_api_key(self) -> None:
+        s = self._make_settings(
+            VOICE_MODELS="openai_compatible/llama3.2",
+            OPENAI_COMPATIBLE_API_KEY="",
+        )
         s.validate_provider_credentials()
 
     def test_missing_openrouter_key_raises(self) -> None:

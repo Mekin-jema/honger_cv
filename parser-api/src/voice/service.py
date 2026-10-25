@@ -37,7 +37,7 @@ async def stream_voice_answer(request: VoiceRequest) -> AsyncIterator[str]:
     messages = build_messages(request)
     last_error: ProviderError | None = None
 
-    for model_ref in settings.parse_model_chain:
+    for model_ref in settings.voice_model_chain:
         provider = get_provider(model_ref)
         received_delta = False
         try:

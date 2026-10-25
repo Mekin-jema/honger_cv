@@ -38,6 +38,15 @@ def _create_provider(name: str) -> BaseProvider:
             base_url=settings.OPENROUTER_BASE_URL,
         )
 
+    if name == "openai_compatible":
+        from src.config import settings
+        from src.providers.openai_compatible import OpenAICompatibleProvider
+
+        return OpenAICompatibleProvider(
+            api_key=settings.OPENAI_COMPATIBLE_API_KEY,
+            base_url=settings.OPENAI_COMPATIBLE_BASE_URL,
+        )
+
     if name == "anthropic":
         raise NotImplementedError("Anthropic provider is not yet implemented.")
 

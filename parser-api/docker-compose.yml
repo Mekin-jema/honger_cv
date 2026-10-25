@@ -13,6 +13,7 @@ services:
     environment:
       ENVIRONMENT: local
       LOG_LEVEL: debug
+      OPENAI_COMPATIBLE_BASE_URL: ${OPENAI_COMPATIBLE_DOCKER_BASE_URL:-http://ollama:11434/v1}
     volumes:
       - ./src:/app/src:ro
     command: >
@@ -21,3 +22,14 @@ services:
       --port 8000
       --reload
       --reload-dir src
+  ollama:
+    image: ollama/ollama:latest
+    container_name: resume-parser-ollama-dev
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
