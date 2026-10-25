@@ -95,6 +95,7 @@ Keep output compact: group skills by the CV's headings instead of listing each s
         temperature: 0.1,
         maxTokens: 1800,
         timeoutMs: 60_000,
+        ollamaTimeoutMs: 100_000,
       });
 
       // Strict validation of the parsed output

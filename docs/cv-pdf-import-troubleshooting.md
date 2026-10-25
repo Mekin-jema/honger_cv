@@ -10,7 +10,7 @@ This guide covers the **customer CV editor's document import** (the Upload CV ac
    ```
 2. `app/api/account/personas/[slug]/studio/[...parts]/route.ts` checks the signed-in owner, same-origin request, AI configuration, per-user rate limit (10 attempts per 10 minutes), upload size, and document signature.
 3. `doclingParser` converts the document to Markdown. `CvExtractor` sends that text to the ordered structured-extraction model chain and validates the returned data against the CV schema. The result is previewed/applied in the editor; the import route itself does not save or publish the CV.
-4. When `CV_EXTRACTION_MODELS` is unset, development prefers local Ollama, then tries configured OpenRouter and Gemini providers. Production uses configured hosted providers. If a provider is rate-limited or unavailable, the next configured provider is attempted. Each model request has a 60-second timeout; the route declares Node.js runtime and `maxDuration = 120` seconds.
+4. When `CV_EXTRACTION_MODELS` is unset, development prefers local Ollama, then configured Gemini, then OpenRouter. Production tries configured OpenRouter, then Gemini. If a provider is rate-limited or unavailable, the next configured provider is attempted. Ollama requests allow up to 100 seconds for local inference; hosted requests allow 60 seconds. The route declares Node.js runtime and `maxDuration = 120` seconds.
 
 ## Required Vercel variables
 
@@ -30,7 +30,7 @@ Set these in **Vercel → Project → Settings → Environment Variables** for e
 
 Model and key values are exact strings, with no comments or quotes. `CV_EXTRACTION_MODELS` accepts `ollama`, `openrouter`, and `google` entries, for example `ollama/llama3.2,openrouter/mistralai/mistral-small-24b-instruct-2501`. OpenRouter capacity and quotas can change; when it is rate-limited, extraction proceeds to the next configured model. For production, explicitly choose the hosted model chain you want rather than relying on development defaults. After changing deployment variables, **redeploy**.
 
-CV extraction uses the structured output schema and does not change the saved profile until the user applies the preview. Local Ollama uses its OpenAI-compatible `/chat/completions` endpoint with JSON Schema output. The separate Resume Parser API setting is used by the standalone CV parse endpoint, not this design-studio import route.
+CV extraction uses the structured output schema and does not change the saved profile until the user applies the preview. Local Ollama uses its OpenAI-compatible `/chat/completions` endpoint in JSON mode; the app then validates the result against its CV schema. The separate Resume Parser API setting is used by the standalone CV parse endpoint, not this design-studio import route.
 
 Never paste an API key into an issue, chat, source file, or `NEXT_PUBLIC_*` variable. If a key has been exposed, rotate it in Google AI Studio and update Vercel.
 

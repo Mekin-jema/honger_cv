@@ -104,6 +104,17 @@ describe("CvExtractor & Security Boundaries", () => {
     ]);
     expect(
       cvExtractionModelChain({
+        NODE_ENV: "development",
+        OPENROUTER_API_KEY: "test-key",
+        GEMINI_API_KEY: "test-key",
+      }),
+    ).toEqual([
+      { provider: "ollama", model: "llama3.2" },
+      { provider: "google", model: "gemini-3.5-flash-lite" },
+      { provider: "openrouter", model: "mistralai/mistral-small-24b-instruct-2501" },
+    ]);
+    expect(
+      cvExtractionModelChain({
         NODE_ENV: "production",
         OPENROUTER_API_KEY: "test-key",
         OPENROUTER_CV_MODEL: "mistralai/test-model",
@@ -184,11 +195,10 @@ describe("CvExtractor & Security Boundaries", () => {
     );
     const requestBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
       model: string;
-      response_format: { type: string; json_schema: { schema: unknown } };
+      response_format: { type: string };
     };
     expect(requestBody.model).toBe("llama3.2");
-    expect(requestBody.response_format.type).toBe("json_schema");
-    expect(requestBody.response_format.json_schema.schema).toEqual(z.toJSONSchema(schema));
+    expect(requestBody.response_format.type).toBe("json_object");
     expect(result).toEqual({ output: data, providerUsed: "ollama:llama3.2" });
   });
 
