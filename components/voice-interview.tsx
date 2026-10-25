@@ -53,11 +53,67 @@ export function VoiceInterview({
   const speechCursorRef = useRef(0);
   const speechPendingRef = useRef(0);
   const responseCompleteRef = useRef(false);
+  const nativeSpeechAvailableRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
 
   const replaceTurns = useCallback((next: Turn[]) => {
     turnsRef.current = next;
     setTurns(next);
   }, []);
+
+  const clearFallbackAudio = useCallback(() => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = null;
+  }, []);
+
+  const playFallbackSpeech = useCallback(
+    async (text: string, signal: AbortSignal) => {
+      const response = await fetch("/api/voice/speech/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+        signal,
+      });
+      if (!response.ok) {
+        const result = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(result?.error || "Could not generate spoken audio.");
+      }
+
+      const url = URL.createObjectURL(await response.blob());
+      audioUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const onAbort = () => reject(new DOMException("Speech playback was stopped.", "AbortError"));
+          const cleanup = () => signal.removeEventListener("abort", onAbort);
+          audio.onended = () => {
+            cleanup();
+            resolve();
+          };
+          audio.onerror = () => {
+            cleanup();
+            reject(new Error("The browser could not play the generated audio."));
+          };
+          signal.addEventListener("abort", onAbort, { once: true });
+          if (signal.aborted) {
+            onAbort();
+            return;
+          }
+          audio.play().catch((error: unknown) => {
+            cleanup();
+            reject(error);
+          });
+        });
+      } finally {
+        if (audioRef.current === audio) clearFallbackAudio();
+      }
+    },
+    [clearFallbackAudio],
+  );
 
   const startRecognition = useCallback(() => {
     const recognition = recognitionRef.current;
@@ -89,8 +145,16 @@ export function VoiceInterview({
     (text: string, final = false) => {
       if (!("speechSynthesis" in window)) return;
       const queue = (sentence: string) => {
-        if (!sentence) return;
+        if (!sentence || !nativeSpeechAvailableRef.current) return;
+        const synthesis = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.lang = "en-US";
+        const voices = synthesis.getVoices();
+        utterance.voice =
+          voices.find((voice) => voice.lang.toLowerCase() === "en-us") ??
+          voices.find((voice) => voice.lang.toLowerCase().startsWith("en-")) ??
+          voices[0] ??
+          null;
         utterance.rate = 1;
         speechPendingRef.current += 1;
         utterance.onstart = () => setStatus("Speaking...");
@@ -102,7 +166,8 @@ export function VoiceInterview({
           speechPendingRef.current = Math.max(0, speechPendingRef.current - 1);
           if (responseCompleteRef.current && speechPendingRef.current === 0) finishSpeech();
         };
-        window.speechSynthesis.speak(utterance);
+        synthesis.resume();
+        synthesis.speak(utterance);
       };
 
       let cursor = speechCursorRef.current;
@@ -133,6 +198,8 @@ export function VoiceInterview({
       speechCursorRef.current = 0;
       speechPendingRef.current = 0;
       responseCompleteRef.current = false;
+      nativeSpeechAvailableRef.current =
+        "speechSynthesis" in window && window.speechSynthesis.getVoices().length > 0;
       const answerIndex = turnsRef.current.length + 1;
       replaceTurns([
         ...turnsRef.current,
@@ -190,7 +257,23 @@ export function VoiceInterview({
         ];
         queueSpeech(answer, true);
         responseCompleteRef.current = true;
-        if (speechPendingRef.current === 0) finishSpeech();
+        if (speechPendingRef.current === 0 && !nativeSpeechAvailableRef.current) {
+          try {
+            await playFallbackSpeech(answer, controller.signal);
+          } catch (error) {
+            if (controller.signal.aborted) return;
+            busyRef.current = false;
+            setBusy(false);
+            enabledRef.current = false;
+            recognitionRef.current?.abort();
+            setListening(false);
+            setStatus(`Could not play the voice response: ${errorMessage(error)}`);
+            return;
+          }
+          if (!controller.signal.aborted) finishSpeech();
+        } else if (speechPendingRef.current === 0) {
+          finishSpeech();
+        }
       } catch (error) {
         if (controller.signal.aborted) return;
         window.speechSynthesis?.cancel();
@@ -199,13 +282,17 @@ export function VoiceInterview({
         busyRef.current = false;
         setBusy(false);
         replaceTurns(turnsRef.current.filter((_, index) => index !== answerIndex));
-        setStatus(errorMessage(error));
+        setStatus(
+          nativeSpeechAvailableRef.current
+            ? errorMessage(error)
+            : `Could not play the voice response: ${errorMessage(error)}`,
+        );
         if (enabledRef.current) window.setTimeout(startRecognition, 700);
       } finally {
         abortRef.current = null;
       }
     },
-    [finishSpeech, queueSpeech, replaceTurns, startRecognition],
+    [finishSpeech, playFallbackSpeech, queueSpeech, replaceTurns, startRecognition],
   );
 
   useEffect(() => {
@@ -262,10 +349,11 @@ export function VoiceInterview({
       abortRef.current?.abort();
       recognition.abort();
       window.speechSynthesis?.cancel();
+      clearFallbackAudio();
       speechPendingRef.current = 0;
       responseCompleteRef.current = false;
     };
-  }, [ask, startRecognition]);
+  }, [ask, clearFallbackAudio, startRecognition]);
 
   const start = () => {
     enabledRef.current = true;
@@ -277,6 +365,7 @@ export function VoiceInterview({
     abortRef.current?.abort();
     recognitionRef.current?.abort();
     window.speechSynthesis?.cancel();
+    clearFallbackAudio();
     busyRef.current = false;
     setBusy(false);
     setListening(false);
