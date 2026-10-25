@@ -4,7 +4,7 @@ import { mapResumeParserResult } from "@/server/brain/resume-parser";
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-function parserConfig(): { endpoint: URL; apiKey: string } {
+function parserConfig(): { baseUrl: string; apiKey: string } {
   const baseUrl = process.env.RESUME_PARSER_API_URL?.trim();
   const apiKey = process.env.RESUME_PARSER_API_KEY?.trim();
   if (!baseUrl || !apiKey) {
@@ -12,10 +12,17 @@ function parserConfig(): { endpoint: URL; apiKey: string } {
   }
 
   try {
-    return { endpoint: new URL("/api/v1/extract", baseUrl), apiKey };
+    new URL(baseUrl);
+    return { baseUrl, apiKey };
   } catch {
     throw new Error("RESUME_PARSER_API_URL must be a valid URL.");
   }
+}
+
+function localParseModel(): string | undefined {
+  return process.env.NODE_ENV === "production"
+    ? undefined
+    : `openai_compatible/${process.env.OLLAMA_CV_MODEL?.trim() || "llama3.2"}`;
 }
 
 export async function POST(req: Request) {
@@ -35,8 +42,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { endpoint, apiKey } = parserConfig();
-    const upstream = await fetch(endpoint, {
+    const { baseUrl, apiKey } = parserConfig();
+    const parseModels = localParseModel();
+    const endpoint = new URL("/api/v1/extract", baseUrl);
+    let upstream = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,10 +54,28 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         markdown,
         filename: typeof body?.filename === "string" ? body.filename : "cv.md",
+        ...(parseModels ? { parse_models: parseModels } : {}),
       }),
       cache: "no-store",
       signal: AbortSignal.any([req.signal, AbortSignal.timeout(110_000)]),
     });
+
+    if (upstream.status === 404) {
+      const form = new FormData();
+      form.set(
+        "file",
+        new Blob([markdown], { type: "text/markdown" }),
+        typeof body?.filename === "string" ? body.filename : "cv.md",
+      );
+      form.set("options", JSON.stringify({ ...(parseModels ? { parse_models: parseModels } : {}), ocr: "skip" }));
+      upstream = await fetch(new URL("/api/v1/parse", baseUrl), {
+        method: "POST",
+        headers: { "X-API-Key": apiKey },
+        body: form,
+        cache: "no-store",
+        signal: AbortSignal.any([req.signal, AbortSignal.timeout(110_000)]),
+      });
+    }
 
     if (!upstream.ok) {
       const detail = await upstream.text().catch(() => "");
