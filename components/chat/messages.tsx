@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Check, Copy, FileText, RefreshCw, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, Copy, FileText, RefreshCw, Sparkles, ThumbsDown, ThumbsUp, Volume2, VolumeX } from "lucide-react";
 import { AnimatedBlocks, loadGsap } from "@/components/blocks/animated-blocks";
 import { BlockView } from "@/components/blocks/blocks";
 import { resolveIntent, type AssistantMessage as AssistantMsg, type Phase } from "@/lib/chat";
@@ -73,6 +73,20 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate, pr
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [voteNote, setVoteNote] = useState(false);
   const [voteError, setVoteError] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [speechError, setSpeechError] = useState("");
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  useEffect(
+    () => () => {
+      if (utteranceRef.current) {
+        utteranceRef.current.onend = null;
+        utteranceRef.current.onerror = null;
+        window.speechSynthesis?.cancel();
+      }
+    },
+    [],
+  );
 
   // The "couldn't save" note clears itself after a few seconds.
   useEffect(() => {
@@ -137,6 +151,27 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate, pr
     }
   };
 
+  const toggleSpeech = () => {
+    if (!("speechSynthesis" in window)) {
+      setSpeechError("Audio playback is not supported by this browser.");
+      return;
+    }
+    setSpeechError("");
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(plain(text));
+    utteranceRef.current = utterance;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  };
+
   const appear = (i: number) =>
     msg.animate
       ? {
@@ -177,6 +212,19 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate, pr
             )}
 
             <motion.div {...appear(intent.blocks.length)} className="mt-3 -ml-[3.375rem] inline-flex items-center gap-1 rounded-xl border border-line bg-bg-soft/70 p-1 shadow-sm md:-ml-2.5">
+              <button
+                type="button"
+                className={cn(
+                  "icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface",
+                  speaking && "border-accent bg-accent-soft text-accent",
+                )}
+                onClick={toggleSpeech}
+                aria-label={speaking ? "Stop reading answer aloud" : "Read answer aloud"}
+                title={speaking ? "Stop reading answer aloud" : "Read answer aloud"}
+                aria-pressed={speaking}
+              >
+                {speaking ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
               <button type="button" className="icon-btn size-9 border border-line bg-card text-fg shadow-sm hover:border-line-strong hover:bg-surface" onClick={copy} aria-label="Copy answer" title="Copy answer">
                 {copied ? <Check className="size-4 text-accent" /> : <Copy className="size-4" />}
               </button>
@@ -222,6 +270,11 @@ export function AssistantMessage({ msg, isLast, onPhase, onAsk, onRegenerate, pr
               )}
               {vote === "up" && <span className="ml-1 text-sm text-faint">Thanks!</span>}
             </motion.div>
+            {speechError && (
+              <p role="status" aria-live="polite" className="-ml-11 mt-1 text-sm text-muted md:ml-0">
+                {speechError}
+              </p>
+            )}
             <p role="status" aria-live="polite" className={cn("-ml-11 text-sm text-muted md:ml-0", voteError ? "mt-1" : "sr-only")}>
               {voteError ? "Couldn't save your vote - try again." : ""}
             </p>

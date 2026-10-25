@@ -7,8 +7,9 @@ import {
   MotionConfig,
   motion,
 } from "motion/react";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, AudioLines } from "lucide-react";
 import { Composer, type ComposerHandle } from "@/components/chat/composer";
+import { VoiceInterview } from "@/components/voice-interview";
 import { useVisibleHeight } from "@/lib/use-visible-height";
 import { ConsentBanner } from "@/components/consent";
 import { PhotoViewerProvider } from "@/components/photo-viewer";
@@ -89,6 +90,7 @@ export function ChatApp({
   const empty = messages.length === 0;
 
   const [showDown, setShowDown] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const composer = useRef<ComposerHandle>(null);
   // The question box stays above the on-screen keyboard on phones.
@@ -116,6 +118,11 @@ export function ChatApp({
       if (trackEvents) track("ask", { intentId });
     },
     [chatAsk, trackEvents],
+  );
+
+  const askByVoice = useCallback(
+    (transcript: string) => ask(aiEnabled ? "ai" : "fallback", transcript),
+    [aiEnabled, ask],
   );
 
   useEffect(() => {
@@ -250,6 +257,18 @@ export function ChatApp({
               privateMode={privateMode}
               showSidebarToggle={showSidebarToggle}
             />
+            {!privateMode && (
+              <div className="flex justify-center border-b border-line bg-surface/60 px-4 py-2">
+                <button
+                  type="button"
+                  onClick={() => setVoiceOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-line bg-card px-4 py-2 text-sm font-medium text-fg shadow-sm transition hover:bg-surface"
+                >
+                  <AudioLines className="size-4 text-primary" />
+                  Start a live voice interview
+                </button>
+              </div>
+            )}
 
             <LayoutGroup>
               <main
@@ -358,6 +377,7 @@ export function ChatApp({
                   <Composer
                     ref={composer}
                     onSubmit={ask}
+                    onVoiceInput={askByVoice}
                     generating={generating}
                     onStop={chat.stop}
                     aiEnabled={aiEnabled}
@@ -395,6 +415,12 @@ export function ChatApp({
             </LayoutGroup>
           </div>
         </div>
+        {voiceOpen && !privateMode && (
+          <VoiceInterview
+            candidateName={persona.identity.name}
+            onClose={() => setVoiceOpen(false)}
+          />
+        )}
       </PhotoViewerProvider>
     </MotionConfig>
   );

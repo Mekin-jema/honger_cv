@@ -3,6 +3,7 @@
 import { forwardRef, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUp, CornerDownLeft, Sparkles, Square } from "lucide-react";
+import { VoiceInput } from "@/components/chat/voice-input";
 import { exactIntent, matchIntents } from "@/lib/match-intent";
 import { usePersona } from "@/lib/persona/context";
 import { QIcon } from "@/lib/persona/icons";
@@ -14,6 +15,7 @@ type Props = {
   onSubmit: (intentId: string, text?: string) => void;
   generating: boolean;
   onStop: () => void;
+  onVoiceInput?: (transcript: string) => void;
   className?: string;
   /** Typed questions go to the AI (which may still play a ready-made answer) instead of the keyword match. */
   aiEnabled?: boolean;
@@ -24,7 +26,7 @@ type Option = { kind: "intent"; intent: Question } | { kind: "ask" };
 
 export type ComposerHandle = { focus: () => void; showAll: () => void };
 
-export const Composer = forwardRef<ComposerHandle, Props>(function Composer({ onSubmit, generating, onStop, className, aiEnabled = false }, ref) {
+export const Composer = forwardRef<ComposerHandle, Props>(function Composer({ onSubmit, generating, onStop, onVoiceInput, className, aiEnabled = false }, ref) {
   const persona = usePersona();
   const { questions, labels } = persona;
   const [value, setValue] = useState("");
@@ -178,6 +180,9 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer({ on
           spellCheck={false}
           className="min-w-0 flex-1 bg-transparent py-2.5 text-[17px] font-medium outline-none placeholder:font-normal placeholder:text-faint"
         />
+        {onVoiceInput && (
+          <VoiceInput onTranscript={onVoiceInput} language={persona.lang} />
+        )}
         <button
           type="button"
           onClick={submit}
