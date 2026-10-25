@@ -18,6 +18,7 @@ import {
 import { clientView } from "@/server/persona/compile";
 import { personaForRequest } from "@/server/persona/resolve";
 import { addAiAnswer, type AiAnswerEntry } from "@/server/store";
+import { customerPersonaHasPortfolioPro } from "@/server/billing";
 
 // 20 free-form questions per 10 minutes per client and persona, and AI_DAILY_LIMIT answered questions per
 // day across everyone (the cost cap; failed calls don't count).
@@ -65,6 +66,11 @@ export async function POST(req: Request) {
   if (!aiEnabled()) return bad("AI answers are switched off.", 503);
   const persona = await personaForRequest(req);
   const { compiled, tier, lang, preview } = persona;
+  if (!preview) {
+    if (!(await customerPersonaHasPortfolioPro(compiled.slug))) {
+      return bad("Advanced visitor AI is part of Portfolio Pro. Curated CV topics remain available.", 402);
+    }
+  }
   if (
     limited(
       `ask:${compiled.slug}:${clientKey(req)}`,

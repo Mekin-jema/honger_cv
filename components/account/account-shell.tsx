@@ -14,7 +14,7 @@ export function AccountShell({ children, name, email, avatar, personas }: { chil
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const routePath = pathname.replace(/\/+$/, "") || "/";
-  const section = routePath === "/account" ? "My CVs" : routePath === "/account/new" ? "Create CV" : routePath.includes("/ai/") ? "AI responses" : routePath.includes("/design") ? "CV design" : searchParams.get("tab") === "json" ? "Profile JSON" : "AI training";
+  const section = routePath === "/account" ? "My CVs" : routePath === "/account/new" ? "Create CV" : routePath === "/account/billing" ? "Billing & plans" : routePath.includes("/ai/") ? "AI responses" : routePath.includes("/design") ? "CV design" : searchParams.get("tab") === "json" ? "Profile JSON" : "AI training";
   const isStudio = /^\/account\/training\/[^/]+$/.test(routePath);
 
   return (

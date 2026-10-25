@@ -8,6 +8,7 @@ import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
 import { toast } from "@/components/ui/toast";
 import type { CvData, CvIdentity } from "@/lib/persona/cv";
+import type { CvTemplateId } from "@/lib/persona/cv-templates";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
 import { CvImportPipeline } from "./cv-import-pipeline";
@@ -232,12 +233,14 @@ export function ProfileDesignStudio({
   initialRev,
   cv,
   initialDesign,
+  availableTemplates,
 }: {
   slug: string;
   doc: PersonaDoc;
   initialRev: number;
   cv: CvData;
   initialDesign: CvDesign;
+  availableTemplates: readonly CvTemplateId[];
 }) {
   const router = useRouter();
   const [doc, setDoc] = useState(initialDoc);
@@ -661,6 +664,8 @@ export function ProfileDesignStudio({
             cv={cvData}
             initialTemplate={design.template}
             initialAccentColor={design.accentColor}
+            availableTemplates={availableTemplates}
+            onTemplateLocked={() => router.push(withBase("/account/billing/"))}
             onTemplateChange={() => setDesignSelected(true)}
             onDesignChange={(next) => {
               setDesign(next);

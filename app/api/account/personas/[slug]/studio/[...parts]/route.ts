@@ -17,6 +17,8 @@ import { compilePersona } from "@/server/persona/compile";
 import { activateVersion, PublishError } from "@/server/persona/publish";
 import { loadDraft, personaOwnedBy, saveDraft } from "@/server/persona/repo";
 import { recordPlatformEventSafely } from "@/server/platform-events";
+import { hasCvPass, CV_PASS_TEMPLATE } from "@/server/billing";
+import { isCvTemplateId } from "@/lib/persona/cv-templates";
 import {
   accessRequests,
   decideAccessRequest,
@@ -99,6 +101,14 @@ export async function PUT(req: Request, context: Context) {
   const previousDoc = PersonaDocShape.safeParse(previousDraft?.doc);
   const previousDesign = previousDoc.success ? previousDoc.data.document?.data : undefined;
   const nextDesign = parsed.data.document?.data;
+  if (
+    isCvTemplateId(nextDesign?.cvTemplate) &&
+    nextDesign?.cvTemplate !== previousDesign?.cvTemplate &&
+    nextDesign?.cvTemplate !== CV_PASS_TEMPLATE &&
+    !(await hasCvPass(access.session.userId))
+  ) {
+    return bad("Unlock all CV designs with a 90-day CV Design Pass.", 402);
+  }
   const next = await saveDraft(access.slug, parsed.data, rev);
   if (next === null) return bad("This draft changed in another tab. Reload and try again.", 409);
   await query("UPDATE personas SET name = $3, updated_at = now() WHERE slug = $1 AND owner_user_id = $2", [

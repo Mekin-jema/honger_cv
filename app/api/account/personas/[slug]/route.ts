@@ -4,6 +4,8 @@ import { customerSession } from "@/server/admin-session";
 import { query } from "@/server/db";
 import { loadDraft, personaOwnedBy, saveDraft } from "@/server/persona/repo";
 import { recordPlatformEventSafely } from "@/server/platform-events";
+import { hasCvPass, CV_PASS_TEMPLATE } from "@/server/billing";
+import { isCvTemplateId } from "@/lib/persona/cv-templates";
 
 type Context = { params: Promise<{ slug: string }> };
 const SLUG = /^[a-z][a-z0-9-]{1,31}$/;
@@ -41,6 +43,15 @@ export async function PUT(req: Request, context: Context) {
   const previousDoc = PersonaDocShape.safeParse(previousDraft?.doc);
   const previousDesign = previousDoc.success ? previousDoc.data.document.data : undefined;
   const nextDesign = parsed.data.document.data;
+  const nextTemplate = nextDesign?.cvTemplate;
+  if (
+    isCvTemplateId(nextTemplate) &&
+    nextTemplate !== previousDesign?.cvTemplate &&
+    nextTemplate !== CV_PASS_TEMPLATE &&
+    !(await hasCvPass(session.userId))
+  ) {
+    return bad("Unlock all CV designs with a 90-day CV Design Pass.", 402);
+  }
   const designChanged =
     previousDesign?.cvTemplate !== nextDesign?.cvTemplate ||
     previousDesign?.cvAccent !== nextDesign?.cvAccent;

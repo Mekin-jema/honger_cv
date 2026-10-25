@@ -72,6 +72,14 @@ Free-form questions are rate-limited per visitor and per day. Preview questions 
 
 A persona can mark content as private. When a public visitor reaches it, the portfolio displays a request-access card instead of the content. Access-code verification is handled through the access endpoints and a signed cookie; the AI is given only the visitor's resulting tier, never the code itself.
 
+### 4. Choose a billing plan
+
+Customer billing is available at `/account/billing/`. The free plan keeps one CV design (`modern`), editing, PDF export, the public CV, and curated visitor topics available. A one-time **ETB 799 Chapa** or **USD 6 PayPal** payment unlocks the full design collection for 90 days. **Portfolio Pro** is a **USD 4.99/month PayPal subscription**; it enables advanced visitor AI and aggregated profile insights, while the basic public CV remains available.
+
+The server chooses prices and verifies provider-side payment status before granting entitlements. Chapa uses transaction verification on its callback and the customer return page. PayPal uses order capture, subscription verification, and signed webhooks for subscription lifecycle events. The application never accepts a client-provided amount and does not store payment credentials.
+
+For local setup, add Chapa's secret key and PayPal sandbox credentials to the ignored `.env.local` file. Chapa's public key is not needed for the hosted redirect checkout. To enable Portfolio Pro, create and activate a **USD 4.99 monthly** plan in PayPal, set its plan ID, register `/api/billing/paypal/webhook/` as a PayPal webhook, and set the matching webhook ID. Keep `PAYPAL_ENVIRONMENT` aligned with the credentials and webhook environment. The database migration creates the order, subscription, and webhook-idempotency tables automatically.
+
 ## Publishing pipeline
 
 Publishing is a background job scheduled after the HTTP response. Its progress is stored so the studio can poll it.
@@ -119,6 +127,7 @@ For the customer editor's PDF upload flow, model configuration, and Vercel troub
 | `/api/admin/` | Admin-only content, previews, exports, and AI tooling. |
 | `/api/auth/` | Better Auth handlers. |
 | `/api/contact/`, `/api/events/` | Contact and privacy-aware analytics events. |
+| `/api/billing/` | Customer checkout, verified payment returns, subscription lifecycle, and PayPal webhooks. |
 
 ## Local development recipe
 
@@ -150,6 +159,8 @@ The server also attempts pending migrations during startup. Running the migratio
 | Signed access/preview flows | `PERSONA_SIGNING_SECRET` |
 | Canonical public URLs | `NEXT_PUBLIC_SITE_URL` |
 | Generated answers, CV mapping, embeddings | `GEMINI_API_KEY` |
+| Chapa CV-pass checkout | `CHAPA_SECRET_KEY` |
+| PayPal checkout and Portfolio Pro | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENVIRONMENT`, `PAYPAL_PORTFOLIO_PRO_PLAN_ID`, `PAYPAL_WEBHOOK_ID` |
 | Durable customer images and PDFs | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
 | Sign-in-code delivery | `MAIL_PROVIDER`, `RESEND_API_KEY`, `MAIL_FROM` |
 

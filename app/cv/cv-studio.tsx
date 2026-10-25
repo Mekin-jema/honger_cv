@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, LockKeyhole } from "lucide-react";
 import { CvSheet, cvSheetLayoutForTemplate, cvTemplateStyle } from "@/components/document/cv-sheet";
 import { ThemeToggle } from "@/components/theme-provider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -71,6 +71,8 @@ export function CvStudio({
   onNextStep,
   nextStepLabel = "Continue to edit CV",
   showSidebarToggle = true,
+  availableTemplates,
+  onTemplateLocked,
 }: {
   cv: CvData;
   initialTemplate?: CvTemplateId;
@@ -88,6 +90,8 @@ export function CvStudio({
   onNextStep?: () => void;
   nextStepLabel?: string;
   showSidebarToggle?: boolean;
+  availableTemplates?: readonly CvTemplateId[];
+  onTemplateLocked?: () => void;
 }) {
   const [template, setTemplate] = useState<CvTemplateId>(initialTemplate);
   const [accentColor, setAccentColor] = useState<string>(initialAccentColor);
@@ -198,30 +202,35 @@ export function CvStudio({
           <div className="cv-template-heading">
             <div>
               <h2 id="cv-template-heading">Choose a layout</h2>
-              <p>Pick a design to update the preview.</p>
+              <p>{availableTemplates ? "Choose a free design or unlock the full collection." : "Pick a design to update the preview."}</p>
             </div>
             <span className="cv-template-count">{CV_TEMPLATES.length}</span>
           </div>
           <div className="cv-template-grid" role="group" aria-label="CV design options">
-            {CV_TEMPLATES.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`cv-template-card${template === item.id ? " is-selected" : ""}`}
-                aria-pressed={template === item.id}
-                onClick={() => selectTemplate(item.id)}
-              >
-                <TemplateThumbnail template={item.id} />
-                <span className="cv-template-copy">
-                  <span className="cv-template-name">
-                    {item.name}
-                    {template === item.id && <span className="cv-selected-badge">Selected</span>}
+            {CV_TEMPLATES.map((item) => {
+              const locked = availableTemplates !== undefined && !availableTemplates.includes(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`cv-template-card${template === item.id ? " is-selected" : ""}${locked ? " is-locked" : ""}`}
+                  aria-pressed={template === item.id}
+                  aria-disabled={locked || undefined}
+                  onClick={() => locked ? onTemplateLocked?.() : selectTemplate(item.id)}
+                >
+                  <TemplateThumbnail template={item.id} />
+                  <span className="cv-template-copy">
+                    <span className="cv-template-name">
+                      {item.name}
+                      {template === item.id && <span className="cv-selected-badge">Selected</span>}
+                    </span>
+                    <span className="cv-template-description">{item.description}</span>
+                    <span className={`cv-template-meta${item.atsFriendly ? " is-ats" : ""}`}>{item.atsFriendly ? "ATS-friendly structure" : "Design-forward layout"}</span>
+                    {locked && <span className="cv-template-meta inline-flex items-center gap-1 text-accent"><LockKeyhole className="size-3" aria-hidden="true" />Unlock with 90-day pass</span>}
                   </span>
-                  <span className="cv-template-description">{item.description}</span>
-                  <span className={`cv-template-meta${item.atsFriendly ? " is-ats" : ""}`}>{item.atsFriendly ? "ATS-friendly structure" : "Design-forward layout"}</span>
-                </span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </aside>}
 

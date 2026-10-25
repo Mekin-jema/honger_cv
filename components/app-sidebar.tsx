@@ -8,6 +8,7 @@ import {
   Bot,
   BrainCircuit,
   Activity,
+  CreditCard,
   Gauge,
   FileText,
   FolderKanban,
@@ -143,6 +144,7 @@ export function AppSidebar({
               ),
             )}
             {accountName && linkItem("Create CV", "/account/new/", <FileText />)}
+            {accountName && linkItem("Billing & plans", "/account/billing/", <CreditCard />)}
             {linkItem(
               accountName ? "Edit CV" : persona.document.label || "CV",
               accountName ? (activeSlug ? `/account/training/${activeSlug}/design/` : "/account/new/") : persona.href(documentPath),
