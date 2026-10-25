@@ -11,12 +11,16 @@ function parserConfig(): { baseUrl: string; apiKey: string } {
     throw new Error("Resume parser is not configured. Set RESUME_PARSER_API_URL and RESUME_PARSER_API_KEY.");
   }
 
+  let parserUrl: URL;
   try {
-    new URL(baseUrl);
-    return { baseUrl, apiKey };
+    parserUrl = new URL(baseUrl);
   } catch {
     throw new Error("RESUME_PARSER_API_URL must be a valid URL.");
   }
+  if (parserUrl.protocol !== "https:" && parserUrl.hostname !== "localhost") {
+    throw new Error("The Resume Parser API URL must use HTTPS.");
+  }
+  return { baseUrl, apiKey };
 }
 
 function localParseModel(): string | undefined {

@@ -67,6 +67,25 @@ async def test_extract_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_openai_compatible_provider_receives_configured_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pass Ollama's configured context size through to its compatible API."""
+    provider = _make_mock_provider(_valid_json_response())
+    local_ref = ModelRef(provider="openai_compatible", model="llama3.2")
+    monkeypatch.setattr("src.llm.service.settings.OPENAI_COMPATIBLE_NUM_CTX", 8192)
+    monkeypatch.setattr("src.llm.service.settings.OPENAI_COMPATIBLE_MAX_TOKENS", 2048)
+    monkeypatch.setattr("src.llm.service.get_provider", lambda ref: provider)
+
+    result = await extract_resume_data("Resume text", local_ref)
+
+    assert result.success is True
+    provider.chat.assert_awaited_once()
+    assert provider.chat.await_args.kwargs["options"] == {"num_ctx": 8192}
+    assert provider.chat.await_args.kwargs["max_tokens"] == 2048
+
+
+@pytest.mark.asyncio
 async def test_extract_validation_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock provider returns JSON with schema violations; success=False, errors set."""
     content = (

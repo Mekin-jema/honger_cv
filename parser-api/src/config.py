@@ -79,6 +79,8 @@ class Settings(BaseSettings):
     OPENAI_COMPATIBLE_BASE_URL: str = "http://localhost:11434/v1"
     OPENAI_COMPATIBLE_API_KEY: str = ""
     OPENAI_COMPATIBLE_TIMEOUT_SECONDS: int = 300
+    OPENAI_COMPATIBLE_NUM_CTX: int = 0
+    OPENAI_COMPATIBLE_MAX_TOKENS: int = 0
     OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""

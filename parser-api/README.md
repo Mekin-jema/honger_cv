@@ -85,6 +85,11 @@ OPENROUTER_API_KEY=sk-or-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_COMPATIBLE_BASE_URL=http://localhost:11434/v1
 OPENAI_COMPATIBLE_API_KEY=
+OPENAI_COMPATIBLE_TIMEOUT_SECONDS=180
+# Ollama only: set a larger context for structured CV extraction.
+OPENAI_COMPATIBLE_NUM_CTX=8192
+# Ollama only: cap extraction output to reduce local inference time.
+OPENAI_COMPATIBLE_MAX_TOKENS=2048
 
 # Model chains — ordered left to right, provider prefix required
 # Format: provider/model_name (comma-separated for fallback chain)
@@ -100,6 +105,7 @@ LOG_LEVEL=info
 ```
 
 **Model chains** define the escalation order. The pipeline tries models left to right — if the first model's output fails validation, the next model in the chain is tried. Each entry includes a provider prefix (`openrouter/`, `anthropic/`, `openai/`, or `openai_compatible/`) so different models in the same chain can use different providers. OpenAI-compatible endpoints such as Ollama, LM Studio, and vLLM use `OPENAI_COMPATIBLE_BASE_URL` and the optional `OPENAI_COMPATIBLE_API_KEY`.
+For Ollama, `OPENAI_COMPATIBLE_NUM_CTX` passes a context size through the compatible chat endpoint, and `OPENAI_COMPATIBLE_MAX_TOKENS` caps structured extraction output. Leave either at `0` or unset to use provider defaults.
 
 Set `DEFAULT_OCR_MODELS=none` to disable OCR entirely (useful when inputs are always clean PDFs with selectable text).
 

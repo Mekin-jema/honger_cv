@@ -4,33 +4,29 @@ This guide covers the **customer CV editor's document import** (the Upload CV ac
 
 ## Request flow
 
-1. `components/account/profile-design-studio.tsx` uploads the selected document as `FormData` to:
+1. `components/account/cv-import-pipeline.tsx` uploads the selected document as `FormData` to:
    ```text
-   POST /api/account/personas/<slug>/studio/cv-import/
+   POST /api/cv/parse
    ```
-2. `app/api/account/personas/[slug]/studio/[...parts]/route.ts` checks the signed-in owner, same-origin request, AI configuration, per-user rate limit (10 attempts per 10 minutes), upload size, and document signature.
-3. `doclingParser` converts the document to Markdown. `CvExtractor` sends that text to the ordered structured-extraction model chain and validates the returned data against the CV schema. The result is previewed/applied in the editor; the import route itself does not save or publish the CV.
-4. When `CV_EXTRACTION_MODELS` is unset, development prefers local Ollama, then configured Gemini, then OpenRouter. Production tries configured OpenRouter, then Gemini. If a provider is rate-limited or unavailable, the next configured provider is attempted. Ollama requests allow up to 100 seconds for local inference; hosted requests allow 60 seconds. The route declares Node.js runtime and `maxDuration = 120` seconds.
+2. The Next.js route calls the Python parser API at `POST /api/v1/extract`. If the running parser version returns 404 because it predates this endpoint, Next.js retries via the compatible `POST /api/v1/parse` endpoint by uploading the Markdown as a file.
+3. In non-production environments, Next.js explicitly requests `openai_compatible/${OLLAMA_CV_MODEL}` (default `llama3.2`). The Python service performs structured extraction and validates its response; Next.js maps it into the CV editor schema.
+4. The extracted fields are merged into the draft. The known Mekin/Jordan starter CV is replaced automatically. Existing user data is preserved unless a conflict is explicitly resolved in favor of the import. Importing does not publish the CV.
 
-## Required Vercel variables
+## Required variables
 
-Set these in **Vercel → Project → Settings → Environment Variables** for every environment you test (Production, Preview, and/or Development):
+Configure the Next.js app with the parser API URL and key. Configure the Python parser with its model provider:
 
 | Name | Suggested value | Required? |
 | --- | --- | --- |
-| `CV_EXTRACTION_MODELS` | `ollama/llama3.2,openrouter/mistralai/mistral-small-24b-instruct-2501` | Optional ordered `provider/model` chain; when unset, development prefers Ollama and production uses configured hosted providers |
-| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Needed when Ollama is not at the local default URL |
-| `OLLAMA_CV_MODEL` | `llama3.2` | Optional local model override |
-| `OLLAMA_API_KEY` | Empty for local Ollama | Optional; only needed for an authenticated OpenAI-compatible endpoint |
-| `OPENROUTER_API_KEY` | Your OpenRouter API key | Optional hosted provider |
-| `OPENROUTER_CV_MODEL` | `mistralai/mistral-small-24b-instruct-2501` | Optional OpenRouter model override |
-| `GEMINI_API_KEY` | Your valid Google AI Studio / Gemini API key | Optional hosted fallback and other AI features |
-| `AI_MODEL` | `gemini-3.8-flash` | Used for general Gemini AI and as a Gemini CV fallback |
-| `AI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | Preferred Gemini model for CV extraction |
+| Next.js `RESUME_PARSER_API_URL` | `http://localhost:8000` | Yes |
+| Next.js `RESUME_PARSER_API_KEY` | A key also present in parser `API_KEYS` | Yes |
+| Next.js `OLLAMA_CV_MODEL` | `llama3.2` | Optional local model override |
+| Parser `OPENAI_COMPATIBLE_BASE_URL` | `http://localhost:11434/v1` on host, `http://ollama:11434/v1` in Compose | Required for local Ollama |
+| Parser `DEFAULT_PARSE_MODELS` | `openai_compatible/llama3.2` | Default when no request model is supplied |
+| Parser `OPENAI_COMPATIBLE_NUM_CTX` | `8192` | Set for Ollama to fit larger structured extraction prompts |
+| Parser `OPENAI_COMPATIBLE_MAX_TOKENS` | `2048` | Optional Ollama output cap to keep local extraction within the route timeout |
 
-Model and key values are exact strings, with no comments or quotes. `CV_EXTRACTION_MODELS` accepts `ollama`, `openrouter`, and `google` entries, for example `ollama/llama3.2,openrouter/mistralai/mistral-small-24b-instruct-2501`. OpenRouter capacity and quotas can change; when it is rate-limited, extraction proceeds to the next configured model. For production, explicitly choose the hosted model chain you want rather than relying on development defaults. After changing deployment variables, **redeploy**.
-
-CV extraction uses the structured output schema and does not change the saved profile until the user applies the preview. Local Ollama uses its OpenAI-compatible `/chat/completions` endpoint in JSON mode; the app then validates the result against its CV schema. The separate Resume Parser API setting is used by the standalone CV parse endpoint, not this design-studio import route.
+In production, configure the provider and model chain on the Python parser API, then restart/redeploy that service. The Next.js extraction route supports parser versions that do not yet have `/api/v1/extract` by falling back to `/api/v1/parse`.
 
 Never paste an API key into an issue, chat, source file, or `NEXT_PUBLIC_*` variable. If a key has been exposed, rotate it in Google AI Studio and update Vercel.
 
@@ -40,16 +36,14 @@ Never paste an API key into an issue, chat, source file, or `NEXT_PUBLIC_*` vari
    ```text
    [customer-cv-import]
    ```
-2. Read the provider error after the profile slug and check for `[CvExtraction] Provider failed; trying the next configured model.` A rate-limit response should move to the next model in `CV_EXTRACTION_MODELS`. If all configured providers fail, the final provider error is returned.
+2. A 404 from `/api/v1/extract` should fall back to `/api/v1/parse`. If the fallback also returns 404, check that `RESUME_PARSER_API_URL` points to the expected Python parser service.
    ```text
-   AI_APICallError: This model models/gemini-2.5-flash is no longer available to new users...
+   {"detail":"Not Found"}
    ```
-   This means a retired model is still configured in the running environment. Replace that model in `CV_EXTRACTION_MODELS` or the corresponding provider setting, then restart/redeploy. Confirm the log belongs to the latest process; environment changes do not update a running deployment.
-3. For local extraction, confirm `ollama list` includes the configured `OLLAMA_CV_MODEL`, and that `OLLAMA_BASE_URL` is reachable from the Next.js server.
-4. For hosted fallback, check that the corresponding API key is present and has model access/quota. Do not print keys when debugging.
-5. Retry a small, non-sensitive document first. Provider quota/rate limits, unsupported content, and slow local inference can still fail; the route limits each user to ten attempts per ten minutes.
+3. Check Python parser logs for provider failures. In local development, extraction explicitly selects `openai_compatible/${OLLAMA_CV_MODEL}`; verify the model is installed and the parser can reach its Ollama URL.
+4. Use `public/cv2.md` as a repeatable test document. Longer documents or slow local inference may exceed the request timeout.
 
-The API deliberately returns a generic timeout/network response for errors it cannot classify safely. The server log is the source of the underlying provider error. Do not repeatedly retry before checking it; retries can hit the import rate limit.
+Do not repeatedly retry before checking the server logs; retries can hit the import rate limit.
 
 ### Vercel deployment packaging
 
@@ -59,21 +53,18 @@ The CV route uses PDF.js locally. Its Node worker file must be available in the 
 
 | Response/error | Likely cause / next check |
 | --- | --- |
-| `CV import needs a configured local Ollama model or hosted OpenRouter/Gemini provider.` | No model provider is available in the current environment. |
-| `Failed to extract structured CV information: ... rate-limited ...` | Check the `[CvExtraction]` fallback logs and configure another model in `CV_EXTRACTION_MODELS`; otherwise wait for the provider's quota to recover. |
-| `Ollama CV extraction failed ...` | Check that Ollama is running, the configured model is downloaded, and `OLLAMA_BASE_URL` is reachable from the app. |
-| `The AI couldn't extract editable fields...` | The model did not return valid structured CV data; try a simpler document or another configured model. |
-| `CV import timed out or could not reach the parser service...` | Inspect `[customer-cv-import]` logs. It may be an unavailable model, network issue, timeout, or other provider failure. |
+| `{"detail":"Not Found"}` | Next.js falls back to `/api/v1/parse`; if that is also 404, check the parser URL/service. |
+| Parser provider error or timeout | Check parser logs, Ollama availability, configured model, and parser-to-Ollama connectivity. |
+| Extracted fields do not appear in the editor | Check the response mapping and conflict review. Starter data should be replaced automatically. |
 
 ## Running the Resume Parser API locally
 
-The parser is a separate service and is not started by this app. Clone it and run it with Docker:
+The parser is a separate service. In this repository, start the API and Ollama with Docker Compose:
 
 ```bash
-git clone https://github.com/theresumeparser/resume-parser-api.git
-cd resume-parser-api
-cp .env.example .env      # add OPENROUTER_API_KEY and API_KEYS
-docker run --rm -p 8000:8000 --env-file .env ghcr.io/theresumeparser/resume-parser-api:latest
+cd parser-api
+docker compose up -d --build
+docker compose exec ollama ollama pull llama3.2
 ```
 
 Then point this app at it and use the same key in both places:
@@ -83,7 +74,7 @@ RESUME_PARSER_API_URL=http://localhost:8000
 RESUME_PARSER_API_KEY=sk-parse-abc123
 ```
 
-The parser service needs its own `OPENROUTER_API_KEY`, and `API_KEYS` must contain the value you put in `RESUME_PARSER_API_KEY`. Its own rate limit and timeout settings apply. In production, host it on a stable HTTPS URL.
+Set parser `API_KEYS` to include the key used by `RESUME_PARSER_API_KEY`. The parser container uses `http://ollama:11434/v1`; when running the parser on the host, configure it to use `http://localhost:11434/v1`. In production, host the parser on a stable HTTPS URL and configure its deployment model provider.
 
 ## Local verification
 

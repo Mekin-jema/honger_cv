@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from src.config import ModelRef
+from src.config import ModelRef, settings
 from src.llm.prompts import build_parse_messages
 from src.llm.schemas import ResumeData
 from src.llm.validation import validate_llm_response
@@ -41,7 +41,22 @@ async def extract_resume_data(
 
     messages = build_parse_messages(text)
     provider = get_provider(model_ref)
-    response = await provider.chat(model=model_ref.model, messages=messages)
+    provider_options: dict[str, object] = {}
+    if (
+        model_ref.provider == "openai_compatible"
+        and settings.OPENAI_COMPATIBLE_NUM_CTX > 0
+    ):
+        provider_options["options"] = {"num_ctx": settings.OPENAI_COMPATIBLE_NUM_CTX}
+    if (
+        model_ref.provider == "openai_compatible"
+        and settings.OPENAI_COMPATIBLE_MAX_TOKENS > 0
+    ):
+        provider_options["max_tokens"] = settings.OPENAI_COMPATIBLE_MAX_TOKENS
+    response = await provider.chat(
+        model=model_ref.model,
+        messages=messages,
+        **provider_options,
+    )
 
     content = provider.extract_content(response)
     usage = provider.extract_usage(response)
