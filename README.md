@@ -1,274 +1,113 @@
 <div align="center">
-  <a href="https://github.com/Mekin-jema/honger_cv">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="public/honger-cv-logo.webp" />
-      <img src="public/honger-cv-logo-light.webp" alt="Honger CV logo" width="108" height="108" />
-    </picture>
-  </a>
+  <img src="public/honger-cv-logo.webp" alt="Honger CV" width="88" height="88" />
 
   # Honger CV
 
   ### Build a CV. Publish a portfolio. Let your work speak.
 
-  An open-source CV builder and conversational portfolio platform. Create a polished CV, publish the work behind it, and give visitors an AI guide grounded in your own content.
+  Turn your experience into a polished CV, a shareable portfolio, and an AI guide that helps people understand your work.
 
-  [Explore the demo](https://honger-cv.vercel.app/ask/) · [Read the project guide](docs/PROJECT_GUIDE.md) · [Report an issue](https://github.com/Mekin-jema/honger_cv/issues)
+  **[Open the live demo](https://honger-cv.vercel.app/)** ·
+  **[Explore the portfolio assistant](https://honger-cv.vercel.app/ask/)** ·
+  **[Read the project guide](docs/PROJECT_GUIDE.md)**
 
   ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
   ![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
   ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
-  ![License](https://img.shields.io/badge/license-private-lightgrey)
 </div>
 
 ---
 
-## Why Honger CV?
+## Take a look
 
-A traditional CV is useful, but it cannot explain the decisions, context, and outcomes behind your work. Honger CV combines a professional document, a public portfolio, and a conversational guide so recruiters, clients, and collaborators can explore the story at their own pace.
+The previews below use a fictional **John Doe** CV.
 
-The repository ships with **Mekin Jemal's** portfolio as a working demo. You can browse it without an account or use it as a starting point for your own profile.
+<p align="center">
+  <img src="docs/images/readme/cv-sample.png" alt="John Doe sample CV in a modern two-column design" width="48%" />
+  <img src="docs/images/readme/cv-template-forest.png" alt="John Doe sample CV in a clean, forest-accented template" width="48%" />
+</p>
 
-## Features
+<p align="center">
+  <img src="docs/images/readme/portfolio-chat.png" alt="Portfolio assistant answering questions about a sample portfolio" width="72%" />
+</p>
 
-<table>
-<tr>
-<td width="50%" valign="top">
+## What you can do
 
-### ✦ CV Studio
-Choose from 25+ CV layouts, set an accent colour, preview changes live, and print or download a professional PDF. A customer's first CV includes every template free; a one-time ETB 100 / USD 1 lifetime pass unlocks additional CVs.
+- **Create and customize CVs** with 25+ templates, live previews, color palettes, and print-ready PDF export.
+- **Build a portfolio** from your profile, experience, projects, skills, and contact information.
+- **Add a portfolio assistant** that answers questions from the information you choose to publish.
+- **Import an existing CV** and turn its contents into editable profile details.
+- **Publish with confidence** using private drafts, content checks, immutable releases, and rollback.
+- **Control access** with private sections and visitor access codes.
+- **Manage everything in one workspace** with customer tools and a protected admin area.
 
-</td>
-<td width="50%" valign="top">
+## Try the demo
 
-### ◌ Public portfolio
-Publish profile, experience, projects, skills, and contact pages from a single structured persona document.
+Explore the landing page, template previews, sample CV, and curated assistant topics without an account. The public demo works without a database or AI credentials. Database-backed accounts, publishing, and administration require PostgreSQL.
 
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
+## Plans
 
-### ✦ Grounded portfolio AI & voice chat
-Ask by microphone, hear answers read aloud, or start a hands-free interview grounded in published content.
+Your **first CV includes all 25+ designs for free**. A one-time **ETB 100 Chapa** or **USD 1 PayPal** payment unlocks additional CVs and all designs for life. Optional Portfolio Pro adds advanced visitor AI and profile insights.
 
-</td>
-<td width="50%" valign="top">
+## Run locally
 
-### ◌ Safe publishing
-Draft privately, validate and test content, publish immutable versions, and roll back to a ready version when needed.
+### Requirements
 
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
+- [Bun](https://bun.sh/) 1.4.3
+- Node.js 20.11 or newer
+- PostgreSQL 17 for accounts and publishing (optional for the public demo)
 
-### ✦ Customer workspace
-Owners can create CVs, edit their content, train their assistant, select a design, and share a public profile.
-
-</td>
-<td width="50%" valign="top">
-
-### ◌ Admin tools
-Manage personas, jobs, messages, feedback, access requests, platform events, and analytics in a protected workspace.
-
-</td>
-</tr>
-</table>
-
-Additional product details include dark mode, responsive layouts, accessibility-minded interactions, privacy-aware analytics, content gates with access codes, and optional Google/GitHub sign-in.
-
-### Payments
-
-Customer plans are available at `/account/billing/`: the first CV includes all templates free; the lifetime design pass costs ETB 100 through Chapa or USD 1 through PayPal; Portfolio Pro is a monthly PayPal subscription. Configure credentials in `.env.local` or deployment secrets, never in source control or `NEXT_PUBLIC_` variables. See [the project guide](docs/PROJECT_GUIDE.md#4-choose-a-billing-plan) for provider setup and required PayPal plan/webhook configuration.
-
-## Product flow
-
-```text
-Create a CV → Edit a private draft → Publish & train → Share a portfolio and CV
-                                            │
-                                            └─ Visitors explore curated answers
-                                               or ask the AI about published work
-```
-
-The public demo and curated portfolio work without a database or an AI key. Add PostgreSQL to enable persistence, accounts, publishing, and administration. Add Gemini to enable generated answers, source-PDF mapping, and semantic retrieval.
-
-## Quick start
-
-### Prerequisites
-
-- [Bun](https://bun.sh/) **1.4.3**
-- Node.js **20.11** or newer
-- PostgreSQL 17 (optional for the public demo; required for accounts, publishing, and admin features)
-
-### Run locally
+### Start the app
 
 ```bash
-# Clone the project
 git clone https://github.com/Mekin-jema/honger_cv.git
 cd honger_cv
-
-# Install dependencies
 bun install
-
-# Create your local environment file
-cp .env.example .env.local
-
-# Start the development server
+cp .env.example .env
 bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-> **Demo-first design:** You can explore the landing page, Mekin's portfolio, CV Studio, and curated assistant topics without configuring any credentials.
-
-### Add a local database
-
-The included Docker Compose file starts PostgreSQL with pgvector support:
+To enable accounts and persistence, start PostgreSQL and apply the database migrations:
 
 ```bash
 docker compose up -d
-```
-
-Add this to `.env.local`:
-
-```dotenv
-DATABASE_URL=postgresql://postgres:local_dev_password@localhost:5432/myapp
-```
-
-Then apply the schema:
-
-```bash
 bun run db:migrate
 ```
 
-The application also attempts to apply pending migrations when its Node.js server starts. Running migrations explicitly is recommended before deployment and in CI.
+Set `DATABASE_URL` in `.env` to `postgresql://postgres:local_dev_password@localhost:5432/myapp` for the provided local database. Configure only the optional integrations you need; see [.env.example](.env.example) and the [project guide](docs/PROJECT_GUIDE.md).
 
-## Configuration
-
-Copy `.env.example` to `.env.local`. Only configure the integrations you plan to use.
-
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string for personas, accounts, admin data, messages, jobs, and analytics. |
-| `BETTER_AUTH_SECRET` | Private secret for authentication; use at least 32 characters. |
-| `BETTER_AUTH_URL` | Application origin used by authentication, e.g. `http://localhost:3000`. |
-| `PERSONA_SIGNING_SECRET` | Private secret for persona access and preview tokens; use at least 32 characters. |
-| `NEXT_PUBLIC_SITE_URL` | Public canonical site URL used for metadata and the sitemap. |
-| `GEMINI_API_KEY` | Enables generated assistant answers, content mapping, embeddings, and Gemini fallback for CV mapping. |
-| `OPENROUTER_API_KEY` | Optional; enables OpenRouter CV PDF mapping. |
-| `OPENROUTER_CV_MODEL` | Optional OpenRouter model override; defaults to `openrouter/free`. |
-| `RESUME_PARSER_API_URL` / `RESUME_PARSER_API_KEY` | Optional hosted [Resume Parser](https://github.com/theresumeparser/resume-parser-api.git) used for CV PDF import and streaming, CV-grounded answers in Ask AI's live voice mode. Configure an LLM provider key and model chain in the parser API as well. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google sign-in for customers. |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Optional GitHub sign-in for customers. |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name for customer photos and durable generated PDFs. |
-| `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Server-only Cloudinary credentials. |
-| `MAIL_PROVIDER` | Sign-in-code delivery strategy: `resend`, `log`, or `none`. |
-| `RESEND_API_KEY` / `MAIL_FROM` | Required when `MAIL_PROVIDER=resend`. |
-| `ADMIN_OTP_STATIC` | Local-development convenience code. **Do not use in production.** |
-| `NEXT_PUBLIC_BASE_PATH` | Optional deployment path prefix. |
-
-Generate secrets with a secure random source, for example:
-
-```bash
-openssl rand -base64 32
-```
-
-Never commit `.env.local`, credentials, or tokens. Variables prefixed with `NEXT_PUBLIC_` are sent to the browser; never use that prefix for a secret.
-
-## Main routes
-
-| Route | Description |
-| --- | --- |
-| `/` | Honger CV landing page and template overview. |
-| `/ask/` | Mekin's public conversational portfolio demo. |
-| `/cv/` | CV Studio, template previews, and PDF/print experience. |
-| `/about/`, `/experience/`, `/projects/`, `/skills/`, `/contact/` | Bundled public portfolio pages. |
-| `/u/<slug>/` | A customer's published portfolio. |
-| `/u/<slug>/ask/` | A customer's published portfolio assistant. |
-| `/u/<slug>/cv/` | A customer's chosen CV design and PDF download. |
-| `/account/` | Authenticated customer workspace. |
-| `/admin/` | Protected administration dashboard. |
-| `/api/health/` | Database health endpoint (`200` when ready; `503` otherwise). |
-
-## Commands
+## Useful commands
 
 | Command | Description |
 | --- | --- |
-| `bun run dev` | Start the development server. |
-| `bun run build` | Create a production build. |
-| `bun run start` | Serve the production build. |
-| `bun run typecheck` | Run TypeScript without emitting files. |
+| `bun run dev` | Start the local development server. |
+| `bun run typecheck` | Check TypeScript types. |
 | `bun run lint` | Run ESLint. |
-| `bun run test` | Run the Vitest suite. |
-| `bun run check` | Run typecheck, lint, tests, and a production build. |
-| `bun run db:migrate` | Apply pending PostgreSQL migrations. |
-| `bun run db:migrate -- --check` | Check migration status. |
-| `bun run admin:create -- --email you@example.com` | Create the initial admin account. |
-| `bun run cv:pdf` | Generate the bundled CV PDF after building the app. |
+| `bun run test` | Run the test suite. |
+| `bun run build` | Create a production build. |
+| `bun run check` | Run typecheck, lint, tests, and build. |
+| `bun run db:migrate` | Apply pending database migrations. |
 
-Run the complete quality gate before opening a pull request or deploying:
+## Built with
 
-```bash
-bun run check
-```
+Next.js App Router, React, TypeScript, Tailwind CSS, PostgreSQL, and optional Gemini-powered answers and retrieval.
 
-## Architecture
+## Documentation
 
-```text
-app/                   Next.js App Router pages, layouts, and API routes
-components/            Interface components grouped by feature
-content/               Typed content for the bundled Mekin demo
-lib/persona/           Persona schemas, templates, transforms, and shared helpers
-server/persona/        Drafts, versions, publication, caching, and PDF generation
-server/brain/          Grounded AI, retrieval, embeddings, and safety checks
-server/access/         Gated-content and access-code logic
-migrations/            Ordered PostgreSQL migrations
-scripts/               Admin, migration, import, PDF, and IndexNow utilities
-```
-
-For a guided tour of the product architecture, publishing lifecycle, AI safety model, API groups, and deployment decisions, see **[docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md)**.
-
-## Publishing and AI safety
-
-Publishing does more than save a form. Honger CV validates the persona, compiles visitor-facing knowledge, snapshots a version, optionally indexes content for retrieval, runs expected-answer and privacy checks, then activates the release. A failed publication leaves the currently live version unchanged.
-
-Generated answers are optional. When enabled, they are structured by the server and limited to the current persona's visible knowledge. Returned cards and topics are validated again, and a leak filter blocks details that do not belong to the visitor's access tier.
-
-## Deployment
-
-Honger CV is designed for a Node.js or serverless deployment with a Neon-compatible PostgreSQL database.
-
-- Set `BETTER_AUTH_URL` and `NEXT_PUBLIC_SITE_URL` to the exact public HTTPS origin.
-- Use a pooled PostgreSQL connection string in serverless environments.
-- Configure Cloudinary to keep customer-uploaded images and generated PDFs durable across instances.
-- Allocate at least **512 MB** of function memory for serverless PDF generation.
-- Use `GET /api/health/` for infrastructure readiness checks.
-- Enable `ENABLE_HSTS=1` only when the application is served exclusively over HTTPS.
-
-## Security notes
-
-- Authentication and administrative authorization are enforced server-side, not only hidden in the UI.
-- The application sends a Content Security Policy, anti-framing headers, `nosniff`, a restrictive permissions policy, and a strict referrer policy.
-- Access codes are handled outside AI prompts; the assistant receives only the resulting visibility tier.
-- Keep `ADMIN_OTP_STATIC` limited to local development. Use verified email delivery in production.
+- [Project guide](docs/PROJECT_GUIDE.md) — product behavior, publishing, billing, configuration, and deployment.
+- [CV import troubleshooting](docs/cv-pdf-import-troubleshooting.md) — parser setup and import troubleshooting.
+- [Report a bug or request a feature](https://github.com/Mekin-jema/honger_cv/issues).
 
 ## Contributing
 
-Contributions and improvements are welcome. Before submitting a pull request:
-
-1. Keep changes focused and documented.
-2. Do not include secrets, local database data, or generated build output.
-3. Run `bun run check`.
-4. Describe user-visible changes and any required configuration updates.
-
-## Author
-
-Built by **[Mekin Jemal](https://github.com/Mekin-jema)** — Software Engineer, Full-Stack Developer, and AI Engineer.
+Contributions are welcome. Keep changes focused, avoid committing credentials or local data, and run `bun run check` before submitting a pull request.
 
 ---
 
 <div align="center">
-  <sub>Made with care for people who want their work to be understood, not just listed.</sub>
+  <sub>Made for work that deserves to be understood—not just listed.</sub>
 </div>

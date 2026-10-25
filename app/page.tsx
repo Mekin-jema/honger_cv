@@ -25,7 +25,7 @@ import { billingProducts } from "@/server/billing";
 export const metadata: Metadata = {
   title: "Honger CV — Build a CV and portfolio that speaks for you",
   description:
-    "Create your CV, publish a personal portfolio, and let an AI assistant answer questions about your work. Explore 25+ templates and try Mekin's public demo.",
+    "Create your CV, publish a personal portfolio, and let an AI assistant answer questions about your work. Explore 25+ templates and try the public demo.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -68,7 +68,19 @@ const billingUrl = "/register/?next=%2Faccount%2Fbilling%2F";
 
 export default async function Home() {
   const persona = await currentPersona();
-  const cv = readCv(persona.compiled.doc.document.data, codeCv);
+  const sampleCv = readCv(persona.compiled.doc.document.data, codeCv);
+  const cv = {
+    ...sampleCv,
+    showPhoto: false,
+    photo: "",
+    identity: {
+      ...sampleCv.identity,
+      name: "John Doe",
+      email: "john.doe@example.com",
+      phone: "",
+      links: [],
+    },
+  };
 
   return (
     <main className="min-h-dvh overflow-hidden bg-bg text-fg">
@@ -150,7 +162,7 @@ export default async function Home() {
                 href="/ask/"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-line-strong bg-card px-5 text-sm font-semibold text-fg transition-colors hover:bg-surface"
               >
-                Explore Mekin&apos;s demo <ArrowDownRight className="size-4" aria-hidden="true" />
+                Explore the public demo <ArrowDownRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
 
@@ -164,7 +176,7 @@ export default async function Home() {
           <div className="relative min-w-0 lg:translate-x-4 lg:pl-5">
             <div className="absolute -right-8 top-12 -z-10 hidden h-56 w-56 rounded-full border border-accent/20 sm:block" aria-hidden="true" />
             <HeroPreview />
-            <p className="mt-3 text-center text-xs text-muted">A live preview, using Mekin&apos;s sample CV</p>
+            <p className="mt-3 text-center text-xs text-muted">A live preview, using a fictional John Doe sample CV</p>
           </div>
         </div>
       </section>
@@ -204,7 +216,7 @@ export default async function Home() {
               <p className="flex items-center gap-3"><span className="size-1.5 rounded-full bg-accent" />Text chat today, voice responses in development.</p>
             </div>
             <Link href="/ask/" className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-accent hover:underline">
-              Try Mekin&apos;s public demo <ArrowRight className="size-4" aria-hidden="true" />
+              Try the public demo <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
             <p className="mt-2 text-xs text-muted">No account needed to explore the demo.</p>
           </div>
@@ -216,7 +228,7 @@ export default async function Home() {
                   <Bot className="size-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="text-sm font-bold">Mekin&apos;s portfolio assistant</p>
+                  <p className="text-sm font-bold">John Doe&apos;s portfolio assistant</p>
                   <p className="text-xs text-muted">Ask about projects, skills, and experience</p>
                 </div>
               </div>
@@ -234,7 +246,7 @@ export default async function Home() {
                   <Sparkles className="size-3.5" aria-hidden="true" />
                 </span>
                 <p className="text-sm leading-6 text-muted">
-                  Ask Mekin directly and explore his work through the public portfolio. The assistant is ready for questions about his projects, experience, and skills.
+                  Explore John Doe&apos;s sample portfolio. The assistant is ready for questions about the projects, experience, and skills shown.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 border-t border-line pt-5">
@@ -354,7 +366,7 @@ export default async function Home() {
             <h2 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
               Put your work together. Let people discover it.
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Create a polished CV first, then grow it into a portfolio. Or explore Mekin&apos;s public demo.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Create a polished CV first, then grow it into a portfolio. Or explore the public demo.</p>
           </div>
           <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <Link href="/register/" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-bold text-on-accent transition hover:brightness-95">
@@ -377,7 +389,7 @@ export default async function Home() {
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-muted">
             <Link href="/cv/" className="hover:text-fg">CV Studio</Link>
             <a href="#pricing" className="hover:text-fg">Pricing</a>
-            <Link href="/ask/" className="hover:text-fg">Mekin&apos;s demo</Link>
+            <Link href="/ask/" className="hover:text-fg">Public demo</Link>
             <Link href="/register/" className="hover:text-fg">Create account</Link>
           </div>
           <p className="text-xs text-muted">© {new Date().getFullYear()} Honger CV</p>

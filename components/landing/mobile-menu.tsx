@@ -54,7 +54,7 @@ export function MobileMenu() {
               onClick={close}
               className="flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface hover:text-fg"
             >
-              Explore Mekin&apos;s demo
+              Explore the public demo
             </Link>
             <Link
               href="/register/"

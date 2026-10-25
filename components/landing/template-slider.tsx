@@ -238,9 +238,9 @@ export function TemplateSlider() {
                     className="grid size-14 place-items-center rounded-2xl text-lg font-bold text-white shadow-md"
                     style={{ backgroundColor: accentColor }}
                   >
-                    MJ
+                    JD
                   </div>
-                  <h3 className="mt-4 text-base font-bold">Mekin Jemal</h3>
+                  <h3 className="mt-4 text-base font-bold">John Doe</h3>
                   <p className="text-[11px] opacity-80">Senior Systems & AI Engineer</p>
 
                   <div className="mt-6 space-y-4 border-t border-current/15 pt-4 text-[10px]">
@@ -278,8 +278,8 @@ export function TemplateSlider() {
                       </p>
                       <div className="mt-1.5 space-y-1 opacity-80">
                         <p>📍 Addis Ababa, Ethiopia</p>
-                        <p>✉️ mekin@example.com</p>
-                        <p>🔗 mekin-jemal.cv</p>
+                        <p>✉️ john.doe@example.com</p>
+                        <p>🔗 johndoe.example.com</p>
                       </div>
                     </div>
                   </div>
@@ -346,13 +346,13 @@ export function TemplateSlider() {
               <div className="p-6 sm:p-7">
                 <div className="flex items-start justify-between border-b pb-4" style={{ borderColor: accentColor }}>
                   <div>
-                    <h3 className="text-2xl font-bold tracking-tight text-[#1f1d1a]">Mekin Jemal</h3>
+                    <h3 className="text-2xl font-bold tracking-tight text-[#1f1d1a]">John Doe</h3>
                     <p className="text-xs font-semibold" style={{ color: accentColor }}>
                       {currentTemplate.name} · Career Path & Milestones
                     </p>
                   </div>
                   <div className="text-right text-[10px] text-muted">
-                    <p>mekin@example.com</p>
+                    <p>john.doe@example.com</p>
                     <p>Addis Ababa, Ethiopia</p>
                   </div>
                 </div>
@@ -474,14 +474,14 @@ export function TemplateSlider() {
                       {currentTemplate.categoryLabel}
                     </span>
                     <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#1f1d1a]">
-                      Mekin Jemal
+                      John Doe
                     </h3>
                     <p className="text-xs text-muted">Computer Engineer · Addis Ababa University</p>
                   </div>
                   <div className="text-right text-[10px] text-muted space-y-0.5">
                     <p>📍 Addis Ababa, ET</p>
-                    <p>✉️ mekin@example.com</p>
-                    <p>🔗 github.com/mekin-jema</p>
+                    <p>✉️ john.doe@example.com</p>
+                    <p>🔗 github.com/johndoe</p>
                   </div>
                 </div>
 

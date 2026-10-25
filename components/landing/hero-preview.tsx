@@ -13,7 +13,7 @@ export function HeroPreview() {
             <span className="size-2.5 rounded-full bg-[#fbbf24]" />
             <span className="size-2.5 rounded-full bg-[#34d399]" />
           </div>
-          <span className="ml-2 text-xs font-semibold text-muted">Mekin Jemal · CV preview</span>
+          <span className="ml-2 text-xs font-semibold text-muted">John Doe · CV preview</span>
         </div>
 
         <div className="p-3 sm:p-5">
@@ -21,10 +21,10 @@ export function HeroPreview() {
             <aside className="bg-[#1e2f3d] p-5 text-white sm:p-6">
               <div className="flex items-center gap-3">
                 <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#b5400f] text-sm font-bold text-white shadow-inner">
-                  MJ
+                  JD
                 </div>
                 <div>
-                  <p className="text-xs font-bold tracking-tight">Mekin Jemal</p>
+                  <p className="text-xs font-bold tracking-tight">John Doe</p>
                   <p className="text-[10px] text-white/75">Computer Engineer</p>
                 </div>
               </div>
@@ -51,8 +51,8 @@ export function HeroPreview() {
                 <h2 className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#f7b18a]">Contact</h2>
                 <div className="mt-2 space-y-1 text-[9px] text-white/80">
                   <p>Addis Ababa, Ethiopia</p>
-                  <p>mekin@example.com</p>
-                  <p>github.com/mekin-jema</p>
+                  <p>john.doe@example.com</p>
+                  <p>github.com/johndoe</p>
                 </div>
               </section>
             </aside>

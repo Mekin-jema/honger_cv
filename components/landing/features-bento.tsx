@@ -128,11 +128,11 @@ export function FeaturesBento() {
             <div className="mt-6 rounded-xl border border-line bg-[#1e2f3d] p-3 text-white text-xs">
               <p className="text-white/60">Recruiter:</p>
               <p className="text-white font-medium">
-                &ldquo;Tell me about Mekin&apos;s experience with real-time data analytics.&rdquo;
+                &ldquo;Tell me about John Doe&apos;s experience with real-time data analytics.&rdquo;
               </p>
               <p className="mt-2 text-accent font-semibold">AI Assistant:</p>
               <p className="text-white/90">
-                &ldquo;Mekin designed automated SQL and Oracle pipelines at Safaricom Ethiopia processing 10M+ daily events...&rdquo;
+                &ldquo;John Doe has experience using SQL and Oracle for data analysis, reporting, and business insights...&rdquo;
               </p>
             </div>
           </div>
