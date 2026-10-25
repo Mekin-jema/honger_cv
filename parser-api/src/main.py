@@ -12,6 +12,7 @@ from src.health import router as health_router
 from src.logging import get_logger, setup_logging
 from src.parsing.router import router as parsing_router
 from src.rate_limit import limiter
+from src.voice.router import router as voice_router
 
 setup_logging()
 logger = get_logger(__name__)
@@ -52,6 +53,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(parsing_router)
+    app.include_router(voice_router)
 
     return app
 
