@@ -30,6 +30,24 @@ class ParseOptions(BaseModel):
     )
 
 
+class ExtractRequest(BaseModel):
+    markdown: str = Field(
+        min_length=1,
+        description="Markdown text to extract into a structured CV payload.",
+    )
+    filename: str | None = Field(
+        default=None,
+        description="Optional filename for logging and debugging.",
+    )
+    parse_models: str | None = Field(
+        default=None,
+        description=(
+            "Optional parse model override. Comma-separated, provider-prefixed "
+            "entries tried left-to-right."
+        ),
+    )
+
+
 # -- Response schemas --
 
 

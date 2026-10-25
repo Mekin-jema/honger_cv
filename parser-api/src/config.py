@@ -24,8 +24,10 @@ REGISTERED_PROVIDERS: dict[str, list[str]] = {
     "openrouter": ["OPENROUTER_API_KEY"],
     "anthropic": ["ANTHROPIC_API_KEY"],
     "openai": ["OPENAI_API_KEY"],
-    "openai_compatible": [],
+    "openai_compatible": ["OPENAI_COMPATIBLE_API_KEY"],
 }
+
+OPTIONAL_PROVIDER_KEYS: set[str] = {"openai_compatible"}
 
 
 def parse_chain(chain_str: str, field_name: str) -> list[ModelRef]:
@@ -76,19 +78,17 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENAI_COMPATIBLE_BASE_URL: str = "http://localhost:11434/v1"
     OPENAI_COMPATIBLE_API_KEY: str = ""
-    OPENAI_COMPATIBLE_TIMEOUT_SECONDS: int = 180
+    OPENAI_COMPATIBLE_TIMEOUT_SECONDS: int = 300
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 
     # Model chains — ordered left to right, provider prefix required.
     # Format: provider/model_name (comma-separated for fallback chain).
     # OCR accepts "none" or empty to disable OCR entirely.
-    DEFAULT_OCR_MODELS: str = (
-        "openrouter/google/gemini-flash-1.5,openrouter/google/gemini-pro-vision"
-    )
-    DEFAULT_PARSE_MODELS: str = (
-        "openrouter/google/gemini-flash-1.5,openrouter/openai/gpt-4o-mini"
-    )
+    DEFAULT_OCR_MODELS: str = "none"
+    DEFAULT_PARSE_MODELS: str = "openai_compatible/llama3.2"
+    AI_MODELS: str = ""
     VOICE_MODELS: str = ""
 
     # Limits
@@ -121,6 +121,10 @@ class Settings(BaseSettings):
         if voice_raw:
             parse_chain(voice_raw, "VOICE_MODELS")
 
+        ai_raw = self.AI_MODELS.strip()
+        if ai_raw:
+            parse_chain(ai_raw, "AI_MODELS")
+
         # Validate OCR chain (allow "none" or empty → skip OCR)
         ocr_raw = self.DEFAULT_OCR_MODELS.strip()
         if ocr_raw and ocr_raw.lower() != "none":
@@ -149,6 +153,12 @@ class Settings(BaseSettings):
         raw = self.VOICE_MODELS.strip()
         return parse_chain(raw, "VOICE_MODELS") if raw else self.parse_model_chain
 
+    @property
+    def ai_model_chain(self) -> list[ModelRef]:
+        """General AI model chain, defaulting to the local-first parse chain."""
+        raw = self.AI_MODELS.strip()
+        return parse_chain(raw, "AI_MODELS") if raw else self.parse_model_chain
+
     # -- Startup credential validation ------------------------------------
 
     def validate_provider_credentials(self) -> None:
@@ -160,6 +170,7 @@ class Settings(BaseSettings):
         all_refs = (
             self.parse_model_chain
             + self.ocr_model_chain
+            + self.ai_model_chain
             + self.voice_model_chain
         )
         checked: set[str] = set()
@@ -168,11 +179,14 @@ class Settings(BaseSettings):
                 continue
             for env_var in REGISTERED_PROVIDERS[ref.provider]:
                 value = getattr(self, env_var, "")
-                if not value:
-                    raise ValueError(
-                        f"Provider '{ref.provider}' is referenced in model "
-                        f"chains but {env_var} is not configured"
-                    )
+                if value:
+                    continue
+                if ref.provider in OPTIONAL_PROVIDER_KEYS:
+                    continue
+                raise ValueError(
+                    f"Provider '{ref.provider}' is referenced in model "
+                    f"chains but {env_var} is not configured"
+                )
             checked.add(ref.provider)
 
     # -- Existing helpers -------------------------------------------------

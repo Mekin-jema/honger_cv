@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { isStarterCv, mergeCvData } from "@/server/services/cv-mapper/safe-merge";
 import { mapResumeParserResult, ResumeParserError } from "./resume-parser";
 
 describe("Resume Parser mapping", () => {
@@ -117,6 +118,44 @@ describe("Resume Parser mapping", () => {
       text: "A headless CMS.\n1k stars",
     });
     expect(cv.highlights).toEqual(["Best Hack · GDG · 2022"]);
+  });
+
+  it("replaces the Mekin starter CV with mapped parser output", () => {
+    const starterCv = {
+      showPhoto: true,
+      title: "Data Analyst",
+      availability: "",
+      photo: "/images/mekin.jpg",
+      profile: "Starter profile",
+      highlights: ["Starter achievement"],
+      skills: [{ k: "Starter", v: "Sample skill" }],
+      experience: [{
+        company: "Safaricom Ethiopia Telecommunications PLC",
+        role: "Data Analyst",
+        period: "",
+        location: "",
+        context: "",
+        bullets: [],
+        engagements: [],
+      }],
+      projects: [],
+      education: { degree: "", school: "", year: "", note: "" },
+      courses: [],
+      languages: [],
+      identity: { name: "Mekin Jemal", links: [] },
+    };
+    const result = mergeCvData(starterCv, mapResumeParserResult(payload), {
+      isStarterDraft: isStarterCv(starterCv),
+    });
+
+    expect(result.mergedCv.identity?.name).toBe("Jane Example");
+    expect(result.mergedCv.title).toBe("Software Engineer");
+    expect(result.mergedCv.experience[0].company).toBe("Example Corp");
+    expect(result.mergedCv.skills).toEqual([
+      { k: "Languages", v: "TypeScript, Node.js" },
+      { k: "Databases", v: "PostgreSQL" },
+      { k: "Skills", v: "Lonely" },
+    ]);
   });
 
   it("leaves fields empty when the parser has no data", () => {

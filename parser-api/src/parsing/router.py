@@ -17,7 +17,7 @@ from src.config import parse_chain as parse_chain_fn
 from src.config import settings
 from src.logging import get_logger
 from src.parsing.dependencies import validate_upload
-from src.parsing.schemas import ParseOptions, ParseResponse
+from src.parsing.schemas import ExtractRequest, ParseOptions, ParseResponse
 from src.pipeline.service import run_pipeline
 from src.rate_limit import limiter
 
@@ -112,6 +112,55 @@ async def parse_resume(
         filename=filename,
         extraction_method=result.metadata.extraction_method,
         processing_time_ms=elapsed_ms,
+    )
+
+    return ParseResponse(
+        success=result.success,
+        data=result.data,
+        metadata=result.metadata,
+        error=result.error,
+    )
+
+
+@router.post(
+    "/extract",
+    response_model=ParseResponse,
+    description="Extract structured CV JSON from raw markdown using the configured model chain.",
+    responses={
+        400: {"description": "Invalid markdown input"},
+        401: {"description": "Invalid or missing API key"},
+        422: {"description": "Invalid request body or model chain"},
+        429: {"description": "Rate limit exceeded"},
+    },
+)
+@limiter.limit(lambda: settings.RATE_LIMIT)
+async def extract_resume_from_markdown(
+    request: Request,
+    body: ExtractRequest,
+    key_identity: str = Depends(require_api_key),
+) -> ParseResponse:
+    """Structured extraction for markdown content, intended for local app flows."""
+    parse_chain = (
+        parse_chain_fn(body.parse_models, "parse_models")
+        if body.parse_models
+        else settings.parse_model_chain
+    )
+
+    logger.info(
+        "markdown_extract_request_received",
+        key_identity=key_identity,
+        filename=body.filename,
+        parse_models=[f"{ref.provider}/{ref.model}" for ref in parse_chain],
+        text_length=len(body.markdown),
+    )
+
+    result = await run_pipeline(
+        content=body.markdown.encode("utf-8"),
+        content_type="text/markdown",
+        filename=body.filename or "cv.md",
+        parse_chain=parse_chain,
+        ocr_chain=[],
+        ocr_preference="skip",
     )
 
     return ParseResponse(
