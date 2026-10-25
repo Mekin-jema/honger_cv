@@ -21,6 +21,7 @@ class OpenAICompatibleProvider(BaseProvider):
         base_url: str,
         provider_name: str = "openai_compatible",
         extra_headers: dict[str, str] | None = None,
+        timeout_seconds: int = 60,
     ) -> None:
         self._provider_name = provider_name
         headers = {"Content-Type": "application/json", **(extra_headers or {})}
@@ -29,7 +30,7 @@ class OpenAICompatibleProvider(BaseProvider):
         self._client = httpx.AsyncClient(
             base_url=base_url,
             headers=headers,
-            timeout=httpx.Timeout(60.0, connect=10.0),
+            timeout=httpx.Timeout(float(timeout_seconds), connect=10.0),
         )
 
     async def chat(

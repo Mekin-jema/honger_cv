@@ -8,10 +8,17 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
  */
 
 export const aiEnabled = () => !!process.env.GEMINI_API_KEY?.trim();
-export const cvImportEnabled = () => aiEnabled() || !!process.env.OPENROUTER_API_KEY?.trim();
+export const cvImportEnabled = () =>
+  aiEnabled() ||
+  !!process.env.OPENROUTER_API_KEY?.trim() ||
+  process.env.NODE_ENV !== "production" ||
+  !!process.env.OLLAMA_BASE_URL?.trim() ||
+  process.env.CV_EXTRACTION_MODELS?.split(",").some((entry) => entry.trim().startsWith("ollama/"));
 /** A separately hosted Resume Parser API (PyMuPDF + validated parsing, OCR for scans). */
 export const resumeParserConfigured = () => !!process.env.RESUME_PARSER_API_URL?.trim();
 export const openRouterCvModelId = () => process.env.OPENROUTER_CV_MODEL?.trim() || "mistralai/mistral-small-24b-instruct-2501";
+export const ollamaBaseUrl = () => process.env.OLLAMA_BASE_URL?.trim() || "http://localhost:11434/v1";
+export const ollamaCvModelId = () => process.env.OLLAMA_CV_MODEL?.trim() || "llama3.2";
 
 export const chatModelId = () => process.env.AI_MODEL?.trim() || process.env.GEMINI_MODEL?.trim() || "gemini-3.8-flash";
 /** Tried as well when the first model is slow, busy or gone. "" turns it off. */

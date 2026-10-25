@@ -45,6 +45,7 @@ def _create_provider(name: str) -> BaseProvider:
         return OpenAICompatibleProvider(
             api_key=settings.OPENAI_COMPATIBLE_API_KEY,
             base_url=settings.OPENAI_COMPATIBLE_BASE_URL,
+            timeout_seconds=settings.OPENAI_COMPATIBLE_TIMEOUT_SECONDS,
         )
 
     if name == "anthropic":

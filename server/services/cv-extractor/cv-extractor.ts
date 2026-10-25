@@ -69,7 +69,7 @@ export class CvExtractor {
 
     if (!this.provider.isAvailable()) {
       throw new CvExtractorError(
-        "No AI provider is configured on the server. Please configure GEMINI_API_KEY or OPENROUTER_API_KEY.",
+        "No AI provider is configured on the server. Configure CV_EXTRACTION_MODELS, Ollama, GEMINI_API_KEY, or OPENROUTER_API_KEY.",
         "AI_NOT_CONFIGURED",
         503,
       );

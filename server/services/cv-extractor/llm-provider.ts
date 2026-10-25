@@ -6,6 +6,8 @@ import {
   chatModelId,
   fallbackModelId,
   google,
+  ollamaBaseUrl,
+  ollamaCvModelId,
   openRouter,
   openRouterCvModelId,
 } from "@/server/brain/model";
@@ -22,7 +24,56 @@ export interface LLMProviderOptions {
 export interface LLMProvider {
   name: string;
   isAvailable(): boolean;
-  generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }>;
+  generateStructured<T>(options: LLMProviderOptions, modelId?: string): Promise<{ output: T; providerUsed: string }>;
+}
+
+export type CvModelProviderName = "ollama" | "openrouter" | "google";
+
+export interface CvModelRef {
+  provider: CvModelProviderName;
+  model: string;
+}
+
+const CV_MODEL_PROVIDERS = new Set<CvModelProviderName>(["ollama", "openrouter", "google"]);
+
+export function cvExtractionModelChain(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): CvModelRef[] {
+  const configured = env.CV_EXTRACTION_MODELS?.trim();
+  if (configured) {
+    return configured.split(",").map((entry) => {
+      const separator = entry.indexOf("/");
+      const provider = entry.slice(0, separator).trim();
+      const model = entry.slice(separator + 1).trim();
+      if (separator < 1 || !model || !CV_MODEL_PROVIDERS.has(provider as CvModelProviderName)) {
+        throw new Error(
+          `Invalid CV_EXTRACTION_MODELS entry '${entry.trim()}'. Expected provider/model where provider is ollama, openrouter, or google.`,
+        );
+      }
+      return { provider: provider as CvModelProviderName, model };
+    });
+  }
+
+  const chain: CvModelRef[] = [];
+  if (env.NODE_ENV !== "production") {
+    chain.push({ provider: "ollama", model: env.OLLAMA_CV_MODEL?.trim() || "llama3.2" });
+  }
+  if (env.OPENROUTER_API_KEY?.trim()) {
+    chain.push({
+      provider: "openrouter",
+      model: env.OPENROUTER_CV_MODEL?.trim() || "mistralai/mistral-small-24b-instruct-2501",
+    });
+  }
+  if (env.GEMINI_API_KEY?.trim()) {
+    chain.push({
+      provider: "google",
+      model:
+        env.AI_FALLBACK_MODEL?.trim() ||
+        env.GEMINI_FALLBACK_MODEL?.trim() ||
+        "gemini-3.5-flash-lite",
+    });
+  }
+  return chain;
 }
 
 export function affordableOutputTokenLimit(error: unknown, requested: number): number | undefined {
@@ -48,9 +99,9 @@ export class GoogleGeminiProvider implements LLMProvider {
     return aiEnabled();
   }
 
-  public async generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }> {
-    const primary = fallbackModelId() || chatModelId();
-    const fallback = chatModelId();
+  public async generateStructured<T>(options: LLMProviderOptions, modelId?: string): Promise<{ output: T; providerUsed: string }> {
+    const primary = modelId || fallbackModelId() || chatModelId();
+    const fallback = modelId ? "" : chatModelId();
     const timeoutMs = options.timeoutMs ?? 55_000;
 
     const run = async (modelId: string, thinkingOff: boolean) =>
@@ -95,8 +146,8 @@ export class OpenRouterProvider implements LLMProvider {
     return !!process.env.OPENROUTER_API_KEY?.trim();
   }
 
-  public async generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }> {
-    const modelId = openRouterCvModelId();
+  public async generateStructured<T>(options: LLMProviderOptions, configuredModelId?: string): Promise<{ output: T; providerUsed: string }> {
+    const modelId = configuredModelId || openRouterCvModelId();
     const timeoutMs = options.timeoutMs ?? 55_000;
     let maxOutputTokens = options.maxTokens ?? 7000;
     let prompt = options.prompt;
@@ -147,26 +198,115 @@ export class OpenRouterProvider implements LLMProvider {
   }
 }
 
-/** Uses OpenRouter whenever configured; Gemini is used only when OpenRouter is not configured. */
-export class CompositeLLMProvider implements LLMProvider {
-  public readonly name = "composite";
-  private readonly openRouterProvider = new OpenRouterProvider();
-  private readonly geminiProvider = new GoogleGeminiProvider();
+export class OllamaProvider implements LLMProvider {
+  public readonly name = "ollama";
 
   public isAvailable(): boolean {
-    return this.openRouterProvider.isAvailable() || this.geminiProvider.isAvailable();
+    return true;
+  }
+
+  public async generateStructured<T>(
+    options: LLMProviderOptions,
+    modelId = ollamaCvModelId(),
+  ): Promise<{ output: T; providerUsed: string }> {
+    const baseUrl = ollamaBaseUrl();
+    const endpoint = new URL(
+      "chat/completions",
+      baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`,
+    );
+    const apiKey = process.env.OLLAMA_API_KEY?.trim();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          { role: "system", content: options.system },
+          { role: "user", content: options.prompt },
+        ],
+        temperature: options.temperature ?? 0.1,
+        max_tokens: options.maxTokens ?? 7000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "structured_cv",
+            strict: true,
+            schema: z.toJSONSchema(options.schema),
+          },
+        },
+      }),
+      signal: AbortSignal.timeout(options.timeoutMs ?? 55_000),
+    });
+
+    if (!response.ok) {
+      const detail = (await response.text()).slice(0, 500);
+      throw new Error(`Ollama CV extraction failed with HTTP ${response.status}: ${detail}`);
+    }
+
+    const payload: unknown = await response.json();
+    if (
+      !payload ||
+      typeof payload !== "object" ||
+      !("choices" in payload) ||
+      !Array.isArray(payload.choices) ||
+      !payload.choices[0] ||
+      typeof payload.choices[0] !== "object" ||
+      !("message" in payload.choices[0]) ||
+      !payload.choices[0].message ||
+      typeof payload.choices[0].message !== "object" ||
+      !("content" in payload.choices[0].message) ||
+      typeof payload.choices[0].message.content !== "string"
+    ) {
+      throw new Error("Ollama returned an invalid structured CV response.");
+    }
+
+    const output: unknown = JSON.parse(payload.choices[0].message.content);
+    return { output: output as T, providerUsed: `ollama:${modelId}` };
+  }
+}
+
+/** Uses an ordered provider chain, preferring local Ollama during development. */
+export class CompositeLLMProvider implements LLMProvider {
+  public readonly name = "composite";
+  private readonly providers: Record<CvModelProviderName, LLMProvider>;
+
+  constructor(providers?: Record<CvModelProviderName, LLMProvider>) {
+    this.providers = providers ?? {
+      ollama: new OllamaProvider(),
+      openrouter: new OpenRouterProvider(),
+      google: new GoogleGeminiProvider(),
+    };
+  }
+
+  public isAvailable(): boolean {
+    return cvExtractionModelChain().some((ref) => this.providers[ref.provider].isAvailable());
   }
 
   public async generateStructured<T>(options: LLMProviderOptions): Promise<{ output: T; providerUsed: string }> {
-    if (this.openRouterProvider.isAvailable()) {
-      return this.openRouterProvider.generateStructured<T>(options);
+    let lastError: unknown;
+    const chain = cvExtractionModelChain();
+    for (const ref of chain) {
+      const provider = this.providers[ref.provider];
+      if (!provider.isAvailable()) continue;
+      try {
+        return await provider.generateStructured<T>(options, ref.model);
+      } catch (error) {
+        lastError = error;
+        console.warn("[CvExtraction] Provider failed; trying the next configured model.", {
+          provider: ref.provider,
+          model: ref.model,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+        });
+      }
     }
 
-    if (this.geminiProvider.isAvailable()) {
-      return await this.geminiProvider.generateStructured<T>(options);
-    }
-
-    throw new Error("No AI provider is configured. Please set GEMINI_API_KEY or OPENROUTER_API_KEY.");
+    if (lastError) throw lastError;
+    throw new Error(
+      "No CV extraction provider is configured. Set CV_EXTRACTION_MODELS or configure Ollama, OpenRouter, or Gemini.",
+    );
   }
 }
 

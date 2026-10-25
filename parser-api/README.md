@@ -140,7 +140,8 @@ When running the API directly on the host, set
 `OPENAI_COMPATIBLE_BASE_URL=http://localhost:11434/v1`. To use a different model,
 change `VOICE_MODELS`; for a different OpenAI-compatible service, also change
 `OPENAI_COMPATIBLE_BASE_URL` (or, for Docker Compose, the
-`OPENAI_COMPATIBLE_DOCKER_BASE_URL` override) and set its API key if required.
+`OPENAI_COMPATIBLE_DOCKER_BASE_URL` override), set its API key if required, and
+adjust `OPENAI_COMPATIBLE_TIMEOUT_SECONDS` for slower local models.
 Production uses environment configuration, so no code changes are needed to switch
 models or OpenAI-compatible providers.
 

@@ -142,7 +142,7 @@ export async function POST(req: Request, context: Context) {
 
   if (endpoint === "cv-import") {
     if (!cvImportEnabled() && !resumeParserConfigured()) {
-      return bad("CV import needs DOCLING_API_URL, OPENROUTER_API_KEY or GEMINI_API_KEY configured on the server.", 503);
+      return bad("CV import needs a configured local Ollama model or hosted OpenRouter/Gemini provider.", 503);
     }
     if (limited(`customer:cv-import:${session.userId}`, 10, 10 * 60_000)) {
       return bad("Too many CV imports. Please try again in a few minutes.", 429);

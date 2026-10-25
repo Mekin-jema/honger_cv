@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENAI_COMPATIBLE_BASE_URL: str = "http://localhost:11434/v1"
     OPENAI_COMPATIBLE_API_KEY: str = ""
+    OPENAI_COMPATIBLE_TIMEOUT_SECONDS: int = 180
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 

@@ -1,8 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { StructuredCvOutputSchema, StructuredCvSchema } from "./schema";
 import { CvExtractor, CvExtractorError } from "./cv-extractor";
-import { affordableOutputTokenLimit, isOpenRouterInFlightCreditError, type LLMProvider, type LLMProviderOptions } from "./llm-provider";
+import {
+  affordableOutputTokenLimit,
+  CompositeLLMProvider,
+  cvExtractionModelChain,
+  isOpenRouterInFlightCreditError,
+  OllamaProvider,
+  type LLMProvider,
+  type LLMProviderOptions,
+} from "./llm-provider";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 describe("StructuredCvSchema Validation", () => {
   it("requires all nested properties in the provider JSON schema", () => {
@@ -85,6 +98,100 @@ describe("StructuredCvSchema Validation", () => {
 });
 
 describe("CvExtractor & Security Boundaries", () => {
+  it("prefers local Ollama in development and uses configured hosted providers in production", () => {
+    expect(cvExtractionModelChain({ NODE_ENV: "development" })).toEqual([
+      { provider: "ollama", model: "llama3.2" },
+    ]);
+    expect(
+      cvExtractionModelChain({
+        NODE_ENV: "production",
+        OPENROUTER_API_KEY: "test-key",
+        OPENROUTER_CV_MODEL: "mistralai/test-model",
+        GEMINI_API_KEY: "test-key",
+        AI_FALLBACK_MODEL: "gemini-test",
+      }),
+    ).toEqual([
+      { provider: "openrouter", model: "mistralai/test-model" },
+      { provider: "google", model: "gemini-test" },
+    ]);
+  });
+
+  it("validates a configured model chain", () => {
+    expect(() =>
+      cvExtractionModelChain({
+        CV_EXTRACTION_MODELS: "ollama/",
+      }),
+    ).toThrow("Invalid CV_EXTRACTION_MODELS entry");
+  });
+
+  it("falls back to Ollama when the configured OpenRouter model is throttled", async () => {
+    vi.stubEnv("CV_EXTRACTION_MODELS", "openrouter/test-model,ollama/llama3.2");
+    const calls: string[] = [];
+    const unavailable: LLMProvider = {
+      name: "openrouter",
+      isAvailable: () => true,
+      generateStructured: async () => {
+        calls.push("openrouter");
+        throw new Error("temporarily rate-limited upstream");
+      },
+    };
+    const local: LLMProvider = {
+      name: "ollama",
+      isAvailable: () => true,
+      generateStructured: async <T>() => {
+        calls.push("ollama");
+        return { output: { name: "Jane" } as T, providerUsed: "ollama:llama3.2" };
+      },
+    };
+    const composite = new CompositeLLMProvider({
+      ollama: local,
+      openrouter: unavailable,
+      google: local,
+    });
+
+    const result = await composite.generateStructured<{ name: string }>({
+      system: "extract",
+      prompt: "CV data",
+      schema: z.object({ name: z.string() }),
+    });
+
+    expect(calls).toEqual(["openrouter", "ollama"]);
+    expect(result).toEqual({ output: { name: "Jane" }, providerUsed: "ollama:llama3.2" });
+  });
+
+  it("sends a JSON schema request to the configured Ollama OpenAI-compatible endpoint", async () => {
+    const data = { name: "Jane Smith" };
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(data) } }] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubEnv("OLLAMA_BASE_URL", "http://localhost:11434/v1");
+    vi.stubEnv("OLLAMA_API_KEY", "");
+    const schema = z.object({ name: z.string() });
+    const provider = new OllamaProvider();
+
+    const result = await provider.generateStructured<{ name: string }>(
+      { system: "Extract CV fields.", prompt: "Name: Jane Smith", schema },
+      "llama3.2",
+    );
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][0]).toBeInstanceOf(URL);
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "http://localhost:11434/v1/chat/completions",
+    );
+    const requestBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
+      model: string;
+      response_format: { type: string; json_schema: { schema: unknown } };
+    };
+    expect(requestBody.model).toBe("llama3.2");
+    expect(requestBody.response_format.type).toBe("json_schema");
+    expect(requestBody.response_format.json_schema.schema).toEqual(z.toJSONSchema(schema));
+    expect(result).toEqual({ output: data, providerUsed: "ollama:llama3.2" });
+  });
+
   it("reduces OpenRouter output reservations from its affordable-token error", () => {
     expect(
       affordableOutputTokenLimit(
