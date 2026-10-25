@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import AsyncIterator
 from typing import Any, cast
 
 import httpx
@@ -139,6 +141,94 @@ class OpenRouterProvider(BaseProvider):
         )
 
         return cast(dict[str, Any], payload)
+
+    async def stream_chat(
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> AsyncIterator[str]:
+        """Stream text deltas from an OpenRouter chat completion."""
+        body: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": kwargs.pop("temperature", 0.3),
+            "max_tokens": kwargs.pop("max_tokens", 320),
+            "stream": True,
+        }
+        if kwargs:
+            body.update(kwargs)
+
+        logger.info(
+            "provider_stream_request",
+            provider="openrouter",
+            model=model,
+            message_count=len(messages),
+        )
+        started_at = time.monotonic()
+        received_content = False
+        try:
+            async with self._client.stream(
+                "POST", "/chat/completions", json=body
+            ) as response:
+                if response.status_code != 200:
+                    logger.warn(
+                        "provider_stream_error",
+                        provider="openrouter",
+                        model=model,
+                        status=response.status_code,
+                    )
+                    raise ProviderError(
+                        message=(
+                            "OpenRouter streaming request failed with status "
+                            f"{response.status_code}"
+                        ),
+                        provider="openrouter",
+                        model=model,
+                        status_code=response.status_code,
+                    )
+
+                async for line in response.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data = line[5:].strip()
+                    if not data or data == "[DONE]":
+                        continue
+                    try:
+                        event = json.loads(data)
+                        choices = event.get("choices", [])
+                        delta = choices[0].get("delta", {}) if choices else {}
+                        content = delta.get("content")
+                    except (ValueError, AttributeError, IndexError, TypeError):
+                        logger.warn(
+                            "provider_stream_invalid_event",
+                            provider="openrouter",
+                            model=model,
+                        )
+                        continue
+                    if isinstance(content, str) and content:
+                        received_content = True
+                        yield content
+        except httpx.RequestError as exc:
+            raise ProviderError(
+                message=f"Request to OpenRouter failed: {exc}",
+                provider="openrouter",
+                model=model,
+            ) from exc
+
+        if not received_content:
+            raise ProviderError(
+                message="OpenRouter returned an empty streaming response",
+                provider="openrouter",
+                model=model,
+            )
+
+        logger.info(
+            "provider_stream_response",
+            provider="openrouter",
+            model=model,
+            latency_ms=int((time.monotonic() - started_at) * 1000),
+        )
 
     def extract_usage(self, response: dict[str, Any]) -> dict[str, int]:
         """Extract token usage from an OpenRouter response.

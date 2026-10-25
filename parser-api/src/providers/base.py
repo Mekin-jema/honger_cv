@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from typing import Any
 
 
@@ -35,6 +36,16 @@ class BaseProvider(ABC):
         dict:
             Raw response from the provider API.
         """
+        ...
+
+    @abstractmethod
+    def stream_chat(
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        **kwargs: Any,
+    ) -> AsyncIterator[str]:
+        """Stream text deltas from a chat completion."""
         ...
 
     @abstractmethod
