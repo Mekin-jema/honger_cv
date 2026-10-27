@@ -11,9 +11,13 @@ import {
   Bot,
   Check,
   FileText,
+  Flame,
+  Globe,
   Globe2,
   LayoutTemplate,
+  Lock,
   Mic,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { HeroPreview } from "@/components/landing/hero-preview";
@@ -21,6 +25,16 @@ import { CvTemplateShowcase } from "@/components/landing/cv-template-showcase";
 import { MobileMenu } from "@/components/landing/mobile-menu";
 import { ThemeToggle } from "@/components/theme-provider";
 import { billingProducts } from "@/server/billing";
+import {
+  AmexBadge,
+  CbBadge,
+  ChapaLogo,
+  MastercardBadge,
+  PaymentBadgesRow,
+  PaypalLogo,
+  StripeLogo,
+  VisaBadge,
+} from "@/components/billing/payment-icons";
 
 export const metadata: Metadata = {
   title: "Honger CV — Build a CV and portfolio that speaks for you",
@@ -295,67 +309,246 @@ export default async function Home() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">Simple, transparent pricing</p>
             <h2 id="pricing-heading" className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Start free. Upgrade when you need more.</h2>
-            <p className="mt-4 text-sm leading-6 text-muted">Build and share your first CV for free. Choose a one-time pass for more CVs and designs, or add ongoing tools to your portfolio.</p>
+            <p className="mt-4 text-sm leading-6 text-muted">Build and share your first CV for free. Choose a one-time pass for all 25+ templates and AI document import, or add ongoing tools to your portfolio.</p>
           </div>
 
-          <div className="mt-10 grid items-stretch gap-5 lg:grid-cols-3">
-            <article className="flex flex-col rounded-2xl border border-line bg-card p-6">
-              <p className="text-sm font-semibold text-muted">Free</p>
-              <h3 className="mt-2 text-2xl font-semibold">Your first CV</h3>
-              <p className="mt-3 text-3xl font-semibold">ETB 0 <span className="text-sm font-normal text-muted">forever</span></p>
-              <p className="mt-3 text-sm leading-6 text-muted">All 25+ designs and everything you need to build and share one polished CV.</p>
-              <ul className="mt-6 flex-1 space-y-3 text-sm">
-                {["One CV with all 25+ templates and palettes", "Edit and download a PDF", "Public CV and curated visitor answers"].map((feature) => (
-                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
-                ))}
-              </ul>
-              <Link href="/register/" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong px-4 text-sm font-semibold transition-colors hover:bg-surface">
-                Create your free CV
-              </Link>
-            </article>
+          <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-3">
+            {/* PLAN 1: FREE CV */}
+            <article className="flex flex-col justify-between rounded-3xl border border-line bg-card p-6 sm:p-7 shadow-xs">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-muted border border-line">
+                    Starter
+                  </span>
+                  <span className="text-xs text-muted">Free Forever</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight">Your First CV</h3>
+                  <div className="mt-3 flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-fg">ETB 0</span>
+                    <span className="text-sm font-medium text-muted">/ $0 USD</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                    Full access to all 25+ templates, color palettes, and ATS vector PDF export for your first CV.
+                  </p>
+                </div>
 
-            <article className="flex flex-col rounded-2xl border-2 border-accent bg-card p-6 shadow-[var(--card-shadow)]">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-accent">One-time payment · lifetime access</p>
-                <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent">Popular</span>
+                <ul className="space-y-2.5 pt-2 border-t border-line text-xs">
+                  {[
+                    "One CV with all 25+ designer layouts and palettes",
+                    "Instant vector PDF export (ATS-friendly)",
+                    "Live public portfolio link with curated answers",
+                    "No credit card required to start",
+                  ].map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5">
+                      <Check className="size-4 shrink-0 text-accent mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <h3 className="mt-2 text-2xl font-semibold">Lifetime CV Design Pass</h3>
-              <p className="mt-3 text-3xl font-semibold">
-                ETB {billingProducts.cv_pass.prices.chapa.amount}
-                <span className="text-sm font-normal text-muted"> or USD {billingProducts.cv_pass.prices.paypal.amount}</span>
-              </p>
-              <p className="mt-3 text-sm leading-6 text-muted">Get every design and create additional CVs with one affordable payment.</p>
-              <ul className="mt-6 flex-1 space-y-3 text-sm">
-                {["All 25+ CV templates for life", "Create additional CVs whenever you need", "One-time payment · no renewal"].map((feature) => (
-                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
-                ))}
-              </ul>
-              <Link href={billingUrl} className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent transition hover:brightness-95">
-                Get the CV Design Pass <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              <p className="mt-3 text-center text-xs text-muted">Pay securely with Chapa or PayPal</p>
+
+              <div className="mt-8 pt-4 border-t border-line">
+                <Link
+                  href="/register/"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-line-strong bg-surface px-4 text-xs font-semibold text-fg transition-colors hover:bg-surface/80"
+                >
+                  Create Your Free CV
+                </Link>
+              </div>
             </article>
 
-            <article className="flex flex-col rounded-2xl border border-line bg-card p-6">
-              <p className="text-sm font-semibold text-muted">Monthly · cancel any time</p>
-              <h3 className="mt-2 text-2xl font-semibold">Portfolio Pro</h3>
-              <p className="mt-3 text-3xl font-semibold">
-                USD {billingProducts.portfolio_pro.prices.paypal.amount.toFixed(2)}
-                <span className="text-sm font-normal text-muted"> / month</span>
-              </p>
-              <p className="mt-3 text-sm leading-6 text-muted">For people who want deeper engagement and insight from their portfolio.</p>
-              <ul className="mt-6 flex-1 space-y-3 text-sm">
-                {["Advanced visitor AI on your portfolio", "Aggregated profile views and question insights", "Your basic public CV stays available if you cancel"].map((feature) => (
-                  <li key={feature} className="flex gap-2.5"><Check className="size-4 shrink-0 text-accent" aria-hidden="true" />{feature}</li>
-                ))}
-              </ul>
-              <Link href={billingUrl} className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl border border-line-strong px-4 text-sm font-semibold transition-colors hover:bg-surface">
-                Explore Portfolio Pro
-              </Link>
-              <p className="mt-3 text-center text-xs text-muted">Subscription managed securely by PayPal</p>
+            {/* PLAN 2: LIFETIME CV DESIGN PASS */}
+            <article className="relative flex flex-col justify-between rounded-3xl border-2 border-accent bg-card p-6 sm:p-7 shadow-[var(--card-shadow)] ring-1 ring-accent/20 overflow-hidden">
+              <div className="absolute top-4 right-4 z-10">
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent text-on-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide shadow-sm">
+                  <Flame className="size-3.5 fill-current" /> Most Popular
+                </span>
+              </div>
+
+              <div className="space-y-5">
+                {/* Visual Image Banner */}
+                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border border-line bg-bg/40 shadow-inner">
+                  <Image
+                    src="/images/billing-pass-badge.jpg"
+                    alt="Lifetime CV Design Pass"
+                    fill
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end p-3.5">
+                    <div>
+                      <span className="rounded bg-accent px-2 py-0.5 text-[9px] font-extrabold text-on-accent uppercase tracking-wider">
+                        Lifetime Deal
+                      </span>
+                      <h4 className="text-white text-sm font-bold mt-1">CV Design & AI Extraction Pass</h4>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight">Lifetime CV Design Pass</h3>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg">
+                      $1 <span className="text-lg font-medium text-muted">USD</span>
+                    </span>
+                    <span className="text-sm font-semibold text-muted">or 100 ETB</span>
+                  </div>
+                  <p className="mt-1 text-xs font-semibold text-accent">
+                    One-time payment • Lifetime access • Zero monthly renewal
+                  </p>
+                </div>
+
+                <ul className="space-y-2 pt-2 border-t border-line text-xs">
+                  {[
+                    "All 25+ CV templates for life (Executive, Minimal, Creative)",
+                    "Instant AI document extraction (PDF, DOCX, TXT resumes)",
+                    "Create unlimited separate CV versions for different jobs",
+                    "Speech synthesis sound playback on public profile",
+                    "High-resolution vector PDF export",
+                  ].map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5">
+                      <Check className="size-4 shrink-0 text-accent mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Payment Actions with real icons */}
+              <div className="mt-8 pt-4 border-t border-line space-y-2.5">
+                <Link
+                  href={billingUrl}
+                  className="w-full flex items-center justify-between gap-3 rounded-xl bg-accent px-4 py-3 text-xs font-bold text-on-accent shadow-sm transition hover:brightness-95"
+                >
+                  <span className="flex items-center gap-2">
+                    <StripeLogo className="size-4.5 rounded shadow-xs" />
+                    <span>Pay with Card via Stripe ($1 USD)</span>
+                  </span>
+                  <div className="hidden sm:flex items-center gap-1 shrink-0">
+                    <VisaBadge className="h-4 w-7 px-0.5 rounded-xs" />
+                    <MastercardBadge className="h-4 w-7 px-0.5 rounded-xs" />
+                    <AmexBadge className="h-4 w-7 px-0.5 rounded-xs" />
+                  </div>
+                </Link>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href={billingUrl}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-xs font-semibold text-fg hover:border-accent transition-colors"
+                  >
+                    <ChapaLogo className="size-4" />
+                    <span>Pay with Chapa (100 ETB)</span>
+                  </Link>
+
+                  <Link
+                    href={billingUrl}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-xs font-semibold text-fg hover:border-accent transition-colors"
+                  >
+                    <PaypalLogo className="size-4" />
+                    <span>Pay with PayPal ($1)</span>
+                  </Link>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line/40">
+                  <PaymentBadgesRow label="Payments:" />
+                  <span className="text-[11px] font-medium text-muted">Instant activation</span>
+                </div>
+              </div>
+            </article>
+
+            {/* PLAN 3: PORTFOLIO PRO */}
+            <article className="relative flex flex-col justify-between rounded-3xl border border-line bg-card p-6 sm:p-7 shadow-xs overflow-hidden">
+              <div className="absolute top-4 right-4 z-10">
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft text-accent px-3 py-1 text-[11px] font-bold uppercase tracking-wide border border-accent/20">
+                  <Sparkles className="size-3.5" /> AI & Insights
+                </span>
+              </div>
+
+              <div className="space-y-5">
+                {/* Visual Image Banner */}
+                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border border-line bg-bg/40 shadow-inner">
+                  <Image
+                    src="/images/billing-pro-badge.jpg"
+                    alt="Portfolio Pro"
+                    fill
+                    className="object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end p-3.5">
+                    <div>
+                      <span className="rounded bg-violet-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-wider">
+                        AI Powered
+                      </span>
+                      <h4 className="text-white text-sm font-bold mt-1">Portfolio Pro AI & Insights</h4>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-bold tracking-tight">Portfolio Pro</h3>
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-fg">
+                      $4.99 <span className="text-lg font-medium text-muted">USD</span>
+                    </span>
+                    <span className="text-sm font-semibold text-muted">/ month</span>
+                  </div>
+                  <p className="mt-1 text-xs font-semibold text-accent">
+                    Monthly subscription • Cancel anytime in 1 click
+                  </p>
+                </div>
+
+                <ul className="space-y-2 pt-2 border-t border-line text-xs">
+                  {[
+                    "24/7 Recruiter AI Assistant grounded in your CV data",
+                    "Interactive Voice Persona with speech synthesis",
+                    "30-day visitor analytics & question logs",
+                    "Priority semantic vector caching for instant answers",
+                    "Basic public CV stays free forever if cancelled",
+                  ].map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5">
+                      <Check className="size-4 shrink-0 text-accent mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-8 pt-4 border-t border-line space-y-2.5">
+                <Link
+                  href={billingUrl}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 text-xs font-bold text-on-accent shadow-sm transition hover:brightness-95"
+                >
+                  <PaypalLogo className="size-4" />
+                  <span>Subscribe to Portfolio Pro ($4.99/mo)</span>
+                  <ArrowRight className="size-3.5" />
+                </Link>
+
+                <p className="pt-2 text-center text-[11px] text-muted">
+                  Managed securely by PayPal • No lock-in
+                </p>
+              </div>
             </article>
           </div>
-          <p className="mt-6 text-center text-xs leading-5 text-muted">Create an account before checking out. You can manage plans and payments from your billing settings.</p>
+
+          {/* Trust and Security row */}
+          <div className="mt-10 rounded-2xl border border-line bg-card/40 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4">
+              <span className="flex items-center gap-1.5 font-medium text-fg">
+                <Lock className="size-3.5 text-accent" /> 256-Bit SSL Encryption
+              </span>
+              <span className="flex items-center gap-1.5 font-medium text-fg">
+                <ShieldCheck className="size-3.5 text-accent" /> Powered by Stripe, Chapa & PayPal
+              </span>
+              <span className="flex items-center gap-1.5 font-medium text-fg">
+                <Globe className="size-3.5 text-accent" /> Instant Global Activation
+              </span>
+            </div>
+
+            <PaymentBadgesRow label="Payments:" />
+          </div>
+
+          <p className="mt-6 text-center text-xs leading-5 text-muted">
+            Create an account before checking out. You can manage plans and payment options from your billing settings.
+          </p>
         </div>
       </section>
 
