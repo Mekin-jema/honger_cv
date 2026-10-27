@@ -1,6 +1,7 @@
 import { bad, clientKey, limited, readJson, sameOrigin, str } from "@/server/http";
 import { clientView } from "@/server/persona/compile";
 import { personaForRequest } from "@/server/persona/resolve";
+import { customerPersonaHasAiVoiceAccess } from "@/server/billing";
 
 export const runtime = "nodejs";
 export const maxDuration = 90;
@@ -50,14 +51,18 @@ export async function POST(request: Request) {
   const question = str(body.question, 600);
   if (!question || question.length < 2) return bad("Ask a question first.");
 
+  const persona = await personaForRequest(request);
+  const hasVoice = await customerPersonaHasAiVoiceAccess(persona.compiled.slug);
+  if (!hasVoice) {
+    return bad("AI voice interview is available exclusively on paid plans. Upgrade your plan to activate AI sound and voice.", 402);
+  }
+
   let parser: { endpoint: URL; apiKey: string };
   try {
     parser = parserConfig();
   } catch (error) {
     return bad(error instanceof Error ? error.message : "Live voice chat is not configured.", 503);
   }
-
-  const persona = await personaForRequest(request);
   const context = JSON.stringify(clientView(persona.compiled, persona.tier, persona.lang));
   if (context.length > 40_000) {
     return bad("The published profile is too large for the live voice assistant.", 413);

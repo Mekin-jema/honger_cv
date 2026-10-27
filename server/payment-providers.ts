@@ -1,4 +1,5 @@
 import "server-only";
+import Stripe from "stripe";
 import { basePath, siteUrl } from "@/lib/site";
 
 type JsonRecord = Record<string, unknown>;
@@ -111,4 +112,36 @@ export async function verifyChapaTransaction(txRef: string): Promise<{ status: s
     throw new Error("Chapa returned incomplete transaction verification data.");
   }
   return { status: data.status.toLowerCase(), amount, currency: data.currency.toUpperCase() };
+}
+
+export function stripeSecret(): string {
+  return process.env.STRIPE_SECRET_KEY?.trim() ?? "";
+}
+
+export function stripeWebhookSecret(): string {
+  return process.env.STRIPE_WEBHOOK_SECRET?.trim() ?? "";
+}
+
+export function stripePublishableKey(): string {
+  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() || process.env.STRIPE_PUBLISHABLE_KEY?.trim() || "";
+}
+
+export function stripeConfig(): { secretKey: string; webhookSecret: string; publishableKey: string } | null {
+  const secretKey = stripeSecret();
+  if (!secretKey) return null;
+  return {
+    secretKey,
+    webhookSecret: stripeWebhookSecret(),
+    publishableKey: stripePublishableKey(),
+  };
+}
+
+let cachedStripe: Stripe | null = null;
+export function stripeClient(): Stripe {
+  const secret = stripeSecret();
+  if (!secret) throw new Error("Stripe is not configured. Set STRIPE_SECRET_KEY.");
+  if (!cachedStripe) {
+    cachedStripe = new Stripe(secret);
+  }
+  return cachedStripe;
 }

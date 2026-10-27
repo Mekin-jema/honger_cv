@@ -10,7 +10,23 @@ import { SignOutButton } from "@/components/account/sign-out-button";
 
 export type AccountSidebarPersona = { slug: string; name: string; identityName: string; role: string; publishedVersionId: string | null };
 
-export function AccountShell({ children, name, email, avatar, personas }: { children: ReactNode; name: string; email: string; avatar?: string | null; personas: AccountSidebarPersona[] }) {
+export function AccountShell({
+  children,
+  name,
+  email,
+  avatar,
+  personas,
+  cvPassActive = false,
+  portfolioProActive = false,
+}: {
+  children: ReactNode;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  personas: AccountSidebarPersona[];
+  cvPassActive?: boolean;
+  portfolioProActive?: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const routePath = pathname.replace(/\/+$/, "") || "/";
@@ -19,7 +35,15 @@ export function AccountShell({ children, name, email, avatar, personas }: { chil
 
   return (
     <SidebarProvider>
-      <AppSidebar isAdmin={false} accountName={name} accountEmail={email} accountAvatar={avatar} accountPersonas={personas} />
+      <AppSidebar
+        isAdmin={false}
+        accountName={name}
+        accountEmail={email}
+        accountAvatar={avatar}
+        accountPersonas={personas}
+        cvPassActive={cvPassActive}
+        portfolioProActive={portfolioProActive}
+      />
       <div className="flex min-w-0 flex-1 flex-col bg-bg text-fg">
         {!isStudio && (
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-bg/90 px-4 backdrop-blur-xl sm:px-6">

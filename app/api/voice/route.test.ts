@@ -1,5 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+
+vi.mock("@/server/billing", () => ({
+  customerPersonaHasAiVoiceAccess: vi.fn().mockImplementation(async (slug: string) => slug !== "unpaid-persona"),
+}));
+
+vi.mock("@/server/persona/resolve", () => ({
+  personaForRequest: vi.fn().mockImplementation(async (req: Request) => {
+    const slug = req.headers.get("x-test-slug") || "job";
+    return {
+      slug,
+      compiled: { slug },
+      tier: "public",
+      lang: "en",
+    };
+  }),
+}));
 
 describe("POST /api/voice", () => {
   it("rejects cross-origin requests", async () => {
@@ -30,5 +46,20 @@ describe("POST /api/voice", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(400);
+  });
+
+  it("rejects requests for unpaid customer personas with 402", async () => {
+    const request = new Request("http://localhost/api/voice", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "sec-fetch-site": "same-origin",
+        "x-test-slug": "unpaid-persona",
+      },
+      body: JSON.stringify({ question: "Tell me about your work experience." }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(402);
   });
 });

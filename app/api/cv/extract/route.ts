@@ -1,5 +1,7 @@
 import { bad, json, limited, readJson, sameOrigin } from "@/server/http";
 import { mapResumeParserResult } from "@/server/brain/resume-parser";
+import { adminSession, customerSession } from "@/server/admin-session";
+import { hasCvPass } from "@/server/billing";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -32,6 +34,22 @@ function localParseModel(): string | undefined {
 export async function POST(req: Request) {
   if (!sameOrigin(req)) {
     return bad("Cross-origin requests are not allowed.", 403);
+  }
+
+  const [session, admin] = await Promise.all([customerSession(req), adminSession(req)]);
+  if (!session && !admin) {
+    return bad("Sign in before extracting CV information.", 401);
+  }
+
+  if (session && !admin) {
+    const passActive = await hasCvPass(session.userId);
+    if (!passActive) {
+      return json({
+        success: false,
+        needsPayment: true,
+        error: "AI CV extraction requires a CV Design Pass. Please upgrade to import your document.",
+      }, 402);
+    }
   }
 
   if (limited("cv:extract", 20, 10 * 60_000)) {

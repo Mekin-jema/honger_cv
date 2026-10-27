@@ -4,6 +4,8 @@ import { bad, json, limited, sameOrigin } from "@/server/http";
 import { doclingParser } from "@/server/services/document-parser";
 import { DocumentParserError } from "@/server/services/document-parser/types";
 import type { StructuredCvData } from "@/server/services/cv-extractor/schema";
+import { adminSession, customerSession } from "@/server/admin-session";
+import { hasCvPass } from "@/server/billing";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -113,6 +115,22 @@ function importedCvToMarkdown(cv: ImportedCv): string {
 export async function POST(req: Request) {
   if (!sameOrigin(req)) {
     return bad("Cross-origin requests are not allowed.", 403);
+  }
+
+  const [session, admin] = await Promise.all([customerSession(req), adminSession(req)]);
+  if (!session && !admin) {
+    return bad("Sign in before uploading or parsing CV documents.", 401);
+  }
+
+  if (session && !admin) {
+    const passActive = await hasCvPass(session.userId);
+    if (!passActive) {
+      return json({
+        success: false,
+        needsPayment: true,
+        error: "File upload and AI document parsing requires a CV Design Pass. Please upgrade to import your document.",
+      }, 402);
+    }
   }
 
   if (limited("cv:parse", 20, 10 * 60_000)) {

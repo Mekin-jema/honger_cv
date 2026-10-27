@@ -48,6 +48,7 @@ export default async function CustomerCvDesignPage({
         cv={personaToCvData(parsed.data, parsed.data.site.defaultLang)}
         initialDesign={{ template, accentColor }}
         availableTemplates={availableTemplates}
+        cvPassActive={passActive}
       />
     </main>
   );

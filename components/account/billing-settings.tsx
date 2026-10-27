@@ -33,8 +33,10 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
     const chapaOrderId = params.get("chapa_order_id");
     const paypalOrderId = params.get("paypal_order_id");
     const paypalSubscriptionId = params.get("paypal_subscription_id");
+    const stripeSessionId = params.get("stripe_session_id");
+    const stripeOrderId = params.get("stripe_order_id");
     const checkoutCancelled = params.get("checkout") === "cancelled";
-    const returnId = chapaOrderId || paypalOrderId || paypalSubscriptionId;
+    const returnId = chapaOrderId || paypalOrderId || paypalSubscriptionId || stripeSessionId || stripeOrderId;
     if (!returnId && checkoutCancelled) {
       setNotice("Checkout was cancelled. Your account has not been charged.");
       return;
@@ -46,7 +48,19 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
     setNotice(undefined);
     try {
       let result: ApiResult;
-      if (chapaOrderId) {
+      if (stripeSessionId || stripeOrderId) {
+        result = await requestJson("/api/billing/stripe/verify/", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ sessionId: stripeSessionId, orderId: stripeOrderId }),
+        });
+        if (!result.paid) {
+          returnProcessed.current = false;
+          setPaymentPending(true);
+          setNotice("Stripe is still processing your payment. You can check again shortly.");
+          return;
+        }
+      } else if (chapaOrderId) {
         result = await requestJson("/api/billing/chapa/verify/", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -100,7 +114,7 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
     return () => window.clearTimeout(timer);
   }, [verifyReturn]);
 
-  const checkout = async (provider: "chapa" | "paypal") => {
+  const checkout = async (provider: "chapa" | "paypal" | "stripe") => {
     setBusy(provider);
     setError(undefined);
     try {
@@ -233,14 +247,18 @@ export function BillingSettings({ billing, insights }: { billing: BillingSummary
           </div>
           <p className="mt-4 text-3xl font-semibold">ETB 100 <span className="text-sm font-normal text-muted">or USD 1</span></p>
           <ul className="mt-4 flex-1 space-y-2 text-sm text-muted">
+            <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />Upload & auto-extract CVs from PDF, Word & text documents</li>
             <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />All 25+ CV templates and additional CV creation for life</li>
             <li className="flex gap-2"><Check className="size-4 shrink-0 text-accent" />One-time payment · no renewal</li>
           </ul>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" onClick={() => void checkout("chapa")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60">
+            <button type="button" onClick={() => void checkout("stripe")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 font-semibold text-on-accent disabled:opacity-60">
+              {busy === "stripe" ? <LoaderCircle className="size-4 animate-spin" /> : <CreditCard className="size-4" />} Pay with Stripe
+            </button>
+            <button type="button" onClick={() => void checkout("chapa")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line-strong px-4 font-semibold disabled:opacity-60 hover:bg-surface">
               {busy === "chapa" ? <LoaderCircle className="size-4 animate-spin" /> : null} Pay with Chapa
             </button>
-            <button type="button" onClick={() => void checkout("paypal")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line-strong px-4 font-semibold disabled:opacity-60">
+            <button type="button" onClick={() => void checkout("paypal")} disabled={!!busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line-strong px-4 font-semibold disabled:opacity-60 hover:bg-surface">
               {busy === "paypal" ? <LoaderCircle className="size-4 animate-spin" /> : null} Pay with PayPal
             </button>
           </div>

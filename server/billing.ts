@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { query, withTransaction } from "./db";
 
-export type BillingProvider = "chapa" | "paypal";
+export type BillingProvider = "chapa" | "paypal" | "stripe";
 export type BillingProduct = "cv_pass" | "portfolio_pro";
 
 export const CV_PASS_TEMPLATE = "modern";
@@ -11,17 +11,19 @@ export const CV_PASS_TEMPLATE = "modern";
 export const billingProducts = {
   cv_pass: {
     title: "Lifetime CV Design Pass",
-    description: "Unlock every CV template and create additional CVs for life.",
+    description: "Unlock every CV template, AI document import, live voice sound, and create additional CVs for life.",
     prices: {
       chapa: { currency: "ETB", amount: 100 },
       paypal: { currency: "USD", amount: 1 },
+      stripe: { currency: "USD", amount: 1 },
     },
   },
   portfolio_pro: {
     title: "Portfolio Pro",
-    description: "Monthly access to advanced visitor AI and profile insights.",
+    description: "Monthly access to advanced visitor AI, live voice sound, and profile insights.",
     prices: {
       paypal: { currency: "USD", amount: 4.99 },
+      stripe: { currency: "USD", amount: 4.99 },
     },
   },
 } as const;
@@ -125,6 +127,23 @@ export async function customerPersonaHasPortfolioPro(slug: string): Promise<bool
   return hasPortfolioPro(persona.owner_user_id);
 }
 
+export async function customerPersonaHasAiVoiceAccess(slug: string): Promise<boolean> {
+  const { rows } = await query<{ owner_user_id: string | null; role: string | null }>(
+    `SELECT p.owner_user_id, u.role
+       FROM personas p
+       LEFT JOIN admin_users u ON u.id = p.owner_user_id
+      WHERE p.slug = $1`,
+    [slug],
+  );
+  const persona = rows[0];
+  if (!persona?.owner_user_id || persona.role !== "customer") return true;
+  const [pass, pro] = await Promise.all([
+    hasCvPass(persona.owner_user_id),
+    hasPortfolioPro(persona.owner_user_id),
+  ]);
+  return pass || pro;
+}
+
 export async function getPortfolioInsights(userId: string): Promise<PortfolioInsights> {
   const { rows } = await query<PortfolioInsights>(
     `SELECT
@@ -143,7 +162,7 @@ export async function createCvPassOrder(
   userId: string,
   provider: BillingProvider,
 ): Promise<{ id: string; amount: number; currency: "ETB" | "USD" }> {
-  if (provider !== "chapa" && provider !== "paypal") throw new Error("Unsupported billing provider.");
+  if (provider !== "chapa" && provider !== "paypal" && provider !== "stripe") throw new Error("Unsupported billing provider.");
   const price = billingProducts.cv_pass.prices[provider];
   const id = randomUUID();
   await query(

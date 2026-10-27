@@ -1,5 +1,29 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
+import * as adminSessionModule from "@/server/admin-session";
+import * as billingModule from "@/server/billing";
+
+vi.mock("@/server/admin-session", () => ({
+  adminSession: vi.fn(),
+  customerSession: vi.fn(),
+}));
+
+vi.mock("@/server/billing", () => ({
+  hasCvPass: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(adminSessionModule.adminSession).mockResolvedValue({
+    userId: "admin-1",
+    email: "admin@example.com",
+    name: "Admin",
+    role: "admin",
+    sessionId: "s1",
+    createdAt: new Date().toISOString(),
+  });
+  vi.mocked(adminSessionModule.customerSession).mockResolvedValue(null);
+  vi.mocked(billingModule.hasCvPass).mockResolvedValue(true);
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -7,6 +31,42 @@ afterEach(() => {
 });
 
 describe("CV extraction route", () => {
+  it("rejects unauthenticated requests with 401", async () => {
+    vi.mocked(adminSessionModule.adminSession).mockResolvedValue(null);
+    vi.mocked(adminSessionModule.customerSession).mockResolvedValue(null);
+
+    const request = new Request("http://localhost:3000/api/cv/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ markdown: "# Daniel Bekele", filename: "cv.md" }),
+    });
+    const response = await POST(request);
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects unpaid customer requests with 402", async () => {
+    vi.mocked(adminSessionModule.adminSession).mockResolvedValue(null);
+    vi.mocked(adminSessionModule.customerSession).mockResolvedValue({
+      userId: "cust-1",
+      email: "cust@example.com",
+      name: "Customer",
+      role: "customer",
+      sessionId: "s2",
+      createdAt: new Date().toISOString(),
+    });
+    vi.mocked(billingModule.hasCvPass).mockResolvedValue(false);
+
+    const request = new Request("http://localhost:3000/api/cv/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ markdown: "# Daniel Bekele", filename: "cv.md" }),
+    });
+    const response = await POST(request);
+    expect(response.status).toBe(402);
+    const body = await response.json();
+    expect(body.needsPayment).toBe(true);
+  });
+
   it("falls back to the existing parser endpoint when /extract is not deployed", async () => {
     vi.stubEnv("RESUME_PARSER_API_URL", "http://localhost:8000");
     vi.stubEnv("RESUME_PARSER_API_KEY", "test-parser-key");

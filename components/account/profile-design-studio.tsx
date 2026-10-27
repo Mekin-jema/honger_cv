@@ -234,6 +234,7 @@ export function ProfileDesignStudio({
   cv,
   initialDesign,
   availableTemplates,
+  cvPassActive = false,
 }: {
   slug: string;
   doc: PersonaDoc;
@@ -241,6 +242,7 @@ export function ProfileDesignStudio({
   cv: CvData;
   initialDesign: CvDesign;
   availableTemplates: readonly CvTemplateId[];
+  cvPassActive?: boolean;
 }) {
   const router = useRouter();
   const [doc, setDoc] = useState(initialDoc);
@@ -576,6 +578,7 @@ export function ProfileDesignStudio({
             currentCv={cvData}
             onApplyCv={handleApplyPipelineCv}
             disabled={busy || photoUploading}
+            cvPassActive={cvPassActive}
           />
           <section className="mb-5 space-y-4 rounded-2xl border border-line bg-card p-4 sm:p-6" aria-labelledby="cv-personal-details">
             <div>

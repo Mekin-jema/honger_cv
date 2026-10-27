@@ -1,7 +1,7 @@
 import { billingProducts, createCvPassOrder, markOrderFailed, setOrderProviderReference } from "@/server/billing";
 import { customerSession } from "@/server/admin-session";
 import { bad, forbidden, json, limited, readJson, sameOrigin } from "@/server/http";
-import { appUrl, chapaSecret, paypalConfig, paypalRequest } from "@/server/payment-providers";
+import { appUrl, chapaSecret, paypalConfig, paypalRequest, stripeClient, stripeSecret } from "@/server/payment-providers";
 
 type PaypalLink = { rel?: string; href?: string };
 
@@ -13,9 +13,10 @@ export async function POST(req: Request) {
 
   const body = await readJson(req, 1_000);
   const provider = body?.provider;
-  if (provider !== "chapa" && provider !== "paypal") return bad("Choose Chapa or PayPal.");
+  if (provider !== "chapa" && provider !== "paypal" && provider !== "stripe") return bad("Choose Chapa, PayPal, or Stripe.");
   if (provider === "chapa" && !chapaSecret()) return bad("Chapa payments are not configured yet.", 503);
   if (provider === "paypal" && !paypalConfig()) return bad("PayPal payments are not configured yet.", 503);
+  if (provider === "stripe" && !stripeSecret()) return bad("Stripe payments are not configured yet.", 503);
 
   const order = await createCvPassOrder(session.userId, provider);
   try {
@@ -53,6 +54,41 @@ export async function POST(req: Request) {
       }
       await setOrderProviderReference(order.id, order.id, checkoutUrl);
       return json({ ok: true, checkoutUrl });
+    }
+
+    if (provider === "stripe") {
+      const stripe = stripeClient();
+      const sessionStripe = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer_email: session.email,
+        client_reference_id: order.id,
+        metadata: {
+          orderId: order.id,
+          userId: session.userId,
+          product: "cv_pass",
+        },
+        line_items: [
+          {
+            price_data: {
+              currency: order.currency.toLowerCase(),
+              unit_amount: Math.round(order.amount * 100),
+              product_data: {
+                name: billingProducts.cv_pass.title,
+                description: billingProducts.cv_pass.description,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: appUrl(`/account/billing/?stripe_session_id={CHECKOUT_SESSION_ID}&stripe_order_id=${encodeURIComponent(order.id)}`),
+        cancel_url: appUrl("/account/billing/?checkout=cancelled"),
+      });
+
+      if (!sessionStripe.url) {
+        throw new Error("Stripe did not return a secure checkout session URL.");
+      }
+      await setOrderProviderReference(order.id, sessionStripe.id, sessionStripe.url);
+      return json({ ok: true, checkoutUrl: sessionStripe.url });
     }
 
     const response = await paypalRequest("/v2/checkout/orders", {

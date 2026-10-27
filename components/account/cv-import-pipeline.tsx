@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
@@ -11,6 +12,7 @@ import {
   FileCode,
   FileUp,
   LoaderCircle,
+  Lock,
   RefreshCw,
   RotateCcw,
   Shield,
@@ -46,9 +48,10 @@ export interface CvImportPipelineProps {
   currentCv: CvData;
   onApplyCv: (nextCv: CvData, meta: { filename: string; markdown?: string }) => void | Promise<void>;
   disabled?: boolean;
+  cvPassActive?: boolean;
 }
 
-export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvImportPipelineProps) {
+export function CvImportPipeline({ currentCv, onApplyCv, disabled = false, cvPassActive = false }: CvImportPipelineProps) {
   const [stage, setStage] = useState<PipelineStage>("idle");
   const [stageIndex, setStageIndex] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -72,6 +75,12 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
 
   const processFile = async (file: File) => {
     if (disabled || stage !== "idle" && stage !== "error" && stage !== "success") return;
+
+    if (!cvPassActive) {
+      setErrorMessage("Uploading and importing CV documents is available exclusively with the Lifetime CV Design Pass. Please upgrade to import your document.");
+      setStage("error");
+      return;
+    }
 
     const lower = file.name.toLowerCase();
     const validExtensions = [".pdf", ".docx", ".pptx", ".txt", ".md", ".markdown"];
@@ -243,8 +252,36 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
       </div>
 
       <div className="p-5 sm:p-7">
-        {/* State: IDLE */}
-        {stage === "idle" && (
+        {/* State: IDLE - Locked */}
+        {stage === "idle" && !cvPassActive && (
+          <div className="relative overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-accent/5 via-card to-card p-6 text-center sm:p-9">
+            <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+              <Lock className="size-7" aria-hidden="true" />
+            </div>
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+              <Sparkles className="size-3" /> LIFETIME CV DESIGN PASS REQUIRED
+            </div>
+            <h3 className="mt-3 text-lg font-semibold text-fg">CV Document Upload & AI Extraction</h3>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted">
+              Upload your existing PDF, Word, or Markdown document to automatically parse and pre-fill your experience, skills, and education using AI.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/account/billing/?feature=cv-import"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent shadow transition hover:brightness-95 active:scale-[0.98]"
+              >
+                <Lock className="size-4" aria-hidden="true" />
+                Unlock with Lifetime CV Pass ($1 / ETB 100)
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-muted">
+              Manual form creation is free for your first CV. You can fill in and update your details in the sections below.
+            </p>
+          </div>
+        )}
+
+        {/* State: IDLE - Unlocked */}
+        {stage === "idle" && cvPassActive && (
           <div
             className={cn(
               "relative rounded-2xl border-2 border-dashed p-6 text-center transition-all duration-200 sm:p-9",
@@ -503,14 +540,22 @@ export function CvImportPipeline({ currentCv, onApplyCv, disabled = false }: CvI
                 <p className="mt-1 text-sm text-muted">{errorMessage || "An unexpected error occurred during document parsing."}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={reset}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-on-accent hover:brightness-95"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line-strong px-4 py-2 text-xs font-semibold hover:bg-surface"
               >
                 <RotateCcw className="size-3.5" /> Try Another Document
               </button>
+              {(!cvPassActive || errorMessage?.includes("Pass") || errorMessage?.includes("upgrade")) && (
+                <Link
+                  href="/account/billing/?feature=cv-import"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-on-accent hover:brightness-95"
+                >
+                  <Lock className="size-3.5" /> Unlock Lifetime CV Pass
+                </Link>
+              )}
             </div>
           </div>
         )}

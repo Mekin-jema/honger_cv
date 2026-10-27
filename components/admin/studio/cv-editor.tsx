@@ -91,6 +91,7 @@ export function CvEditor({
           <CvImportPipeline
             slug=""
             currentCv={cv}
+            cvPassActive={true}
             onApplyCv={(next) => {
               set((c) => {
                 Object.assign(c, next);
