@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { cv as codeCv } from "@/content/cv";
-import { readCv } from "@/lib/persona/cv";
-import { currentPersona } from "@/server/persona/resolve";
+import { showcaseSampleCv } from "@/lib/persona/showcase-sample";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -81,20 +79,7 @@ const steps = [
 const billingUrl = "/register/?next=%2Faccount%2Fbilling%2F";
 
 export default async function Home() {
-  const persona = await currentPersona();
-  const sampleCv = readCv(persona.compiled.doc.document.data, codeCv);
-  const cv = {
-    ...sampleCv,
-    showPhoto: false,
-    photo: "",
-    identity: {
-      ...sampleCv.identity,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "",
-      links: [],
-    },
-  };
+  const cv = showcaseSampleCv;
 
   return (
     <main className="min-h-dvh overflow-hidden bg-bg text-fg">

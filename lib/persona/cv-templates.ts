@@ -25,6 +25,11 @@ export const CV_TEMPLATES = [
   { id: "mint-header", name: "Mint Header", description: "A teal masthead above a pale profile panel and an open experience column.", atsFriendly: false },
   { id: "minimalist", name: "Minimalist", description: "A compact, single-column CV with dates aligned to the right.", atsFriendly: true },
   { id: "centered-blue", name: "Centered Blue", description: "A centered, photo-free CV with blue ruled section headings.", atsFriendly: true },
+  { id: "nordic-mono", name: "Nordic Minimalist", description: "Clean Swiss typographic grid with monospaced metadata, subtle tech badges, and high ATS compliance.", atsFriendly: true },
+  { id: "devgrid", name: "Silicon Valley DevGrid", description: "Tech-lead layout with structured technical matrix, monospace metadata, and bold impact metrics.", atsFriendly: true },
+  { id: "zurich-modern", name: "Zurich Executive", description: "Asymmetric corporate design with executive summary callout and dual modular columns.", atsFriendly: true },
+  { id: "tokyo-minimal", name: "Tokyo Minimal", description: "Japanese Bauhaus layout with zen-like whitespace, geometric accent nodes, and right-aligned dates.", atsFriendly: true },
+  { id: "emerald-executive", name: "Emerald Executive", description: "Luxury consulting layout with deep forest accents, leadership summary callout, and split columns.", atsFriendly: false },
 ] as const;
 
 export type CvTemplateId = (typeof CV_TEMPLATES)[number]["id"];

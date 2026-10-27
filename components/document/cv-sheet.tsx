@@ -51,7 +51,12 @@ export type CvSheetLayout =
   | "studio-rail"
   | "mint-header"
   | "minimalist"
-  | "centered-blue";
+  | "centered-blue"
+  | "nordic-mono"
+  | "devgrid"
+  | "zurich-modern"
+  | "tokyo-minimal"
+  | "emerald-executive";
 
 const templateLayouts: Partial<Record<CvTemplateId, CvSheetLayout>> = {
   "navy-rail": "navy-rail",
@@ -71,6 +76,11 @@ const templateLayouts: Partial<Record<CvTemplateId, CvSheetLayout>> = {
   "teal-timeline": "gold-timeline",
   "cyan-timeline": "gold-timeline",
   "portrait-two-column": "orange-split",
+  "nordic-mono": "nordic-mono",
+  devgrid: "devgrid",
+  "zurich-modern": "zurich-modern",
+  "tokyo-minimal": "tokyo-minimal",
+  "emerald-executive": "emerald-executive",
 };
 
 export function cvSheetLayoutForTemplate(template: CvTemplateId): CvSheetLayout {
@@ -99,7 +109,11 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
     layout === "gold-timeline" ||
     layout === "career-timeline" ||
     layout === "studio-rail" ||
-    layout === "mint-header";
+    layout === "mint-header" ||
+    layout === "devgrid" ||
+    layout === "emerald-executive" ||
+    layout === "zurich-modern" ||
+    layout === "nordic-mono";
   const sectionIcon = (Icon: typeof UserRound) =>
     hasSectionIcons ? <Icon className="cv-section-icon" aria-hidden="true" /> : undefined;
   const contacts = cv.identity
@@ -302,6 +316,215 @@ export function CvSheet({ cv, layout = "default" }: { cv: CvData; layout?: CvShe
       {!cv.identity && referencesSection}
     </>
   );
+
+  if (layout === "nordic-mono") {
+    return (
+      <article className="cv-sheet cv-sheet-nordic-mono">
+        <header className="cv-nordic-header">
+          <div className="cv-nordic-masthead">
+            {cv.showPhoto && cv.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={180} height={180} className="cv-photo cv-nordic-photo" />
+            )}
+            <div>
+              <h1 className="cv-name">{name}</h1>
+              <p className="cv-title">{cv.title}</p>
+            </div>
+          </div>
+          <ul className="cv-nordic-contacts">
+            {contacts.map((c) => (
+              <li key={c.label}>
+                <c.icon className="cv-icon" aria-hidden="true" />
+                {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+              </li>
+            ))}
+          </ul>
+        </header>
+        <div className="cv-nordic-grid">
+          <div className="cv-nordic-main">
+            {profileSection}
+            {experienceSection}
+            {educationSection}
+          </div>
+          <aside className="cv-nordic-sidebar">
+            {skillsSection}
+            {highlightsSection}
+            {languagesSection}
+            {projectsSection}
+            {!cv.identity && referencesSection}
+          </aside>
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "devgrid") {
+    return (
+      <article className="cv-sheet cv-sheet-devgrid">
+        <header className="cv-devgrid-header">
+          <div className="cv-devgrid-titlebar">
+            <span className="cv-devgrid-prompt">&gt;</span>
+            <div className="min-w-0 flex-1">
+              <h1 className="cv-name">{name}</h1>
+              <p className="cv-title">{cv.title}</p>
+            </div>
+            {cv.showPhoto && cv.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={180} height={180} className="cv-photo cv-devgrid-photo" />
+            )}
+          </div>
+          <ul className="cv-devgrid-contacts">
+            {contacts.map((c) => (
+              <li key={c.label}>
+                <c.icon className="cv-icon" aria-hidden="true" />
+                {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+              </li>
+            ))}
+          </ul>
+        </header>
+        <div className="cv-devgrid-columns">
+          <div className="cv-devgrid-main">
+            {profileSection}
+            {experienceSection}
+            {projectsSection}
+          </div>
+          <aside className="cv-devgrid-sidebar">
+            {skillsSection}
+            {highlightsSection}
+            {educationSection}
+            {languagesSection}
+            {!cv.identity && referencesSection}
+          </aside>
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "zurich-modern") {
+    return (
+      <article className="cv-sheet cv-sheet-zurich-modern">
+        <header className="cv-zurich-header">
+          <div className="cv-zurich-left">
+            {cv.showPhoto && cv.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={180} height={180} className="cv-photo cv-zurich-photo" />
+            )}
+            <div>
+              <h1 className="cv-name">{name}</h1>
+              <p className="cv-title">{cv.title}</p>
+            </div>
+          </div>
+          <div className="cv-zurich-right">
+            <ul className="cv-zurich-contacts">
+              {contacts.map((c) => (
+                <li key={c.label}>
+                  <c.icon className="cv-icon" aria-hidden="true" />
+                  {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </header>
+        <div className="cv-zurich-summary">
+          {profileSection}
+        </div>
+        <div className="cv-zurich-grid">
+          <div className="cv-zurich-main">
+            {experienceSection}
+            {projectsSection}
+          </div>
+          <aside className="cv-zurich-sidebar">
+            {highlightsSection}
+            {skillsSection}
+            {educationSection}
+            {languagesSection}
+            {!cv.identity && referencesSection}
+          </aside>
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "tokyo-minimal") {
+    return (
+      <article className="cv-sheet cv-sheet-tokyo-minimal">
+        <header className="cv-tokyo-header">
+          {cv.showPhoto && cv.photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={180} height={180} className="cv-photo cv-tokyo-photo" />
+          )}
+          <h1 className="cv-name">{name}</h1>
+          <p className="cv-title">{cv.title}</p>
+          <div className="cv-tokyo-divider">
+            <span className="cv-tokyo-node">◆</span>
+          </div>
+          <ul className="cv-tokyo-contacts">
+            {contacts.map((c) => (
+              <li key={c.label}>
+                <c.icon className="cv-icon" aria-hidden="true" />
+                {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+              </li>
+            ))}
+          </ul>
+        </header>
+        <div className="cv-tokyo-body">
+          {profileSection}
+          {highlightsSection}
+          {experienceSection}
+          {educationSection}
+          <div className="cv-tokyo-split">
+            {skillsSection}
+            {languagesSection}
+          </div>
+          {projectsSection}
+          {!cv.identity && referencesSection}
+        </div>
+      </article>
+    );
+  }
+
+  if (layout === "emerald-executive") {
+    return (
+      <article className="cv-sheet cv-sheet-emerald-executive">
+        <header className="cv-emerald-header">
+          <div className="cv-emerald-brand">
+            {cv.showPhoto && cv.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={withBase(cv.photo)} alt={`Photo of ${name}`} width={180} height={180} className="cv-photo cv-emerald-photo" />
+            )}
+            <div>
+              <h1 className="cv-name">{name}</h1>
+              <p className="cv-title">{cv.title}</p>
+            </div>
+          </div>
+          <ul className="cv-emerald-contacts">
+            {contacts.map((c) => (
+              <li key={c.label}>
+                <c.icon className="cv-icon" aria-hidden="true" />
+                {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+              </li>
+            ))}
+          </ul>
+        </header>
+        <div className="cv-emerald-callout">
+          {profileSection}
+        </div>
+        <div className="cv-emerald-grid">
+          <div className="cv-emerald-main">
+            {experienceSection}
+            {projectsSection}
+          </div>
+          <aside className="cv-emerald-rail">
+            {highlightsSection}
+            {skillsSection}
+            {educationSection}
+            {languagesSection}
+            {!cv.identity && referencesSection}
+          </aside>
+        </div>
+      </article>
+    );
+  }
 
   if (layout === "reverse-rail") {
     return (

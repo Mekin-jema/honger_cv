@@ -238,10 +238,10 @@ export function TemplateSlider() {
                     className="grid size-14 place-items-center rounded-2xl text-lg font-bold text-white shadow-md"
                     style={{ backgroundColor: accentColor }}
                   >
-                    JD
+                    AM
                   </div>
-                  <h3 className="mt-4 text-base font-bold">John Doe</h3>
-                  <p className="text-[11px] opacity-80">Senior Systems & AI Engineer</p>
+                  <h3 className="mt-4 text-base font-bold">Alex Morgan</h3>
+                  <p className="text-[11px] opacity-80">Senior Systems & Cloud Engineer</p>
 
                   <div className="mt-6 space-y-4 border-t border-current/15 pt-4 text-[10px]">
                     <div>
@@ -249,8 +249,8 @@ export function TemplateSlider() {
                         Profile
                       </p>
                       <p className="mt-1.5 leading-relaxed opacity-90">
-                        Addis Ababa University CGPA 3.70. Hands-on expertise building enterprise analytics,
-                        cloud microservices, and autonomous AI agents.
+                        Senior engineer with 6+ years building high-throughput distributed microservices,
+                        real-time web platforms, and automated cloud infrastructure.
                       </p>
                     </div>
 
@@ -259,7 +259,7 @@ export function TemplateSlider() {
                         Technical Stack
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {["TypeScript", "React", "Next.js", "Python", "SQL", "Docker", "LangGraph"].map(
+                        {["TypeScript", "React", "Next.js", "Python", "Go", "Docker", "PostgreSQL"].map(
                           (skill) => (
                             <span
                               key={skill}
@@ -277,9 +277,9 @@ export function TemplateSlider() {
                         Location & Contact
                       </p>
                       <div className="mt-1.5 space-y-1 opacity-80">
-                        <p>📍 Addis Ababa, Ethiopia</p>
-                        <p>✉️ john.doe@example.com</p>
-                        <p>🔗 johndoe.example.com</p>
+                        <p>📍 San Francisco, CA</p>
+                        <p>✉️ alex.morgan@example.com</p>
+                        <p>🔗 alexmorgan.dev</p>
                       </div>
                     </div>
                   </div>
@@ -301,26 +301,26 @@ export function TemplateSlider() {
                   <div className="mt-4 space-y-4">
                     <div className="relative border-l-2 pl-3.5" style={{ borderColor: accentColor }}>
                       <div className="flex items-center justify-between text-xs font-bold text-[#1e2f3d]">
-                        <span>Data & Revenue Analyst</span>
-                        <span className="text-[10px] text-muted font-normal">2026 - Present</span>
+                        <span>Senior Software Engineer</span>
+                        <span className="text-[10px] text-muted font-normal">2023 - Present</span>
                       </div>
                       <p className="text-[11px] font-medium" style={{ color: accentColor }}>
-                        Safaricom Ethiopia Telecommunications PLC
+                        Apex Cloud Technologies
                       </p>
                       <ul className="mt-2 space-y-1 text-[10px] leading-relaxed text-[#4b4843]">
-                        <li>• Engineered automated SQL/Python pipelines processing 10M+ daily telemetry events.</li>
-                        <li>• Formulated predictive churn & bundle pricing models boosting conversions.</li>
+                        <li>• Engineered automated ingestion pipelines processing 25M+ daily webhook events.</li>
+                        <li>• Reduced cloud latency by 38% through Redis caching and query optimization.</li>
                       </ul>
                     </div>
 
                     <div className="relative border-l-2 border-line pl-3.5">
                       <div className="flex items-center justify-between text-xs font-bold text-[#1e2f3d]">
                         <span>Full-Stack Software Engineer</span>
-                        <span className="text-[10px] text-muted font-normal">2025 - 2026</span>
+                        <span className="text-[10px] text-muted font-normal">2021 - 2023</span>
                       </div>
-                      <p className="text-[11px] font-medium text-[#4b4843]">Smart Systems Solutions</p>
+                      <p className="text-[11px] font-medium text-[#4b4843]">Meridian Labs</p>
                       <p className="mt-1 text-[10px] text-[#4b4843]">
-                        Delivered production IoT sensor platforms with real-time Next.js dashboards.
+                        Delivered customer-facing analytics dashboards used daily by 50,000+ business accounts.
                       </p>
                     </div>
                   </div>
@@ -331,11 +331,11 @@ export function TemplateSlider() {
                     </p>
                     <div className="mt-2 flex items-center justify-between text-[11px]">
                       <div>
-                        <p className="font-bold text-[#1e2f3d]">B.Sc. in Computer Engineering</p>
-                        <p className="text-[10px] text-muted">Addis Ababa University</p>
+                        <p className="font-bold text-[#1e2f3d]">B.S. in Computer Science</p>
+                        <p className="text-[10px] text-muted">State University</p>
                       </div>
                       <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                        CGPA 3.70 Distinction
+                        Magna Cum Laude
                       </span>
                     </div>
                   </div>
@@ -346,14 +346,14 @@ export function TemplateSlider() {
               <div className="p-6 sm:p-7">
                 <div className="flex items-start justify-between border-b pb-4" style={{ borderColor: accentColor }}>
                   <div>
-                    <h3 className="text-2xl font-bold tracking-tight text-[#1f1d1a]">John Doe</h3>
+                    <h3 className="text-2xl font-bold tracking-tight text-[#1f1d1a]">Alex Morgan</h3>
                     <p className="text-xs font-semibold" style={{ color: accentColor }}>
                       {currentTemplate.name} · Career Path & Milestones
                     </p>
                   </div>
                   <div className="text-right text-[10px] text-muted">
-                    <p>john.doe@example.com</p>
-                    <p>Addis Ababa, Ethiopia</p>
+                    <p>alex.morgan@example.com</p>
+                    <p>San Francisco, CA</p>
                   </div>
                 </div>
 
@@ -364,41 +364,41 @@ export function TemplateSlider() {
                       style={{ backgroundColor: accentColor }}
                     />
                     <div className="flex items-baseline justify-between">
-                      <h4 className="text-sm font-bold text-[#1f1d1a]">Data Analyst · Safaricom Ethiopia</h4>
+                      <h4 className="text-sm font-bold text-[#1f1d1a]">Senior Software Engineer · Apex Cloud Technologies</h4>
                       <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-semibold text-muted">
-                        2026 - Present
+                        2023 - Present
                       </span>
                     </div>
                     <p className="mt-1.5 text-[11px] leading-relaxed text-[#4b4843]">
-                      Leading customer value management analytics, real-time revenue reporting, and predictive bundle
-                      pricing using SQL, Oracle, and Python.
+                      Leading core platform architecture, real-time event streaming pipelines, and microservices
+                      resilience using TypeScript, Go, and PostgreSQL.
                     </p>
                   </div>
 
                   <div className="relative border-l-2 border-line pl-5">
                     <span className="absolute -left-1.5 top-0 size-3 rounded-full bg-line-strong" />
                     <div className="flex items-baseline justify-between">
-                      <h4 className="text-sm font-bold text-[#1f1d1a]">Full-Stack & AI Systems Architect</h4>
+                      <h4 className="text-sm font-bold text-[#1f1d1a]">Full-Stack Engineer · Meridian Labs</h4>
                       <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-semibold text-muted">
-                        2024 - 2026
+                        2021 - 2023
                       </span>
                     </div>
                     <p className="mt-1.5 text-[11px] leading-relaxed text-[#4b4843]">
-                      Architected GIS tracking applications, IoT telemetry engines with ESP32 microcontrollers, and
-                      LangChain RAG agents.
+                      Engineered customer-facing analytics dashboards, reusable UI design systems, and secure
+                      Stripe subscription billing infrastructure.
                     </p>
                   </div>
 
                   <div className="relative border-l-2 border-line pl-5">
                     <span className="absolute -left-1.5 top-0 size-3 rounded-full bg-line-strong" />
                     <div className="flex items-baseline justify-between">
-                      <h4 className="text-sm font-bold text-[#1f1d1a]">Addis Ababa University</h4>
+                      <h4 className="text-sm font-bold text-[#1f1d1a]">State University</h4>
                       <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-semibold text-muted">
-                        Graduated Distinction
+                        B.S. Computer Science
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-[#4b4843]">
-                      B.Sc. Computer Engineering · CGPA 3.70 · Senior Project Excellence.
+                      Magna Cum Laude · Dean's Honor List · Distributed Systems Focus.
                     </p>
                   </div>
                 </div>
@@ -410,10 +410,10 @@ export function TemplateSlider() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-2xl font-black uppercase tracking-wider text-[#1f1d1a]">
-                        MEKIN JEMAL
+                        ALEX MORGAN
                       </h3>
                       <p className="text-xs font-bold tracking-widest text-muted uppercase">
-                        Lead Software & AI Systems Engineer
+                        Lead Software & Cloud Systems Architect
                       </p>
                     </div>
                     <span
@@ -431,8 +431,8 @@ export function TemplateSlider() {
                       Executive Summary
                     </p>
                     <p className="mt-2 leading-relaxed text-[#4b4843]">
-                      High-impact Computer Engineer with proven excellence in enterprise telemetry, data warehousing,
-                      and full-stack software development. AAU CGPA 3.70 Distinction.
+                      High-impact Systems Architect with proven excellence in distributed microservices,
+                      cloud data pipelines, and full-stack software leadership. Magna Cum Laude graduate.
                     </p>
                   </div>
 
@@ -441,7 +441,7 @@ export function TemplateSlider() {
                       Core Competencies
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {["Full-Stack React", "Next.js 15+", "Python / FastAPI", "Oracle SQL", "LangGraph", "Docker"].map(
+                      {["Full-Stack React", "Next.js 15+", "Go / Python", "PostgreSQL", "Docker", "AWS"].map(
                         (tag) => (
                           <span key={tag} className="rounded bg-card px-2 py-0.5 font-medium text-fg shadow-xs">
                             {tag}
@@ -457,8 +457,8 @@ export function TemplateSlider() {
                     Verified Accomplishments
                   </h4>
                   <div className="mt-2 space-y-2 text-[10px] text-[#4b4843]">
-                    <p>• Spearheaded telecom pricing analytics across millions of records at Safaricom Ethiopia.</p>
-                    <p>• Built real-world production GIS and IoT software solutions with verifiable ROI.</p>
+                    <p>• Scaled distributed ingestion pipelines to 25M+ daily transactions at Apex Cloud.</p>
+                    <p>• Built high-performance real-time telemetry systems with zero unplanned downtime.</p>
                   </div>
                 </div>
               </div>
@@ -474,21 +474,21 @@ export function TemplateSlider() {
                       {currentTemplate.categoryLabel}
                     </span>
                     <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#1f1d1a]">
-                      John Doe
+                      Alex Morgan
                     </h3>
-                    <p className="text-xs text-muted">Computer Engineer · Addis Ababa University</p>
+                    <p className="text-xs text-muted">Senior Software Engineer · State University</p>
                   </div>
                   <div className="text-right text-[10px] text-muted space-y-0.5">
-                    <p>📍 Addis Ababa, ET</p>
-                    <p>✉️ john.doe@example.com</p>
-                    <p>🔗 github.com/johndoe</p>
+                    <p>📍 San Francisco, CA</p>
+                    <p>✉️ alex.morgan@example.com</p>
+                    <p>🔗 github.com/alexmorgan</p>
                   </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-3 border-b pb-4 text-center">
                   <div className="rounded-lg bg-surface/50 p-2">
-                    <p className="text-sm font-bold text-[#1f1d1a]">3.70</p>
-                    <p className="text-[9px] text-muted">AAU CGPA</p>
+                    <p className="text-sm font-bold text-[#1f1d1a]">99.9%</p>
+                    <p className="text-[9px] text-muted">Uptime SLA</p>
                   </div>
                   <div className="rounded-lg bg-surface/50 p-2">
                     <p className="text-sm font-bold" style={{ color: accentColor }}>
@@ -505,21 +505,21 @@ export function TemplateSlider() {
                 <div className="mt-5 space-y-3">
                   <div>
                     <div className="flex items-center justify-between text-xs font-bold text-[#1f1d1a]">
-                      <span>Data Analyst · Safaricom Ethiopia PLC</span>
-                      <span className="text-[10px] text-muted font-normal">2026 - Present</span>
+                      <span>Senior Software Engineer · Apex Cloud Technologies</span>
+                      <span className="text-[10px] text-muted font-normal">2023 - Present</span>
                     </div>
                     <p className="mt-1 text-[10px] text-[#4b4843]">
-                      Telecom pricing, CVM performance, and large-scale data modeling using SQL and Oracle.
+                      Distributed systems, real-time webhook infrastructure, and database optimization.
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between text-xs font-bold text-[#1f1d1a]">
                       <span>Featured Projects & Open Source</span>
-                      <span className="text-[10px] text-muted font-normal">AI / IoT</span>
+                      <span className="text-[10px] text-muted font-normal">Cloud / Tooling</span>
                     </div>
                     <p className="mt-1 text-[10px] text-[#4b4843]">
-                      SmartDrain IoT disaster mitigation system & AI Conversational Persona portfolio.
+                      PulseMetrics distributed monitoring engine & NovaFlow declarative task runner.
                     </p>
                   </div>
                 </div>

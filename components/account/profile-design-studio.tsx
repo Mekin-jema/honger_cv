@@ -1,14 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Check, Circle, LoaderCircle, MinusCircle, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Circle,
+  Clock,
+  ExternalLink,
+  Eye,
+  FileText,
+  LoaderCircle,
+  MinusCircle,
+  Palette,
+  Plus,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import { CvStudio, type CvDesign } from "@/app/cv/cv-studio";
 import { CvEditor } from "@/components/admin/studio/cv-editor";
 import { toast } from "@/components/ui/toast";
 import type { CvData, CvIdentity } from "@/lib/persona/cv";
-import type { CvTemplateId } from "@/lib/persona/cv-templates";
+import { CV_TEMPLATES, type CvTemplateId } from "@/lib/persona/cv-templates";
 import type { PersonaDoc } from "@/lib/persona/schema";
 import { withBase } from "@/lib/utils";
 import { CvImportPipeline } from "./cv-import-pipeline";
@@ -553,26 +570,277 @@ export function ProfileDesignStudio({
     }
   };
 
+  const currentStepNumber = view === "content" ? 1 : view === "design" ? 2 : 3;
+  const selectedTemplate = CV_TEMPLATES.find((item) => item.id === design.template) ?? CV_TEMPLATES[0];
+
+  const completedTrainingCount = trainingSteps.filter((s) => s.state === "done").length;
+  const trainingStepPercent = Math.round((completedTrainingCount / trainingSteps.length) * 100);
+
+  const overallProgressPercent = useMemo(() => {
+    if (view === "content") {
+      let score = 15;
+      if (cvData.identity?.name?.trim()) score += 6;
+      if (cvData.profile?.trim()) score += 4;
+      if (cvData.experience?.length > 0) score += 4;
+      if (cvData.skills?.length > 0) score += 4;
+      return Math.min(score, 33);
+    }
+    if (view === "design") {
+      return 66;
+    }
+    if (completedTrainingCount === trainingSteps.length) return 100;
+    return Math.min(66 + Math.round((completedTrainingCount / trainingSteps.length) * 34), 98);
+  }, [view, cvData, completedTrainingCount, trainingSteps.length]);
+
   return (
-    <div className="space-y-4">
-      <div className="mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-5 pt-5 sm:px-8">
-        <Link href="/account/" className="text-sm font-semibold text-muted hover:text-fg">
-          ← My CVs
-        </Link>
-        <div role="group" aria-label="CV creation steps" className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1">
-          <button type="button" aria-pressed={view === "content"} onClick={() => void openDetailsStep()} disabled={busy || photoUploading} className={`min-h-11 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "content" ? "bg-surface text-fg shadow-sm" : "text-muted hover:bg-surface/70 hover:text-fg"}`}>1. Import & details</button>
-          <button type="button" aria-pressed={view === "design"} onClick={() => void openDesignStep()} disabled={busy || photoUploading} className={`min-h-11 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "design" ? "bg-surface text-fg shadow-sm" : "text-muted hover:bg-surface/70 hover:text-fg"}`}>2. Choose design</button>
-          <button type="button" aria-pressed={view === "training"} onClick={() => void finish()} disabled={busy || photoUploading || saveState === "saving"} className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-center text-xs font-semibold transition-all duration-200 sm:text-sm ${view === "training" ? "bg-accent text-on-accent shadow-sm" : "bg-accent text-on-accent hover:brightness-95"}`}>
-            {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <ArrowRight className="size-3.5" aria-hidden="true" />}
-            3. Train & publish
-          </button>
+    <div className="min-h-screen space-y-6 pb-20">
+      {/* Sticky Top Header with Breadcrumbs, Live Preview Link, Autosave Badge, and Step Navigation */}
+      <header className="sticky top-0 z-40 border-b border-line/70 bg-bg/85 backdrop-blur-md transition-all shadow-xs">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Left: Back & Title */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/account/"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-card px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-surface hover:text-fg"
+              >
+                <ArrowLeft className="size-3.5" aria-hidden="true" />
+                <span>My CVs</span>
+              </Link>
+              <div className="hidden h-4 w-px bg-line sm:block" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="truncate text-sm font-bold text-fg sm:text-base">
+                    {cvData.identity?.name?.trim() || doc.site.title || "Your CV"}
+                  </h1>
+                  <span className="hidden rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold text-muted md:inline-block">
+                    /{slug}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Autosave status & Live preview */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1 text-xs font-medium text-muted shadow-2xs"
+              >
+                {saveState === "saving" ? (
+                  <>
+                    <LoaderCircle className="size-3.5 animate-spin text-accent" />
+                    <span>Saving…</span>
+                  </>
+                ) : saveState === "dirty" ? (
+                  <>
+                    <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Unsaved edits</span>
+                  </>
+                ) : saveState === "error" ? (
+                  <>
+                    <X className="size-3.5 text-red-500" />
+                    <span className="font-semibold text-red-600">Autosave failed</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-3.5 text-emerald-600" />
+                    <span className="text-muted">Saved</span>
+                  </>
+                )}
+              </div>
+
+              <Link
+                href={`/u/${slug}/`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface/70 px-3 py-1.5 text-xs font-semibold text-fg transition hover:bg-surface hover:text-accent"
+                title="View live published CV in new tab"
+              >
+                <ExternalLink className="size-3" aria-hidden="true" />
+                <span className="hidden sm:inline">Live Preview</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Stepper Navigation Grid */}
+          <div className="mt-3.5">
+            <div
+              role="group"
+              aria-label="CV creation progress"
+              className="grid grid-cols-3 gap-2 rounded-2xl border border-line bg-card/90 p-1.5 shadow-xs sm:gap-3"
+            >
+              {/* Step 1 Tab */}
+              <button
+                type="button"
+                aria-pressed={view === "content"}
+                onClick={() => void openDetailsStep()}
+                disabled={busy || photoUploading}
+                className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all sm:px-3 sm:py-2.5 ${
+                  view === "content"
+                    ? "bg-surface text-fg shadow-xs ring-1 ring-accent/30"
+                    : "text-muted hover:bg-surface/60 hover:text-fg"
+                }`}
+              >
+                <span
+                  className={`grid size-7 shrink-0 place-items-center rounded-lg text-xs font-bold transition-all sm:size-8 ${
+                    view === "content"
+                      ? "bg-accent text-on-accent shadow-xs"
+                      : currentStepNumber > 1
+                      ? "bg-emerald-600/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                      : "bg-surface-strong text-muted"
+                  }`}
+                >
+                  {currentStepNumber > 1 ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : (
+                    <FileText className="size-4" aria-hidden="true" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <span className="block truncate text-xs font-bold sm:text-sm">
+                    1. Import & Content
+                  </span>
+                  <span className="hidden truncate text-[11px] text-muted lg:block">
+                    Personal bio & experience
+                  </span>
+                </div>
+              </button>
+
+              {/* Step 2 Tab */}
+              <button
+                type="button"
+                aria-pressed={view === "design"}
+                onClick={() => void openDesignStep()}
+                disabled={busy || photoUploading}
+                className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all sm:px-3 sm:py-2.5 ${
+                  view === "design"
+                    ? "bg-surface text-fg shadow-xs ring-1 ring-accent/30"
+                    : "text-muted hover:bg-surface/60 hover:text-fg"
+                }`}
+              >
+                <span
+                  className={`grid size-7 shrink-0 place-items-center rounded-lg text-xs font-bold transition-all sm:size-8 ${
+                    view === "design"
+                      ? "bg-accent text-on-accent shadow-xs"
+                      : currentStepNumber > 2
+                      ? "bg-emerald-600/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                      : "bg-surface-strong text-muted"
+                  }`}
+                >
+                  {currentStepNumber > 2 ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Palette className="size-4" aria-hidden="true" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <span className="block truncate text-xs font-bold sm:text-sm">
+                    2. Choose Design
+                  </span>
+                  <span className="hidden truncate text-[11px] text-muted lg:block">
+                    {selectedTemplate.name} · Style
+                  </span>
+                </div>
+              </button>
+
+              {/* Step 3 Tab */}
+              <button
+                type="button"
+                aria-pressed={view === "training"}
+                onClick={() => void finish()}
+                disabled={busy || photoUploading || saveState === "saving"}
+                className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition-all sm:px-3 sm:py-2.5 ${
+                  view === "training"
+                    ? "bg-accent text-on-accent shadow-xs"
+                    : "bg-surface-strong/40 text-muted hover:bg-surface hover:text-fg"
+                }`}
+              >
+                <span
+                  className={`grid size-7 shrink-0 place-items-center rounded-lg text-xs font-bold transition-all sm:size-8 ${
+                    view === "training"
+                      ? "bg-on-accent text-accent shadow-xs"
+                      : "bg-surface-strong text-muted"
+                  }`}
+                >
+                  {busy ? (
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="size-4" aria-hidden="true" />
+                  )}
+                </span>
+                <div className="min-w-0">
+                  <span className="block truncate text-xs font-bold sm:text-sm">
+                    3. Train & Publish
+                  </span>
+                  <span className="hidden truncate text-[11px] opacity-80 lg:block">
+                    AI persona & live URL
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* Glowing Linear Progress Bar Track */}
+            <div className="mt-2.5 px-0.5">
+              <div className="flex items-center justify-between pb-1 text-[11px] font-semibold text-muted">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block size-2 rounded-full bg-accent" />
+                  <span>
+                    Step {currentStepNumber} of 3:{" "}
+                    <strong className="text-fg">
+                      {view === "content"
+                        ? "Import & Edit CV Details"
+                        : view === "design"
+                        ? "Choose Template & Accent"
+                        : "Train Persona & Publish Live"}
+                    </strong>
+                  </span>
+                </span>
+                <span className="font-mono text-xs font-bold text-accent">
+                  {overallProgressPercent}% Complete
+                </span>
+              </div>
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-surface-strong/60 shadow-inner">
+                <div
+                  role="progressbar"
+                  aria-valuenow={overallProgressPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  className="h-full rounded-full bg-gradient-to-r from-accent via-amber-500 to-emerald-500 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(181,64,15,0.4)]"
+                  style={{ width: `${overallProgressPercent}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <p role="status" className="col-span-full text-right text-xs text-muted" aria-live="polite">
-          {saveState === "saving" ? "Saving changes…" : saveState === "dirty" ? "Changes will save automatically" : saveState === "error" ? "Autosave failed. Edit a field to retry." : "All changes saved"}
-        </p>
-      </div>
+      </header>
+
       {view === "content" ? (
-        <div key={view} className="studio-step-panel mx-auto max-w-7xl px-5 pb-8 sm:px-8">
+        <div key={view} className="studio-step-panel mx-auto max-w-7xl px-4 sm:px-8">
+          {/* Step 1 Quick Action Banner */}
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-line bg-card/70 p-4 backdrop-blur-xs sm:flex-row sm:items-center sm:p-5">
+            <div className="flex items-center gap-3">
+              <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+                <FileText className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-fg sm:text-lg">Step 1: Your CV Details</h2>
+                <p className="mt-0.5 text-xs text-muted sm:text-sm">
+                  Upload an existing PDF/DOCX or fill in your details below. Everything autosaves to your private draft.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void openDesignStep()}
+              disabled={busy || photoUploading}
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-on-accent shadow-sm transition hover:brightness-95 active:scale-98 sm:w-auto sm:text-sm"
+            >
+              <span>Next: Choose Design</span>
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+
           <CvImportPipeline
             slug={slug}
             currentCv={cvData}
@@ -660,9 +928,88 @@ export function ProfileDesignStudio({
             photoUploadBusy={photoUploading || busy || importing}
             projectImageUploadBusy={photoUploading || busy || importing}
           />
+
+          {/* Step 1 Bottom Continuation Toolbar */}
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-line bg-card p-5 shadow-sm sm:flex-row">
+            <div className="flex items-center gap-2.5 text-xs text-muted sm:text-sm">
+              {saveState === "saving" ? (
+                <>
+                  <LoaderCircle className="size-4 animate-spin text-accent" />
+                  <span>Saving changes to your draft…</span>
+                </>
+              ) : saveState === "dirty" ? (
+                <>
+                  <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Unsaved edits will automatically save</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-4 text-emerald-600" />
+                  <span>All CV details are safely saved to your draft</span>
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => void openDesignStep()}
+              disabled={busy || photoUploading}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm font-bold text-on-accent shadow-md transition hover:brightness-95 active:scale-98 sm:w-auto"
+            >
+              <span>Continue to Step 2: Choose Design</span>
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       ) : view === "design" ? (
         <div key={view} className="studio-step-panel">
+          {/* Step 2 Guidance Banner */}
+          <div className="mx-auto max-w-7xl px-4 pt-2 sm:px-8">
+            <div className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-line bg-card/70 p-4 backdrop-blur-xs sm:flex-row sm:items-center">
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+                  <Palette className="size-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-bold text-fg sm:text-lg">Step 2: Choose Design & Accent</h2>
+                    <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-semibold text-fg">
+                      {selectedTemplate.name}
+                    </span>
+                    <span
+                      className="size-3.5 rounded-full border border-line shadow-xs"
+                      style={{ backgroundColor: design.accentColor }}
+                      title={`Accent: ${design.accentColor}`}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted">
+                    Click any layout card to switch styles. The live document sheet updates in real time.
+                  </p>
+                </div>
+              </div>
+              <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => void openDetailsStep()}
+                  disabled={busy || photoUploading}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-line bg-card px-3 text-xs font-semibold text-muted transition hover:bg-surface hover:text-fg sm:text-sm"
+                >
+                  <ArrowLeft className="size-3.5" aria-hidden="true" />
+                  <span>Back to details</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void finish()}
+                  disabled={busy || photoUploading || saveState === "saving"}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-accent px-4 text-xs font-bold text-on-accent shadow-sm transition hover:brightness-95 active:scale-98 sm:text-sm"
+                >
+                  {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                  <span>Train & Publish</span>
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          </div>
+
           <CvStudio
             cv={cvData}
             initialTemplate={design.template}
@@ -681,40 +1028,158 @@ export function ProfileDesignStudio({
             }}
             showSidebarToggle={false}
           />
+
+          {/* Sticky Bottom Action Bar for Step 2 */}
+          <div className="sticky bottom-4 z-30 mx-auto max-w-4xl px-4 no-print">
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-line/90 bg-card/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => void openDetailsStep()}
+                disabled={busy || photoUploading}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-xs font-semibold text-muted transition hover:bg-surface hover:text-fg sm:text-sm"
+              >
+                <ArrowLeft className="size-3.5" aria-hidden="true" />
+                <span>Edit details</span>
+              </button>
+              <div className="hidden items-center gap-2 text-xs text-muted sm:flex">
+                <span>Selected: <strong className="text-fg">{selectedTemplate.name}</strong></span>
+                <span>•</span>
+                <span className="flex items-center gap-1.5">
+                  Accent: <span className="size-3 rounded-full border border-line" style={{ backgroundColor: design.accentColor }} />
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void finish()}
+                disabled={busy || photoUploading || saveState === "saving"}
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2 text-xs font-bold text-on-accent shadow-md transition hover:brightness-95 active:scale-98 sm:text-sm"
+              >
+                {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                <span>Continue to Step 3: Train AI</span>
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
-        <section key={view} className="studio-step-panel mx-auto max-w-7xl px-5 pb-12 pt-8 sm:px-8" aria-live="polite">
-          <div className="mx-auto max-w-2xl space-y-5 rounded-2xl border border-line bg-card p-6 shadow-sm sm:p-8">
-            <div className="flex items-center gap-3">
-              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
-                <LoaderCircle className={`size-5 ${busy ? "animate-spin" : ""}`} />
+        <section key={view} className="studio-step-panel mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-8" aria-live="polite">
+          <div className="mx-auto max-w-2xl space-y-6 rounded-3xl border border-line bg-card p-6 shadow-xl sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-accent/10 text-accent">
+                {busy ? (
+                  <LoaderCircle className="size-6 animate-spin" />
+                ) : (
+                  <Sparkles className="size-6" />
+                )}
               </div>
-              <div>
-                <h2 className="text-lg font-semibold">{busy ? "Training your assistant" : trainingPhase === "saving" ? "Saving your CV" : "Ready to train"}</h2>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-bold tracking-tight text-fg">
+                  {busy
+                    ? "Publishing & Training AI Assistant"
+                    : trainingPhase === "saving"
+                    ? "Saving your CV Design"
+                    : "Ready to Publish"}
+                </h2>
                 <p className="mt-1 text-sm text-muted">
-                  {trainingError || (busy ? "Your saved CV is being checked, indexed, and published." : "Your details and design will be saved before training starts.")}
+                  {trainingError ||
+                    (busy
+                      ? `Compiling ${cvData.identity?.name || "your CV"} into an interactive AI persona and building semantic search embeddings.`
+                      : "Your details and design will be compiled before training begins.")}
                 </p>
               </div>
             </div>
-            <ol className="space-y-2" aria-label="AI training progress">
-              {trainingSteps.map((step) => (
-                <li key={step.id} className="flex items-start gap-3 rounded-lg border border-line px-3 py-2.5 text-sm">
+
+            {/* Step-by-Step Training Progress Bar */}
+            <div className="rounded-2xl border border-line bg-surface/40 p-4">
+              <div className="flex items-center justify-between text-xs font-semibold text-muted mb-2">
+                <span>
+                  {completedTrainingCount === trainingSteps.length
+                    ? "All 7 training jobs completed!"
+                    : `Training Step ${Math.min(completedTrainingCount + 1, trainingSteps.length)} of ${trainingSteps.length}`}
+                </span>
+                <span className="font-mono text-xs font-bold text-accent">
+                  {trainingStepPercent}%
+                </span>
+              </div>
+              <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-surface-strong/70">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-accent to-emerald-500 transition-all duration-300 ease-out shadow-[0_0_8px_rgba(35,134,54,0.4)]"
+                  style={{ width: `${trainingStepPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Checklist of Steps */}
+            <ol className="space-y-2.5" aria-label="AI training steps checklist">
+              {trainingSteps.map((step, idx) => (
+                <li
+                  key={step.id}
+                  className={`flex items-start gap-3 rounded-xl border px-3.5 py-3 text-sm transition-all ${
+                    step.state === "running"
+                      ? "border-accent/50 bg-accent/5 shadow-2xs"
+                      : step.state === "done"
+                      ? "border-line bg-card/60"
+                      : "border-line/60 bg-surface/30 opacity-75"
+                  }`}
+                >
                   <span className="mt-0.5 grid size-5 shrink-0 place-items-center" aria-label={step.state}>
-                    {step.state === "done" ? <Check className="size-4 text-emerald-600" />
-                      : step.state === "running" ? <LoaderCircle className="size-4 animate-spin text-accent" />
-                        : step.state === "failed" ? <X className="size-4 text-red-600" />
-                          : step.state === "skipped" ? <MinusCircle className="size-4 text-muted" />
-                            : <Circle className="size-3.5 text-faint" />}
+                    {step.state === "done" ? (
+                      <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
+                    ) : step.state === "running" ? (
+                      <LoaderCircle className="size-4 animate-spin text-accent" />
+                    ) : step.state === "failed" ? (
+                      <X className="size-4 text-red-600" />
+                    ) : step.state === "skipped" ? (
+                      <MinusCircle className="size-4 text-muted" />
+                    ) : (
+                      <span className="text-xs font-bold text-muted">{idx + 1}</span>
+                    )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`font-medium ${step.state === "pending" ? "text-muted" : "text-fg"}`}>{step.label}</span>
-                    {step.detail && <span className={`mt-0.5 block text-xs ${step.state === "failed" ? "text-red-600" : "text-muted"}`}>{step.detail}</span>}
+                    <span className={`font-semibold ${step.state === "pending" ? "text-muted" : "text-fg"}`}>
+                      {step.label}
+                    </span>
+                    {step.detail && (
+                      <span
+                        className={`mt-0.5 block text-xs ${
+                          step.state === "failed" ? "text-red-600" : "text-muted"
+                        }`}
+                      >
+                        {step.detail}
+                      </span>
+                    )}
                   </span>
-                  {step.ms !== undefined && <span className="shrink-0 text-xs tabular-nums text-muted">{step.ms < 1000 ? `${step.ms} ms` : `${(step.ms / 1000).toFixed(1)} s`}</span>}
+                  {step.ms !== undefined && (
+                    <span className="shrink-0 text-xs tabular-nums text-muted font-mono">
+                      {step.ms < 1000 ? `${step.ms} ms` : `${(step.ms / 1000).toFixed(1)} s`}
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>
-            {trainingError && <button type="button" onClick={() => setView("content")} className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-surface">Back to details</button>}
+
+            {trainingError && (
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-400">
+                <p className="font-semibold">Publishing stopped</p>
+                <p className="mt-1 text-xs opacity-90">{trainingError}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setView("content")}
+                    className="rounded-lg border border-red-500/30 bg-card px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface"
+                  >
+                    Return to details
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView("design")}
+                    className="rounded-lg border border-red-500/30 bg-card px-3 py-1.5 text-xs font-semibold text-fg hover:bg-surface"
+                  >
+                    Return to design
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
