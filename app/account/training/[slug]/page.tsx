@@ -1,26 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Studio } from "@/components/admin/studio/studio";
-import { TABS, type TabId } from "@/components/admin/studio/tabs";
-import type { Doc } from "@/components/admin/studio/use-draft";
+import { SimpleCvTrainer } from "@/components/account/simple-cv-trainer";
 import { PersonaDocShape } from "@/lib/persona/schema";
 import { requireCustomer } from "@/server/admin-session";
 import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
 import { editableDraft, studioOverview } from "@/server/persona/studio";
 import { ensureCustomerStarterDraft } from "@/server/persona/templates";
 
-export const metadata: Metadata = { title: "Job Persona Studio", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Train Your CV AI", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function TrainingPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const query = await searchParams;
   const customer = await requireCustomer(`/account/training/${slug}/`);
   if (!/^[a-z][a-z0-9-]{1,31}$/.test(slug) || !(await personaOwnedBy(slug, customer.userId))) notFound();
   const [initialDraft, overview] = await Promise.all([editableDraft(slug), studioOverview(slug)]);
@@ -42,18 +38,18 @@ export default async function TrainingPage({
       </main>
     );
   }
-  const wanted = typeof query.tab === "string" ? query.tab : "overview";
-  const tab = (TABS.some((item) => item.id === wanted) ? wanted : "overview") as TabId;
+
+  const isPublished = Boolean(overview.liveId);
+
   return (
-    <Studio
+    <SimpleCvTrainer
       key={slug}
       slug={slug}
       name={parsed.data.name}
-      initial={{ doc: parsed.data as Doc, rev: draft.rev, issues: draft.issues, changed: draft.changed, source: draft.source }}
-      overview={overview}
-      tab={tab}
-      previewing={null}
-      mode="customer"
+      initialDoc={parsed.data}
+      initialRev={draft.rev}
+      isPublished={isPublished}
+      liveVersionId={overview.liveId}
     />
   );
 }

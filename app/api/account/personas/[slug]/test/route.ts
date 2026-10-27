@@ -5,7 +5,7 @@ import { hasTrainingContent } from "@/lib/persona/training";
 import { answerQuestion, type AiTurn } from "@/server/brain/answer";
 import { aiEnabled } from "@/server/brain/model";
 import { bad, forbidden, json, limited, readJson, sameOrigin, str } from "@/server/http";
-import { loadDraft, personaOwnedBy } from "@/server/persona/repo";
+import { loadDraft, personaOwnedBy, publishedPointer } from "@/server/persona/repo";
 import { clientView, compilePersona } from "@/server/persona/compile";
 import { recordPlatformEventSafely } from "@/server/platform-events";
 
@@ -41,10 +41,21 @@ export async function POST(req: Request, context: Context) {
   if (!draft) return bad("This profile has no training draft.", 404);
   const parsed = PersonaDocSchema.safeParse(draft.doc);
   if (!parsed.success) return bad(`Fix the draft before testing: ${formatIssues(parsed.error, 6).join("; ")}`, 422);
-  if (!hasTrainingContent(parsed.data)) return bad("Add your own details in the Knowledge tab before asking your AI.", 409);
+  if (!hasTrainingContent(parsed.data)) {
+    return json({
+      ok: true,
+      route: "answer",
+      text: "I don't have enough verified information about my experience or documents yet. Add your career details or upload a document in the Knowledge Base above, then ask me again!",
+      cards: [],
+      suggestedTopics: ["What is your background?", "What are your top skills?"],
+    });
+  }
 
   try {
-    const compiled = compilePersona(slug, parsed.data, { versionId: null, number: 0 });
+    const published = await publishedPointer(slug);
+    const compiled = compilePersona(slug, parsed.data, {
+      versionId: published?.versionId ?? null,
+    });
     const answer = await answerQuestion({ compiled, tier: "public", question, history });
     const result = answer.result;
     const view = clientView(compiled, "public", parsed.data.site.defaultLang);
@@ -75,7 +86,14 @@ export async function POST(req: Request, context: Context) {
         suggestedTopics: view.defaultFollowUps,
       });
     }
-    return json({ ok: true, route: "decline" });
+    return json({
+      ok: true,
+      route: "answer",
+      answerId: `draft-${draft.rev}`,
+      text: "I haven't added details about that in my CV or training documents yet. Feel free to ask about my experience, skills, projects, or background!",
+      cards: [],
+      suggestedTopics: view.defaultFollowUps,
+    });
   } catch (error) {
     console.error(`[account-ai-test] ${slug}:`, error instanceof Error ? `${error.name}: ${error.message}` : error);
     return bad("The assistant couldn't answer this test question. Try again shortly.", 502);
