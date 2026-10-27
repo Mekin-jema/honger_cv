@@ -98,7 +98,7 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
               disabled={signingOut}
@@ -168,14 +168,14 @@ export function NavUser({
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href={withBase("/account/")}>
                   <CircleUserRound aria-hidden="true" />
                   <span>My CVs</span>
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href={withBase("/account/new/")}>
                   <FilePlus2 aria-hidden="true" />
                   <span>Create a CV</span>
